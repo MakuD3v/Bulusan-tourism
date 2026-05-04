@@ -6,7 +6,7 @@ import { blogPosts } from '../../data/blog';
 import { Database, UploadCloud, Trash2, CheckCircle, Loader2 } from 'lucide-react';
 
 const SeederContainer = styled.div`
-  background: white;
+  background: var(--surface-bg);
   padding: 40px;
   border-radius: 24px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.05);

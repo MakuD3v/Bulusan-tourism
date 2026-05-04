@@ -4,7 +4,7 @@ import { UserPlus, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import { apiClient } from '../../api/client';
 
 const PanelContainer = styled.div`
-  background: white;
+  background: var(--surface-bg);
   border-radius: 20px;
   padding: 32px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.05);
@@ -123,7 +123,7 @@ const AdminManagementPanel = () => {
         <h2>Super Admin Area</h2>
       </Header>
       
-      <p style={{ color: '#64748b', marginBottom: '24px', lineHeight: 1.5 }}>
+      <p style={{ color: 'var(--text-light)', marginBottom: '24px', lineHeight: 1.5 }}>
         Only the designated super admin account has access to this panel. Enter the email address of a registered user below to upgrade their account privileges to <strong>ADMIN</strong>.
       </p>
 

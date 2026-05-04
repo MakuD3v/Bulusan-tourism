@@ -13,7 +13,7 @@ const StatsGrid = styled.div`
 `;
 
 const StatCard = styled(motion.div)`
-  background: white;
+  background: var(--surface-bg);
   padding: 24px;
   border-radius: 24px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.03);
@@ -48,12 +48,12 @@ const StatCard = styled(motion.div)`
   .label {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #64748b;
+    color: var(--text-light);
   }
 `;
 
 const GlassTable = styled.div`
-  background: white;
+  background: var(--surface-bg);
   border-radius: 24px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.04);
   overflow: hidden;
@@ -100,7 +100,7 @@ const ModalOverlay = styled(motion.div)`
 `;
 
 const ModalContent = styled(motion.div)`
-  background: white;
+  background: var(--surface-bg);
   width: 90%;
   max-width: 500px;
   border-radius: 32px;
@@ -193,7 +193,7 @@ const OverviewPanel: React.FC<OverviewPanelProps> = ({
       </StatsGrid>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '1.4rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <h2 style={{ fontSize: '1.4rem', color: 'var(--text-dark)', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <BarChart3 size={24} color="var(--cta-blue)" /> Discovery Interactions
         </h2>
         <SearchContainer>
@@ -222,7 +222,7 @@ const OverviewPanel: React.FC<OverviewPanelProps> = ({
               <tr key={entity.firebaseId} onClick={() => setSelectedEntity(entity)}>
                 <td style={{ fontWeight: 700 }}>{entity.name}</td>
                 <td>
-                  <span style={{ padding: '4px 10px', borderRadius: '20px', background: '#f1f5f9', fontSize: '0.8rem', fontWeight: 600, color: '#64748b' }}>
+                  <span style={{ padding: '4px 10px', borderRadius: '20px', background: '#f1f5f9', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-light)' }}>
                     {entity.type}
                   </span>
                 </td>
@@ -273,11 +273,11 @@ const OverviewPanel: React.FC<OverviewPanelProps> = ({
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#64748b' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-light)' }}>
                   <Calendar size={18} />
                   <span>Past 30 Days Interaction: <strong>{Math.floor((selectedEntity.visits || 0) * 0.4)} clicks</strong></span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#64748b' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-light)' }}>
                   <TrendingUp size={18} />
                   <span>Growth Trend: <strong style={{ color: '#2ecc71' }}>+12.4%</strong></span>
                 </div>

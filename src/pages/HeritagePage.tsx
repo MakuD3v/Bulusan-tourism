@@ -147,7 +147,7 @@ const HistoryCard = styled(motion.div)`
     
     p { 
       line-height: 1.8; 
-      color: #64748b; 
+      color: var(--text-light); 
       margin-bottom: 20px; 
       font-size: 1.1rem;
       opacity: 0.9;
@@ -249,7 +249,7 @@ const ModalOverlay = styled(motion.div)`
 `;
 
 const ModalContent = styled(motion.div)`
-  background: white;
+  background: var(--surface-bg);
   border-radius: 32px;
   width: 100%;
   max-width: 900px;
@@ -332,7 +332,7 @@ const ControlsContainer = styled.div`
 const SearchBar = styled.div`
   display: flex;
   align-items: center;
-  background: white;
+  background: var(--surface-bg);
   padding: 10px 20px;
   border-radius: 30px;
   border: 1px solid rgba(0,0,0,0.08);
@@ -519,7 +519,7 @@ export default function HeritagePage() {
             </MobileGrid>
           </>
         ) : !loading ? (
-          <div style={{ textAlign: 'center', padding: '100px', background: 'white', borderRadius: 24 }}>
+          <div style={{ textAlign: 'center', padding: '100px', background: 'var(--surface-bg)', borderRadius: 24 }}>
             <History size={48} color="#cbd5e1" style={{ marginBottom: 16 }} />
             <p style={{ color: '#94a3b8' }}>No heritage stories shared yet. Check back soon!</p>
           </div>
@@ -545,7 +545,7 @@ export default function HeritagePage() {
                 <SmartMedia type="img" src={selectedItem.img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 <button 
                   onClick={() => setSelectedItem(null)}
-                  style={{ position: 'absolute', top: '24px', right: '24px', background: 'white', border: 'none', borderRadius: '50%', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  style={{ position: 'absolute', top: '24px', right: '24px', background: 'var(--surface-bg)', border: 'none', borderRadius: '50%', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                 >
                   <X size={24} />
                 </button>
@@ -562,7 +562,7 @@ export default function HeritagePage() {
                       <Landmark size={28} color="var(--cta-blue)" style={{ flexShrink: 0 }} />
                       <div>
                         <strong>Historical Significance</strong>
-                        <div style={{ marginTop: '8px', color: '#64748b', fontSize: '0.95rem', fontStyle: 'italic' }}>
+                        <div style={{ marginTop: '8px', color: 'var(--text-light)', fontSize: '0.95rem', fontStyle: 'italic' }}>
                           {selectedItem.significance}
                         </div>
                       </div>
@@ -570,7 +570,7 @@ export default function HeritagePage() {
                     {selectedItem.coordinates && (
                       <button 
                         onClick={() => navigate(`/explore?lat=${selectedItem.coordinates.lat}&lng=${selectedItem.coordinates.lng}&name=${encodeURIComponent(selectedItem.name)}&autoRoute=true`)}
-                        style={{ background: 'white', border: '1.5px solid #e2e8f0', borderRadius: '24px', padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer', transition: 'all 0.2s' }}
+                        style={{ background: 'var(--surface-bg)', border: '1.5px solid #e2e8f0', borderRadius: '24px', padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer', transition: 'all 0.2s' }}
                         onMouseOver={(e: any) => { e.currentTarget.style.borderColor = 'var(--cta-blue)'; e.currentTarget.style.background = '#f8fafc'; }}
                         onMouseOut={(e: any) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = 'white'; }}
                       >

@@ -22,7 +22,7 @@ const SearchInput = styled.input`
   transition: all 0.2s;
   
   &:focus {
-    background: white;
+    background: var(--surface-bg);
     border-color: var(--cta-blue);
     box-shadow: 0 0 0 3px rgba(46, 117, 182, 0.1);
   }

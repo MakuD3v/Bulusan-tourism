@@ -15,7 +15,7 @@ const Grid = styled.div`
 `;
 
 const Column = styled.div`
-  background: white;
+  background: var(--surface-bg);
   border-radius: 24px;
   display: flex;
   flex-direction: column;
@@ -45,7 +45,7 @@ const ColumnHeader = styled.div`
   h3 {
     margin: 0;
     font-size: 1.1rem;
-    color: #1e293b;
+    color: var(--text-dark);
     font-family: ${p => p.theme.fonts.heading};
   }
 `;
@@ -93,7 +93,7 @@ const ContentCard = styled(motion.div)`
 
   .meta {
     font-size: 0.8rem;
-    color: #64748b;
+    color: var(--text-light);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -104,7 +104,7 @@ const ContentCard = styled(motion.div)`
     font-size: 0.85rem;
     color: #334155;
     line-height: 1.5;
-    background: white;
+    background: var(--surface-bg);
     padding: 12px;
     border-radius: 12px;
     margin-bottom: 12px;
@@ -129,7 +129,7 @@ const ModerationDashboard: React.FC<ModerationDashboardProps> = ({ attractions, 
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <h2 style={{ fontSize: '1.5rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <h2 style={{ fontSize: '1.5rem', color: 'var(--text-dark)', display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <Search size={24} color="var(--cta-blue)" /> Content Moderation
                 </h2>
                 <AdminSearchBar 
@@ -268,7 +268,7 @@ const ModerationDashboard: React.FC<ModerationDashboardProps> = ({ attractions, 
                 <AnimatePresence>
                     {selectedBlog && (
                         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} style={{ background: 'white', width: '90%', maxWidth: 700, padding: 40, borderRadius: 24 }}>
+                            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} style={{ background: 'var(--surface-bg)', width: '90%', maxWidth: 700, padding: 40, borderRadius: 24 }}>
                                 <h2 style={{ fontSize: '1.8rem' }}>{selectedBlog.title}</h2>
                                 <p style={{ margin: '24px 0', lineHeight: 1.6, color: '#444' }}>{selectedBlog.content}</p>
                                 <button onClick={() => setSelectedBlog(null)} style={{ background: 'var(--cta-blue)', color: 'white', border: 'none', padding: '12px 24px', borderRadius: 12, fontWeight: 700, cursor: 'pointer' }}>Close Preview</button>

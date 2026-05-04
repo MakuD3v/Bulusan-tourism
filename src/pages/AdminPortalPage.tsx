@@ -89,7 +89,7 @@ const NavItem = styled.div<{ $active: boolean }>`
 
 const MainContent = styled.main`
   flex: 1;
-  background: white;
+  background: var(--surface-bg);
   border-radius: 24px;
   box-shadow: 0 10px 40px rgba(0,0,0,0.08);
   padding: 48px;

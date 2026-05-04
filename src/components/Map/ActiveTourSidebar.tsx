@@ -9,22 +9,22 @@ const SidebarContainer = styled.div`
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: white;
+  background: var(--surface-bg);
 `;
 
 const ClassicHeader = styled.div`
   padding: 24px 24px 20px;
-  background: white;
+  background: var(--surface-bg);
   border-bottom: 1px solid #f1f5f9;
   
   .back-btn {
-    display: flex; align-items: center; gap: 4px; border: none; background: none; font-size: 0.75rem; font-weight: 800; color: #64748b; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; transition: color 0.2s;
+    display: flex; align-items: center; gap: 4px; border: none; background: none; font-size: 0.75rem; font-weight: 800; color: var(--text-light); cursor: pointer; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; transition: color 0.2s;
     &:hover { color: var(--cta-blue); }
   }
 
   .label { text-transform: uppercase; font-size: 0.65rem; font-weight: 800; letter-spacing: 2px; color: var(--cta-blue); margin-bottom: 8px; }
   h2 { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 800; color: var(--dark-blue); line-height: 1.1; margin-bottom: 8px; }
-  p { font-size: 0.75rem; color: #64748b; font-weight: 500; }
+  p { font-size: 0.75rem; color: var(--text-light); font-weight: 500; }
 `;
 
 const RouteList = styled.div`

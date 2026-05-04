@@ -250,7 +250,7 @@ const FloatingNav = styled(motion.div)`
 
     .icon-box {
       width: 40px; height: 40px;
-      background: white;
+      background: var(--surface-bg);
       border-radius: 12px;
       display: flex;
       align-items: center;

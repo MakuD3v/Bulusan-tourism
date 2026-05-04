@@ -60,7 +60,7 @@ const Sidebar = styled.div`
     bottom: 0;
     top: auto;
     left: 0;
-    background: white;
+    background: var(--surface-bg);
     box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
     border-top: 1px solid rgba(0,0,0,0.05);
     z-index: 1001; /* Keep above footer on mobile */
@@ -220,7 +220,7 @@ const Header = styled.div`
     display: flex;
     align-items: center;
     gap: 16px;
-    background: white;
+    background: var(--surface-bg);
     padding: 12px 24px;
     border-radius: 20px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
@@ -253,7 +253,7 @@ const ExplorerRank = styled.div<{ $points: number }>`
 `;
 
 const StatCard = styled.div`
-  background: white;
+  background: var(--surface-bg);
   padding: 32px;
   border-radius: 24px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.03);
@@ -268,8 +268,8 @@ const StatCard = styled.div`
     background: #f0f7ff; color: ${(props) => props.theme.colors.ctaBlue};
   }
   
-  .val { font-size: 1.8rem; font-weight: 800; color: #1e293b; }
-  .label { color: #64748b; font-size: 0.9rem; font-weight: 600; }
+  .val { font-size: 1.8rem; font-weight: 800; color: var(--text-dark); }
+  .label { color: var(--text-light); font-size: 0.9rem; font-weight: 600; }
 `;
 
 const ItineraryGrid = styled.div`
@@ -279,7 +279,7 @@ const ItineraryGrid = styled.div`
 `;
 
 const WonderCard = styled(motion.div)`
-  background: white;
+  background: var(--surface-bg);
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0,0,0,0.04);
@@ -295,8 +295,8 @@ const WonderCard = styled(motion.div)`
   
   .info {
     padding: 20px;
-    h4 { font-size: 1.1rem; color: #1e293b; margin-bottom: 8px; }
-    .loc { display: flex; align-items: center; gap: 4px; color: #64748b; font-size: 0.85rem; margin-bottom: 16px; }
+    h4 { font-size: 1.1rem; color: var(--text-dark); margin-bottom: 8px; }
+    .loc { display: flex; align-items: center; gap: 4px; color: var(--text-light); font-size: 0.85rem; margin-bottom: 16px; }
     
     .actions {
       display: flex;
@@ -311,7 +311,7 @@ const WonderCard = styled(motion.div)`
 `;
 
 const ReviewItem = styled.div`
-  background: white;
+  background: var(--surface-bg);
   padding: 24px;
   border-radius: 20px;
   border: 1px solid #f1f5f9;
@@ -413,7 +413,7 @@ export default function AccountPage() {
           <div className="user-card">
             <div className="avatar">{user.name.charAt(0)}</div>
             <div>
-              <div style={{ fontWeight: 800, color: '#1e293b' }}>{user.name}</div>
+              <div style={{ fontWeight: 800, color: 'var(--text-dark)' }}>{user.name}</div>
               <ExplorerRank $points={explorerPoints}>{rank}</ExplorerRank>
             </div>
           </div>
@@ -446,7 +446,7 @@ export default function AccountPage() {
                 </StatCard>
               </div>
 
-              <h3 style={{ fontSize: '1.4rem', color: '#1e293b', marginBottom: '24px' }}>Pinned for Adventure</h3>
+              <h3 style={{ fontSize: '1.4rem', color: 'var(--text-dark)', marginBottom: '24px' }}>Pinned for Adventure</h3>
               <ItineraryGrid>
                 {itineraryItems.slice(0, 3).map(item => (
                   <WonderCard key={`${item.entityType}-${item.id}`} whileHover={{ y: -5 }}>
@@ -465,7 +465,7 @@ export default function AccountPage() {
                   </WonderCard>
                 ))}
                 {itineraryItems.length === 0 && (
-                   <div style={{ gridColumn: '1 / -1', padding: '64px', background: 'white', border: '1px dashed #cbd5e1', borderRadius: '24px', textAlign: 'center' }}>
+                   <div style={{ gridColumn: '1 / -1', padding: '64px', background: 'var(--surface-bg)', border: '1px dashed #cbd5e1', borderRadius: '24px', textAlign: 'center' }}>
                       <Heart size={48} color="#cbd5e1" style={{ marginBottom: '16px' }}/>
                       <p style={{ color: '#94a3b8', fontWeight: 600 }}>No wonders saved yet. Start your journey!</p>
                       <button onClick={() => navigate('/attractions')} style={{ marginTop: '20px', padding: '12px 24px', background: 'var(--cta-blue)', color: 'white', borderRadius: '12px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>Browse Attractions</button>
@@ -484,8 +484,8 @@ export default function AccountPage() {
               transition={{ duration: 0.3 }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-                <h3 style={{ fontSize: '1.6rem', color: '#1e293b' }}>My Saved Wonders</h3>
-                <span style={{ color: '#64748b', fontWeight: 600 }}>{itineraryItems.length} items total</span>
+                <h3 style={{ fontSize: '1.6rem', color: 'var(--text-dark)' }}>My Saved Wonders</h3>
+                <span style={{ color: 'var(--text-light)', fontWeight: 600 }}>{itineraryItems.length} items total</span>
               </div>
               <ItineraryGrid>
                 {itineraryItems.map(item => (
@@ -516,15 +516,15 @@ export default function AccountPage() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <h3 style={{ fontSize: '1.6rem', color: '#1e293b', marginBottom: '32px' }}>Your Community Contributions</h3>
+              <h3 style={{ fontSize: '1.6rem', color: 'var(--text-dark)', marginBottom: '32px' }}>Your Community Contributions</h3>
               <div style={{ maxWidth: '800px' }}>
                 {myReviews.map((rev, idx) => (
                   <ReviewItem key={idx}>
                     <div className="target">
                       <div style={{ width: 40, height: 40, background: '#f0f7ff', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Compass size={20} color="var(--cta-blue)"/></div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Reviewing {rev.targetType}</div>
-                        <div style={{ fontWeight: 800, color: '#1e293b' }}>{rev.targetName}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', fontWeight: 700, textTransform: 'uppercase' }}>Reviewing {rev.targetType}</div>
+                        <div style={{ fontWeight: 800, color: 'var(--text-dark)' }}>{rev.targetName}</div>
                       </div>
                       <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>{rev.date}</div>
                     </div>
@@ -535,7 +535,7 @@ export default function AccountPage() {
                   </ReviewItem>
                 ))}
                 {myReviews.length === 0 && (
-                  <div style={{ textAlign: 'center', padding: '64px', background: 'white', borderRadius: '24px' }}>
+                  <div style={{ textAlign: 'center', padding: '64px', background: 'var(--surface-bg)', borderRadius: '24px' }}>
                     <MessageSquare size={48} color="#cbd5e1" style={{ marginBottom: '16px' }}/>
                     <p style={{ color: '#94a3b8' }}>You haven't posted any reviews yet. Help others explore Bulusan!</p>
                   </div>
@@ -552,8 +552,8 @@ export default function AccountPage() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <h3 style={{ fontSize: '1.6rem', color: '#1e293b', marginBottom: '32px' }}>Profile Settings</h3>
-              <div style={{ background: 'white', padding: '40px', borderRadius: '24px', maxWidth: '600px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+              <h3 style={{ fontSize: '1.6rem', color: 'var(--text-dark)', marginBottom: '32px' }}>Profile Settings</h3>
+              <div style={{ background: 'var(--surface-bg)', padding: '40px', borderRadius: '24px', maxWidth: '600px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                   <div>
                     <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569' }}>Public Display Name</label>

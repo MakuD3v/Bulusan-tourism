@@ -61,7 +61,7 @@ const CategoryPill = styled.button<{ $active: boolean }>`
 `;
 
 const ExpandBtn = styled.button`
-  background: white;
+  background: var(--surface-bg);
   border: 1px solid #e2e8f0;
   border-radius: 30px;
   padding: 6px 16px;

@@ -32,7 +32,7 @@ const CloseButton = styled.button`
   position: absolute;
   top: 32px;
   right: 60px;
-  background: white;
+  background: var(--surface-bg);
   border: 1px solid #e2e8f0;
   color: #475569;
   padding: 10px 20px;
@@ -48,7 +48,7 @@ const CloseButton = styled.button`
 
   &:hover {
     background: #f1f5f9;
-    color: #1e293b;
+    color: var(--text-dark);
   }
 
   @media (max-width: 1024px) {
@@ -199,7 +199,7 @@ const SwitcherHeader = styled.div`
   display: flex;
   gap: 12px;
   margin-bottom: 16px;
-  background: white;
+  background: var(--surface-bg);
   padding: 8px;
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.03);
@@ -225,7 +225,7 @@ const OfferItem = styled.div`
   display: flex;
   align-items: center;
   gap: 16px;
-  background: white;
+  background: var(--surface-bg);
   border: 1px solid rgba(0,0,0,0.05);
   padding: 16px;
   border-radius: 16px;
@@ -239,7 +239,7 @@ const OfferItem = styled.div`
 
   .offer-details {
     flex: 1;
-    .name { font-weight: 700; color: #1e293b; margin-bottom: 4px; }
+    .name { font-weight: 700; color: var(--text-dark); margin-bottom: 4px; }
     .price { font-weight: 900; color: var(--cta-blue); }
   }
 `;

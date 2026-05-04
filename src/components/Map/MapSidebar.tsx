@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const SidebarContainer = styled.div`
   display: flex;
   flex-direction: column;
-  background: white;
+  background: var(--surface-bg);
 
   /* Desktop: must fill the sidebar's fixed height */
   @media (min-width: 1024px) {
@@ -20,7 +20,7 @@ const SidebarContainer = styled.div`
 
 const ClassicHeader = styled.div`
   padding: 16px 24px 8px;
-  background: white;
+  background: var(--surface-bg);
   
   .label {
     text-transform: uppercase;
@@ -47,7 +47,7 @@ const ClassicHeader = styled.div`
   
   p {
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--text-light);
     font-weight: 500;
     margin-bottom: 8px;
 
@@ -86,7 +86,7 @@ const DrawerHandle = styled.div`
 
 const SearchSection = styled.div`
   padding: 0 18px 16px;
-  background: white;
+  background: var(--surface-bg);
   border-bottom: 1px solid #f1f5f9;
   display: flex;
   flex-direction: column;
@@ -141,7 +141,7 @@ const SearchBar = styled.div`
   position: relative;
 
   &:focus-within {
-    background: white;
+    background: var(--surface-bg);
     border-color: var(--cta-blue);
     box-shadow: 0 0 0 3px rgba(46, 117, 182, 0.08);
   }
@@ -150,7 +150,7 @@ const SearchBar = styled.div`
     border: none; outline: none; background: transparent;
     font-size: 0.8rem; margin-left: 8px; width: 100%;
     padding-right: 25px; /* Space for clear button */
-    color: #1e293b; font-weight: 500;
+    color: var(--text-dark); font-weight: 500;
     &::placeholder { color: #94a3b8; }
   }
 
@@ -254,7 +254,7 @@ const CardContent = styled.div`
 
   .loc {
     font-size: 0.55rem;
-    color: #64748b;
+    color: var(--text-light);
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;

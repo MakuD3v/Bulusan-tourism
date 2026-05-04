@@ -5,7 +5,7 @@ import { MapPin, Star, Heart, Zap, TrendingUp, Award, Users } from 'lucide-react
 import { getMapIconUrl } from '../Admin/CategoryTagConfig';
 
 const CardWrapper = styled(motion.div)`
-  background: white;
+  background: var(--surface-bg);
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0,0,0,0.05);

@@ -76,7 +76,7 @@ const getStableCategoryIcon = (category: string) => {
 
 const PopupContent = styled.div`
   width: 100%;
-  background: white;
+  background: var(--surface-bg);
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 10px 40px rgba(0,0,0,0.1);
@@ -127,7 +127,7 @@ const PopupContent = styled.div`
       transition: all 0.2s;
       
       &:hover {
-        background: white;
+        background: var(--surface-bg);
         transform: scale(1.1);
       }
     }
@@ -137,7 +137,7 @@ const PopupContent = styled.div`
     padding: 0 16px 16px;
     position: relative;
     z-index: 2;
-    background: white;
+    background: var(--surface-bg);
     
     .badges-wrapper {
       position: absolute;
@@ -175,7 +175,7 @@ const PopupContent = styled.div`
     
     .rating-location-row {
        display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 2px;
-       font-size: 0.75rem; color: #64748b; font-weight: 600;
+       font-size: 0.75rem; color: var(--text-light); font-weight: 600;
        
        .category-label {
          color: var(--cta-blue);
@@ -201,7 +201,7 @@ const PopupContent = styled.div`
     h3 { margin-bottom: 2px; font-size: 1.2rem; color: var(--dark-blue); font-family: 'Playfair Display', serif; font-weight: 800; }
     
     .location-row {
-       font-size: 0.75rem; color: #64748b; font-weight: 600; display: flex; align-items: center; gap: 4px; margin-bottom: 12px;
+       font-size: 0.75rem; color: var(--text-light); font-weight: 600; display: flex; align-items: center; gap: 4px; margin-bottom: 12px;
     }
     
     p { font-size: 0.85rem; color: #475569; margin-bottom: 16px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -216,7 +216,7 @@ const PopupContent = styled.div`
 `;
 
 const LocationPrompt = styled(motion.div)`
-  position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); width: min(360px, 90%); background: white; border-radius: 20px; padding: 28px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); z-index: 2000; text-align: center;
+  position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); width: min(360px, 90%); background: var(--surface-bg); border-radius: 20px; padding: 28px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); z-index: 2000; text-align: center;
   .prompt-buttons { display: flex; flex-direction: column; gap: 10px; }
   .btn-primary { background: #2e75b6; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; }
   .btn-secondary { background: #f0f4f8; color: #333; border: none; padding: 12px; border-radius: 12px; font-weight: 600; cursor: pointer; }
@@ -229,7 +229,7 @@ const MobileBottomSheet = styled(motion.div)`
   left: 12px;
   right: 12px;
   width: auto;
-  background: white;
+  background: var(--surface-bg);
   border-radius: 24px;
   padding: 24px;
   box-shadow: 0 -4px 40px rgba(0,0,0,0.15), 0 8px 32px rgba(0,0,0,0.1);
@@ -285,7 +285,7 @@ const TravelStatsOverlay = styled(motion.div)`
   }
 
   h4 { margin-bottom: 15px; font-size: 0.9rem; color: var(--dark-blue); font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
-  .stats-content { display: flex; justify-content: space-between; margin-bottom: 20px; .stat-item { flex: 1; .val { font-size: 1.2rem; font-weight: 800; color: var(--dark-blue); } .lab { font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; } } }
+  .stats-content { display: flex; justify-content: space-between; margin-bottom: 20px; .stat-item { flex: 1; .val { font-size: 1.2rem; font-weight: 800; color: var(--dark-blue); } .lab { font-size: 0.65rem; color: var(--text-light); font-weight: 600; text-transform: uppercase; } } }
   .mode-selection { display: flex; background: #f1f5f9; padding: 4px; border-radius: 12px; margin-bottom: 12px; justify-content: space-between; }
   .close-row { display: flex; gap: 8px; button { flex: 1; padding: 10px; border-radius: 10px; border: none; font-weight: 700; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; &.primary { background: var(--dark-blue); color: white; } &.secondary { background: #e2e8f0; color: #475569; } } }
 `;

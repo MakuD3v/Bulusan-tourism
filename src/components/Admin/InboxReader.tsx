@@ -22,7 +22,7 @@ const InboxReader: React.FC<InboxReaderProps> = ({ inquiries }) => {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
       <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr', gap: '24px', height: '600px' }}>
-        <div style={{ background: 'white', borderRadius: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ background: 'var(--surface-bg)', borderRadius: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '16px', borderBottom: '1px solid #eee' }}>
             <AdminSearchBar 
               value={searchTerm} 
@@ -42,7 +42,7 @@ const InboxReader: React.FC<InboxReaderProps> = ({ inquiries }) => {
             )}
           </div>
         </div>
-        <div style={{ background: 'white', borderRadius: '20px', padding: '40px' }}>
+        <div style={{ background: 'var(--surface-bg)', borderRadius: '20px', padding: '40px' }}>
           {selectedInquiry ? (
             <>
               <h3 style={{ fontSize: '1.4rem' }}>{selectedInquiry.subject}</h3>

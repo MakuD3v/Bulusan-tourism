@@ -108,7 +108,7 @@ const PillarGrid = styled.div`
 `;
 
 const PillarCard = styled(motion.div)`
-  background: white;
+  background: var(--surface-bg);
   padding: 56px 44px;
   border-radius: 36px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.04);
@@ -236,7 +236,7 @@ const PillarCard = styled(motion.div)`
 // ─── Featured Section ─────────────────────────────────────────────────────────
 const FeaturedSection = styled(motion.section)`
   padding: 60px 24px 80px;
-  background: white;
+  background: var(--surface-bg);
 `;
 
 // ─── Promotional Section ──────────────────────────────────────────────────────
@@ -440,7 +440,7 @@ const PromoText = styled.div`
 const CtaSection = styled(motion.section)`
   padding: 100px 24px;
   text-align: center;
-  background: white;
+  background: var(--surface-bg);
   position: relative;
   overflow: hidden;
 
@@ -669,8 +669,8 @@ const DiscoverPage = () => {
                 onClick={() => navigate('/attractions')}
                 whileHover={{ scale: 1.05, boxShadow: '0 20px 40px rgba(0,0,0,0.25)' }}
                 style={{ 
-                  background: 'white', 
-                  color: '#0b2147', 
+                  background: 'var(--surface-bg)', 
+                  color: 'var(--dark-blue)', 
                   padding: '16px 40px', 
                   borderRadius: '50px', 
                   border: 'none', 

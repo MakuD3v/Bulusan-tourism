@@ -104,7 +104,7 @@ const ControlsContainer = styled.div`
 const SearchBar = styled.div`
   display: flex;
   align-items: center;
-  background: white;
+  background: var(--surface-bg);
   padding: 16px 28px;
   border-radius: 40px;
   border: 1px solid rgba(0,0,0,0.04);
@@ -187,7 +187,7 @@ const ModalOverlay = styled(motion.div)`
 `;
 
 const ModalContent = styled(motion.div)`
-  background: white;
+  background: var(--surface-bg);
   border-radius: 32px;
   width: 100%;
   max-width: 1200px;

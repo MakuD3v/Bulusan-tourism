@@ -39,7 +39,7 @@ const Overlay = styled(motion.div)`
 `;
 
 const Modal = styled(motion.div)`
-  background: white;
+  background: var(--surface-bg);
   border-radius: 24px;
   width: 100%;
   max-width: 400px;
@@ -70,13 +70,13 @@ const Content = styled.div`
   
   h3 {
     font-size: 1.5rem;
-    color: #1e293b;
+    color: var(--text-dark);
     margin: 0 0 12px 0;
     font-weight: 800;
   }
   
   p {
-    color: #64748b;
+    color: var(--text-light);
     font-size: 1rem;
     line-height: 1.5;
     margin: 0;
@@ -103,7 +103,7 @@ const ButtonGroup = styled.div`
   }
   
   .cancel-btn {
-    color: #64748b;
+    color: var(--text-light);
     border-right: 1px solid #f1f5f9;
   }
   

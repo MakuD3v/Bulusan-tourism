@@ -52,7 +52,7 @@ const BlockerCard = styled.div`
   }
 
   button {
-    background: white;
+    background: var(--surface-bg);
     color: #0a192f;
     border: none;
     padding: 14px 28px;

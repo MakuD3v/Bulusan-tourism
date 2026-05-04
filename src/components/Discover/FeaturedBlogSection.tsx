@@ -7,7 +7,7 @@ import { useBlogs } from '../../hooks/useFirestore';
 
 const SectionWrapper = styled.section`
   padding: 60px 24px;
-  background: white;
+  background: var(--surface-bg);
   position: relative;
   overflow: hidden;
 
@@ -160,7 +160,7 @@ const AuthorInfo = styled.div`
     }
 
     .date {
-      color: #64748b;
+      color: var(--text-light);
       font-size: 0.8rem;
       font-weight: 600;
     }

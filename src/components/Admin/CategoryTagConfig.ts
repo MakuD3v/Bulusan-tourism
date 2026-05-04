@@ -27,7 +27,7 @@ export const ATTRACTION_CATEGORIES: CategoryDef[] = [
   { label: 'Landmarks',  icon: 'Landmark',        bg: '#f5f5f4', color: '#44403c' },
   { label: 'Park',       icon: 'Leaf',            bg: '#d1fae5', color: '#065f46' },
   { label: 'Ruins',      icon: 'Layers',          bg: '#fef3c7', color: '#92400e' },
-  { label: 'Other',      icon: 'MapPin',          bg: '#f1f5f9', color: '#64748b' },
+  { label: 'Other',      icon: 'MapPin',          bg: '#f1f5f9', color: 'var(--text-light)' },
   { label: 'Church',         icon: 'Church',          bg: '#fef9c3', color: '#a16207' },
   { label: 'Fort',           icon: 'Castle',          bg: '#fee2e2', color: '#b91c1c' },
   { label: 'Museum',         icon: 'Landmark',        bg: '#dbeafe', color: '#1d4ed8' },

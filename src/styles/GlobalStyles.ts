@@ -6,6 +6,7 @@ const GlobalStyles = createGlobalStyle`
     --dark-blue: ${(props) => props.theme.colors.darkBlue};
     --cta-blue: ${(props) => props.theme.colors.ctaBlue};
     --light-bg: ${(props) => props.theme.colors.lightBg};
+    --surface-bg: ${(props) => props.theme.colors.white};
     --text-dark: ${(props) => props.theme.colors.textDark};
     --text-light: ${(props) => props.theme.colors.textLight};
     

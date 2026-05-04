@@ -83,7 +83,7 @@ const NavButton = styled.button`
   width: 48px; /* Reduced from 58px */
   height: 48px;
   border-radius: 50%;
-  background: white;
+  background: var(--surface-bg);
   border: 1px solid rgba(0, 0, 0, 0.07);
   display: flex;
   align-items: center;

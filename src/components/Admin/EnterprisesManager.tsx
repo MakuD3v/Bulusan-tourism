@@ -12,7 +12,7 @@ import { useAlert } from '../Common/AlertProvider';
 const MapPicker = lazy(() => import('./MapPicker'));
 
 const ManagerContainer = styled(motion.div)`
-  background: white; border-radius: 20px; padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  background: var(--surface-bg); border-radius: 20px; padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);
 `;
 
 const HeaderRow = styled.div`
@@ -27,7 +27,7 @@ const Table = styled.table`
   th, td { padding: 16px; text-align: left; border-bottom: 1px solid #eee; }
   th { font-weight: 600; color: #666; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
   td { color: #333; }
-  .row-actions { display: flex; gap: 8px; button { background: #f8fafc; border: 1px solid #e2e8f0; padding: 6px; border-radius: 6px; cursor: pointer; color: #64748b; &:hover { color: ${(props) => props.theme.colors.ctaBlue}; background: white; } &.delete:hover { color: #ef4444; } } }
+  .row-actions { display: flex; gap: 8px; button { background: #f8fafc; border: 1px solid #e2e8f0; padding: 6px; border-radius: 6px; cursor: pointer; color: var(--text-light); &:hover { color: ${(props) => props.theme.colors.ctaBlue}; background: var(--surface-bg); } &.delete:hover { color: #ef4444; } } }
 `;
 
 const FormModalOverlay = styled(motion.div)`
@@ -35,7 +35,7 @@ const FormModalOverlay = styled(motion.div)`
 `;
 
 const FormModalContent = styled(motion.div)`
-  background: white; width: 95%; max-width: 1200px; height: 90vh; border-radius: 24px; position: relative; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+  background: var(--surface-bg); width: 95%; max-width: 1200px; height: 90vh; border-radius: 24px; position: relative; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
 `;
 
 const ModalHeader = styled.div`
@@ -53,19 +53,19 @@ const LeftPane = styled.div`
 
 const RightPane = styled.div`
   flex: 1; padding: 40px; display: flex; flex-direction: column; background: #f8fafc; overflow-y: auto;
-  .map-container { flex: 1; background: white; border-radius: 20px; border: 1px solid #e2e8f0; margin-top: 16px; margin-bottom: 24px; min-height: 400px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+  .map-container { flex: 1; background: var(--surface-bg); border-radius: 20px; border: 1px solid #e2e8f0; margin-top: 16px; margin-bottom: 24px; min-height: 400px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
 `;
 
 const FormGroup = styled.div`
   display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px;
   label { font-weight: 800; font-size: 0.9rem; color: #475569; display:flex; align-items: center; gap: 6px; }
-  input, textarea, select { padding: 16px 20px; border: 1px solid #e2e8f0; border-radius: 16px; font-size: 1rem; background: white; outline: none; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); &:focus { border-color: var(--cta-blue); box-shadow: 0 0 0 4px rgba(46, 117, 182, 0.1); } }
+  input, textarea, select { padding: 16px 20px; border: 1px solid #e2e8f0; border-radius: 16px; font-size: 1rem; background: var(--surface-bg); outline: none; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); &:focus { border-color: var(--cta-blue); box-shadow: 0 0 0 4px rgba(46, 117, 182, 0.1); } }
   textarea { resize: vertical; min-height: 120px; }
 `;
 
 const DropZone = styled.div<{ $isDragActive: boolean }>`
   border: 2px dashed ${p => p.$isDragActive ? 'var(--cta-blue)' : '#cbd5e1'}; background: ${p => p.$isDragActive ? '#f0f7ff' : '#f8fafc'};
-  border-radius: 16px; padding: 32px; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 12px; color: #64748b; margin-bottom: 20px;
+  border-radius: 16px; padding: 32px; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--text-light); margin-bottom: 20px;
   &:hover { border-color: var(--cta-blue); background: #f0f7ff; }
   input[type="file"] { display: none; }
 `;
@@ -354,7 +354,7 @@ export default function EnterprisesManager({ enterprises }: { enterprises?: any[
                   {/* Offers Section */}
                   <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '20px', border: '1px solid #e2e8f0', marginBottom: '32px' }}>
                     <div style={{ marginBottom: 0 }}>
-                        <label style={{ fontSize: '1rem', fontWeight: 800, color: '#1e293b', marginBottom: '12px', display: 'block' }}>Offers Builder (Menu / Services)</label>
+                        <label style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-dark)', marginBottom: '12px', display: 'block' }}>Offers Builder (Menu / Services)</label>
                         
                         <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
                           <input placeholder="Offer Name (e.g. Standard Room)" value={newOfferName} onChange={e => setNewOfferName(e.target.value)} style={{ flex: 1, minWidth: '200px', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }} />
@@ -375,7 +375,7 @@ export default function EnterprisesManager({ enterprises }: { enterprises?: any[
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           {offers.map((o) => (
-                             <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', padding: '12px 16px', borderRadius: '14px', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                             <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-bg)', padding: '12px 16px', borderRadius: '14px', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                    {o.image ? <img src={o.image} alt={o.name} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover' }} /> : <div style={{ width: 40, height: 40, borderRadius: 8, background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ImageIcon size={16} color="#94a3b8" /></div>}
                                    <span style={{ fontWeight: 700, color: '#334155' }}>{o.name}</span>
@@ -502,7 +502,7 @@ export default function EnterprisesManager({ enterprises }: { enterprises?: any[
                 </LeftPane>
                 
                 <RightPane>
-                  <label style={{ fontWeight: 800, fontSize: '1rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                  <label style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-dark)', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
                     <Map size={22} color="var(--cta-blue)" strokeWidth={2.5} /> Pinpoint Location
                   </label>
                   <div className="map-container">
@@ -514,7 +514,7 @@ export default function EnterprisesManager({ enterprises }: { enterprises?: any[
                     </Suspense>
                   </div>
                   <div>
-                    <p style={{ textAlign: 'center', fontSize: '0.85rem', color: '#64748b', marginTop: '16px', fontWeight: 500 }}>
+                    <p style={{ textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-light)', marginTop: '16px', fontWeight: 500 }}>
                       Pinpoint the exact location on the map for visitors to navigate.
                     </p>
                   </div>

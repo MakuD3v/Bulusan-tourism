@@ -107,7 +107,7 @@ const ControlsContainer = styled.div`
 const SearchBar = styled.div`
   display: flex;
   align-items: center;
-  background: white;
+  background: var(--surface-bg);
   padding: 12px 24px;
   border-radius: 30px;
   border: 1px solid rgba(0,0,0,0.1);
@@ -219,7 +219,7 @@ const ModalOverlay = styled(motion.div)`
 `;
 
 const FullPostModal = styled(motion.div)`
-  background: white;
+  background: var(--surface-bg);
   width: 90%;
   max-width: 900px;
   border-radius: 32px;
@@ -266,7 +266,7 @@ const FullPostModal = styled(motion.div)`
 // Local mockPosts removed
 
 const CreateModalContent = styled(motion.div)`
-  background: white;
+  background: var(--surface-bg);
   width: 90%;
   max-width: 600px;
   max-height: 90vh;

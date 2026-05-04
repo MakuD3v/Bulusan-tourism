@@ -52,7 +52,7 @@ const SidebarSection = styled.div<{ $isOpen: boolean }>`
   left: 0;
   right: 0;
   z-index: 50;
-  background: white;
+  background: var(--surface-bg);
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
   box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.12);
@@ -114,7 +114,7 @@ const SidebarContent = styled.div<{ $isOpen: boolean }>`
 const MobileSidebarHandle = styled.button<{ $isOpen: boolean }>`
   width: 100%;
   padding: 10px 20px;
-  background: white;
+  background: var(--surface-bg);
   border: none;
   display: flex;
   align-items: center;
@@ -169,7 +169,7 @@ const DesktopToggleBtn = styled.button<{ $isOpen: boolean }>`
     border-radius: 10px 0 0 10px; /* Rounded on left, flush on right */
     border: 1px solid rgba(0, 0, 0, 0.07);
     border-right: none; /* Seamlessly joins the sidebar edge */
-    background: white;
+    background: var(--surface-bg);
     color: var(--dark-blue);
     padding: 0;
     box-shadow: -4px 0 16px rgba(0, 0, 0, 0.08);

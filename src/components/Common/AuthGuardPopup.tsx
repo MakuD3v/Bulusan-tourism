@@ -112,7 +112,7 @@ const CloseButton = styled.button`
   right: 16px;
   background: none;
   border: none;
-  color: #64748B;
+  color: var(--text-light);
   cursor: pointer;
   padding: 8px;
   border-radius: 50%;
@@ -120,7 +120,7 @@ const CloseButton = styled.button`
 
   &:hover {
     background: rgba(0, 0, 0, 0.05);
-    color: #1E293B;
+    color: var(--text-dark);
   }
 `;
 

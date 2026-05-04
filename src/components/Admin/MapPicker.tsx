@@ -35,7 +35,7 @@ const CoordinatesDisplay = styled.div`
     z-index: 1000;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     border: 1px solid #eee;
-    color: #1e293b;
+    color: var(--text-dark);
 `;
 
 interface MapPickerProps {

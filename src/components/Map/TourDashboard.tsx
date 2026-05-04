@@ -14,7 +14,7 @@ const ALL_CATEGORIES = [...ATTRACTION_CATEGORIES, ...ENTERPRISE_CATEGORIES];
 const Overlay = styled(motion.div)`
   position: fixed;
   top: 0; left: 0; width: 100vw; height: 100vh;
-  background: white;
+  background: var(--surface-bg);
   z-index: 9999;
   display: flex;
   flex-direction: column;
@@ -23,7 +23,7 @@ const Overlay = styled(motion.div)`
 
 const Header = styled.div`
   padding: 24px 32px;
-  background: white;
+  background: var(--surface-bg);
   border-bottom: 1px solid #f1f5f9;
   display: flex;
   justify-content: space-between;
@@ -31,7 +31,7 @@ const Header = styled.div`
 
   .titles {
     h1 { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--dark-blue); margin-bottom: 4px; }
-    p { color: #64748b; font-size: 0.9rem; font-weight: 500; }
+    p { color: var(--text-light); font-size: 0.9rem; font-weight: 500; }
   }
 
   button.close {
@@ -41,7 +41,7 @@ const Header = styled.div`
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer;
-    color: #64748b;
+    color: var(--text-light);
     transition: all 0.2s;
     &:hover { background: #e2e8f0; color: #0f172a; }
   }
@@ -85,10 +85,10 @@ const SelectTourCard = styled.div<{ $active: boolean }>`
   transition: all 0.2s;
   box-shadow: ${props => props.$active ? '0 10px 25px rgba(46, 117, 182, 0.1)' : 'none'};
 
-  &:hover { background: white; border-color: ${props => props.$active ? 'var(--cta-blue)' : '#e2e8f0'}; }
+  &:hover { background: var(--surface-bg); border-color: ${props => props.$active ? 'var(--cta-blue)' : '#e2e8f0'}; }
 
   h3 { font-size: 1.1rem; color: var(--dark-blue); font-weight: 800; margin-bottom: 4px; }
-  p { font-size: 0.8rem; color: #64748b; font-weight: 500; }
+  p { font-size: 0.8rem; color: var(--text-light); font-weight: 500; }
 `;
 
 const CreateBtn = styled.button`
@@ -114,7 +114,7 @@ const BuilderView = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: white;
+  background: var(--surface-bg);
   overflow: hidden;
 `;
 
@@ -210,7 +210,7 @@ const SelectedList = styled.div`
   h4 { font-size: 0.9rem; color: var(--dark-blue); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
 
   .dest-card {
-    background: white;
+    background: var(--surface-bg);
     padding: 12px;
     border-radius: 12px;
     margin-bottom: 10px;
@@ -221,7 +221,7 @@ const SelectedList = styled.div`
     .num { font-weight: 800; color: var(--cta-blue); margin-right: 12px; font-size: 1.2rem; }
     .info { flex: 1; overflow: hidden; }
     .info h5 { font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--dark-blue); }
-    .info p { font-size: 0.65rem; color: #64748b; text-transform: uppercase; font-weight: 800; }
+    .info p { font-size: 0.65rem; color: var(--text-light); text-transform: uppercase; font-weight: 800; }
     button { background: none; border: none; color: #94a3b8; cursor: pointer; &:hover { color: #ef4444; } }
   }
 
@@ -273,7 +273,7 @@ const CatalogArea = styled.div`
 `;
 
 const CatalogCard = styled.div<{ $selected: boolean }>`
-  background: white;
+  background: var(--surface-bg);
   border: 2px solid ${props => props.$selected ? 'var(--cta-blue)' : '#e2e8f0'};
   border-radius: 16px;
   overflow: hidden;
@@ -298,7 +298,7 @@ const CatalogCard = styled.div<{ $selected: boolean }>`
   
   .info { padding: 12px; position: relative; z-index: 1; text-shadow: 0 1px 3px rgba(255,255,255,0.8), 0 2px 6px rgba(255,255,255,1); }
   h5 { font-size: 0.9rem; margin-bottom: 2px; color: var(--dark-blue); font-weight: 800; }
-  p { font-size: 0.7rem; color: #64748b; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+  p { font-size: 0.7rem; color: var(--text-light); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
 
   .check {
     position: absolute; top: 12px; right: 12px;

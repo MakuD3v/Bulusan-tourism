@@ -170,7 +170,7 @@ const MobileDrawer = styled(motion.div)`
   width: 85%;
   max-width: 320px;
   height: 100vh;
-  background: white;
+  background: var(--surface-bg);
   z-index: 1100;
   padding: 80px 32px;
   display: flex;
@@ -214,7 +214,7 @@ const UserMenu = styled(motion.div)`
   top: calc(100% + 12px);
   right: 0;
   width: 220px;
-  background: white;
+  background: var(--surface-bg);
   border-radius: 20px;
   padding: 10px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.1);
@@ -335,8 +335,8 @@ const Header = ({ isTransparent }: { isTransparent: boolean }) => {
                   exit={{ opacity: 0, scale: 0.95, y: 10 }}
                 >
                   <div style={{ padding: '8px 16px', borderBottom: '1px solid #f1f5f9', marginBottom: '8px' }}>
-                    <div style={{ fontWeight: 700, color: '#1e293b', fontSize: '0.9rem' }}>{user.name}</div>
-                    <div style={{ fontSize: '0.7rem', color: '#64748b' }}>{user.email}</div>
+                    <div style={{ fontWeight: 700, color: 'var(--text-dark)', fontSize: '0.9rem' }}>{user.name}</div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-light)' }}>{user.email}</div>
                   </div>
                   <MenuLink to="/account" onClick={() => setShowMenu(false)}><UserCircle size={16} /> My Account</MenuLink>
                   {role === 'ADMIN' && (
