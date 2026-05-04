@@ -47,8 +47,8 @@ async function main() {
         category: post.category,
         excerpt: post.excerpt,
         content: post.content,
-        authorName: post.author.name,
-        authorAvatar: post.author.avatar,
+        authorName: post.authorName,
+        authorAvatar: post.authorAvatar,
         image: post.image,
         readTime: post.readTime
       }
