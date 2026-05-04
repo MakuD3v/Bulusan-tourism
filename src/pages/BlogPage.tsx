@@ -423,7 +423,7 @@ const BlogPage = () => {
 
           <button
             onClick={() => user ? setShowCreateModal(true) : setIsAuthPopupOpen(true)}
-            style={{ marginLeft: 'auto', background: 'var(--dark-blue)', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '30px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+            style={{ marginLeft: 'auto', background: 'var(--cta-blue)', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '30px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
           >
             <Plus size={18} /> Share Your Story
           </button>

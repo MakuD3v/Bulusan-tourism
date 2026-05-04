@@ -334,7 +334,7 @@ const EnterpriseDetailsPage = ({ item: selectedItem, onClose }: { item: any, onC
               <DetailTags>
                 {/* Category tags */}
                 {(Array.isArray(selectedItem.categories) ? selectedItem.categories : [selectedItem.categories]).filter(Boolean).map((cat: string) => (
-                  <span key={cat} className="tag-pill" style={{ background: 'var(--dark-blue)', color: 'white' }}>
+                  <span key={cat} className="tag-pill" style={{ background: 'var(--cta-blue)', color: 'white' }}>
                     {cat}
                   </span>
                 ))}
