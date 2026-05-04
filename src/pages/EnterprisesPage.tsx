@@ -1,0 +1,707 @@
+import styled from 'styled-components';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, MapPin, Heart, Star, X, Clock, DollarSign, Info, Sparkles, Award, TrendingUp, Users, Zap } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useEnterprises } from '../hooks/useFirestore';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Enterprise, Review } from '../data/types';
+import MediaCarousel from '../components/Common/MediaCarousel';
+import StarRating from '../components/Common/StarRating';
+import AuthGuardPopup from '../components/Common/AuthGuardPopup';
+import { useAuth } from '../hooks/useAuth';
+import { dbService } from '../api/db';
+import SmartMedia from '../components/Common/SmartMedia';
+import StandardPageHeader from '../components/Common/StandardPageHeader';
+import DiscoveryCard from '../components/Common/DiscoveryCard';
+import SectionHeader from '../components/Common/SectionHeader';
+import CentricCarousel from '../components/Common/CentricCarousel';
+import SharedCategoryScroller from '../components/Common/SharedCategoryScroller';
+import { ENTERPRISE_CATEGORIES, getMapIconUrl } from '../components/Admin/CategoryTagConfig';
+import { getDynamicTags } from '../utils/tagUtils';
+import EnterpriseDetailsPage from './EnterpriseDetailsPage';
+
+const PageContainer = styled(motion.div)`
+  width: 100%;
+  padding: 0 64px 64px;
+
+  @media (max-width: 1024px) {
+    padding: 0 32px 48px;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0 20px 40px;
+  }
+`;
+
+const HeroContainer = styled.div`
+  position: relative;
+  width: 100vw;
+  margin-left: -64px;
+  padding: 0 64px 32px;
+  margin-bottom: 40px;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  
+  @media (max-width: 1024px) {
+    margin-left: -32px;
+    padding: 0 32px 24px;
+  }
+
+  @media (max-width: 768px) {
+    margin-left: -20px;
+    padding: 0 20px 20px;
+  }
+
+  .video-container {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    overflow: hidden;
+    z-index: 0;
+  }
+
+  .video-bg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .hero-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(
+      to bottom,
+      rgba(245, 248, 252, 0.4) 0%,
+      rgba(245, 248, 252, 0.8) 50%,
+      ${(props) => props.theme.colors.lightBg} 100%
+    );
+    z-index: 1;
+  }
+
+  & > section {
+    background: transparent !important;
+    position: relative;
+    z-index: 2;
+  }
+
+  .controls-wrapper {
+    position: relative;
+    z-index: 2;
+  }
+`;
+
+import FeaturedCarouselCard from '../components/Common/FeaturedCarouselCard';
+
+const ControlsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 32px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+  align-items: center;
+`;
+
+const SearchBar = styled.div`
+  display: flex;
+  align-items: center;
+  background: white;
+  padding: 16px 28px;
+  border-radius: 40px;
+  border: 1px solid rgba(0,0,0,0.04);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+  width: 100%;
+  max-width: 600px;
+
+  input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 1.1rem;
+    margin-left: 12px;
+    width: 100%;
+    font-family: ${(props) => props.theme.fonts.body};
+    color: ${(props) => props.theme.colors.textDark};
+    
+    &::placeholder { color: #94a3b8; }
+  }
+`;
+
+const FilterAreaContainer = styled.div`
+  flex: 1;
+  min-width: 0;
+  
+  @media (max-width: 1024px) {
+    width: 100%;
+  }
+`;
+
+const Grid = styled(motion.div)`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 640px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+`;
+
+const HorizontalScroller = styled.div`
+  display: flex;
+  overflow-x: auto;
+  gap: 20px;
+  padding-bottom: 24px;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+  
+  > div {
+    flex: 0 0 320px;
+    
+    @media (max-width: 768px) {
+       flex: 0 0 280px;
+    }
+  }
+`;
+
+// Glassmorphism Modal placeholder
+const ModalOverlay = styled(motion.div)`
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(11, 33, 71, 0.4);
+  backdrop-filter: blur(8px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+`;
+
+const ModalContent = styled(motion.div)`
+  background: white;
+  border-radius: 32px;
+  width: 100%;
+  max-width: 1200px;
+  height: 90vh;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  
+  .immersive-carousel-wrapper {
+     position: absolute;
+     top: 0; left: 0; width: 100%; height: 100%;
+  }
+  
+  .immersive-carousel-wrapper > div {
+     border-radius: 0 !important;
+  }
+`;
+
+const ImmersiveHeaderContainer = styled.div`
+  position: relative;
+  width: 100%;
+  height: 45vh;
+  min-height: 400px;
+  flex-shrink: 0;
+
+  .close-btn {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    z-index: 100;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.4);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+    
+    &:hover {
+      background: rgba(255,255,255,0.4);
+    }
+  }
+
+  .header-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 80px 40px 40px;
+    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
+    color: white;
+    z-index: 10;
+    pointer-events: none;
+
+    span {
+      font-size: 0.85rem;
+      color: #93c5fd;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      display: block;
+      margin-bottom: 8px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    h2 {
+      font-size: 3.5rem;
+      font-family: 'Playfair Display', serif;
+      margin: 0 0 16px 0;
+      background: linear-gradient(135deg, #fff 0%, #93c5fd 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      line-height: 1.1;
+      
+      @media (max-width: 768px) {
+        font-size: 2.5rem;
+      }
+    }
+    
+    .tags-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      pointer-events: auto;
+      
+      .tag-pill {
+        background: rgba(255,255,255,0.2);
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255,255,255,0.3);
+        color: white;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+      }
+      
+      .dynamic-pill {
+        background: rgba(255, 215, 0, 0.3);
+        border-color: rgba(255, 215, 0, 0.6);
+        color: white;
+      }
+    }
+  }
+`;
+
+const DetailTags = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  
+  .tag-pill {
+    background: #f0f7ff;
+    color: var(--cta-blue);
+    padding: 8px 18px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    border: 1px solid rgba(46, 117, 182, 0.1);
+    box-shadow: 0 4px 12px rgba(46, 117, 182, 0.05);
+    transition: all 0.2s;
+    
+    &:hover {
+      background: #e0efff;
+      transform: translateY(-2px);
+    }
+  }
+  
+  .dynamic-pill {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);
+    &:hover { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+  }
+`;
+
+const ModalBody = styled.div`
+  padding: 40px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  
+  /* Scrollbar refinement */
+  &::-webkit-scrollbar { width: 6px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+`;
+
+const MetaGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 48px;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const InfoCard = styled.div<{ $glass?: boolean }>`
+  background: ${(props) => props.$glass ? 'rgba(248, 250, 252, 0.5)' : 'white'};
+  border: 1px solid rgba(0,0,0,0.05);
+  padding: 32px;
+  border-radius: 24px;
+  box-shadow: ${(props) => props.theme.shadows.soft};
+  
+  h3 {
+    font-size: 1.25rem;
+    margin-bottom: 16px;
+    color: ${(props) => props.theme.colors.darkBlue};
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  p {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: ${(props) => props.theme.colors.textDark};
+    opacity: 0.85;
+  }
+`;
+
+const ActionGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+`;
+
+const StatCard = styled.div`
+  background: #f8fafc;
+  padding: 24px;
+  border-radius: 20px;
+  border: 1px solid rgba(0,0,0,0.03);
+  
+  .label {
+    font-size: 0.7rem;
+    color: ${(props) => props.theme.colors.textLight};
+    text-transform: uppercase;
+    font-weight: 800;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  
+  .value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: ${(props) => props.theme.colors.darkBlue};
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+`;
+
+const EnterprisesPage = () => {
+  const { data: enterprises, loading } = useEnterprises();
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [search, setSearch] = useState('');
+  const [selectedItem, setSelectedItem] = useState<Enterprise | null>(null);
+  const [itinerary, setItinerary] = useState<number[]>([]);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const { user, updateUser } = useAuth();
+  const [isAuthPopupOpen, setIsAuthPopupOpen] = useState(false);
+  const [authAction, setAuthAction] = useState('');
+  const [newRating, setNewRating] = useState(0);
+  const [newComment, setNewComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const openId = params.get('openId');
+    if (openId && enterprises.length > 0) {
+      const target = enterprises.find((a: any) => 
+        a.firebaseId === openId || a.id?.toString() === openId
+      );
+      if (target) setSelectedItem(target);
+    } else if (selectedItem) {
+      // Sync selected item with live data
+      const fresh = enterprises.find((a: any) => a.id === selectedItem.id);
+      if (fresh) setSelectedItem(fresh);
+    }
+  }, [location.search, enterprises]);
+
+  useEffect(() => {
+    if (user) setItinerary(user.itinerary || []);
+  }, [user]);
+
+  const closeModal = () => {
+    setSelectedItem(null);
+    if (location.search.includes('openId')) {
+      navigate(-1);
+    }
+  };
+
+  const toggleItinerary = async (id: number) => {
+    if (!user) {
+      setAuthAction('save this to your itinerary');
+      setIsAuthPopupOpen(true);
+      return;
+    }
+    const newItinerary = user.itinerary.includes(id)
+      ? user.itinerary.filter(iid => iid !== id)
+      : [...user.itinerary, id];
+
+    try {
+      await updateUser({ itinerary: newItinerary });
+      setItinerary(newItinerary);
+    } catch (err) {
+      console.error("Failed to update itinerary", err);
+    }
+  };
+
+  // Highest ranks for badges
+  const maxRating = enterprises.length > 0 ? Math.max(...enterprises.map((a: any) => a.rating || 0)) : 0;
+  const maxVisits = enterprises.length > 0 ? Math.max(...enterprises.map((a: any) => a.visits || 0)) : 0;
+
+  const [visitedTags, setVisitedTags] = useState<string[]>(() => JSON.parse(localStorage.getItem('user_visited_tags') || '[]'));
+
+  const handleOpenModal = (item: any) => {
+    setSelectedItem(item);
+    navigate(`/enterprises?openId=${item.firebaseId || item.id}`);
+    
+    if (item.tags) {
+      const newTags = Array.from(new Set([...visitedTags, ...item.tags])) as string[];
+      setVisitedTags(newTags);
+      localStorage.setItem('user_visited_tags', JSON.stringify(newTags));
+    }
+    // Track interaction
+    if (item.firebaseId) {
+      dbService.trackInteraction('enterprises', item.firebaseId);
+    }
+  };
+
+  const filteredData = enterprises.filter((item: any) => {
+    const itemCategories = Array.isArray(item.categories) ? item.categories : [((item as any).category || item.type || 'Stay')];
+    const categoryMatch = selectedCategories.length === 0 || 
+                         selectedCategories.every(sc => itemCategories.some(ic => ic.toLowerCase() === sc.toLowerCase()));
+    const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase());
+    return categoryMatch && matchesSearch;
+  }).sort((a, b) => (b.visits || 0) - (a.visits || 0));
+
+  const featuredItems = enterprises.filter((i: any) => (new Date().getTime() - new Date(i.dateAdded || 0).getTime() <= 30 * 24 * 3600 * 1000) || i.rating >= 4.8).slice(0, 3);
+
+  const recommendedItems = [...enterprises]
+    .map((a: any) => ({ ...a, sharedTags: (a.tags || []).filter((t: string) => visitedTags.includes(t)).length }))
+    .filter((a: any) => a.sharedTags > 0 && !featuredItems.find((f: any) => f.id === a.id))
+    .sort((a: any, b: any) => b.sharedTags - a.sharedTags)
+    .slice(0, 3);
+
+  const isNew = (item: any) => {
+    const added = new Date(item.dateAdded || 0).getTime();
+    return Date.now() - added <= 30 * 24 * 3600 * 1000;
+  };
+
+  const renderCard = (item: any, index: number) => {
+    let badge: 'new' | 'top' | 'trending' | 'featured' | 'most-visited' | undefined = undefined;
+    
+    if (item.featured) {
+      badge = 'featured';
+    } else if (isNew(item)) {
+      badge = 'new';
+    } else if (item.rating >= 4.8 || (item.rating === maxRating && maxRating >= 4.5)) {
+      badge = 'top';
+    } else if (item.visits >= 50 || (item.visits === maxVisits && maxVisits > 0)) {
+      badge = 'trending';
+    } else if (item.visits >= 30) {
+      badge = 'most-visited';
+    }
+
+    let displayCat = item.type || item.category || 'Stay';
+    if (Array.isArray(item.categories)) {
+      displayCat = item.categories[0];
+      if (selectedCategories.length > 0) {
+        const match = selectedCategories.find(sc => item.categories.some((ic: string) => ic.toLowerCase() === sc.toLowerCase()));
+        if (match) displayCat = match;
+      }
+    }
+
+    return (
+      <DiscoveryCard
+        key={item.id}
+        index={index}
+        image={item.photos?.[0] || item.img}
+        category={displayCat}
+        title={item.name}
+        description={item.description}
+        location={item.location}
+        rating={item.rating}
+        badge={badge}
+        badges={getDynamicTags(item, enterprises)}
+        onClick={() => handleOpenModal(item)}
+      />
+    );
+  };
+
+  return (
+    <PageContainer
+      initial={{ opacity: 0 }}
+      animate={!loading ? { opacity: 1 } : { opacity: 0 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+    >
+      <HeroContainer>
+        <div className="video-container">
+          <SmartMedia
+            src="/Bulusan Lake_Informative Video.mp4"
+            type="video"
+            className="video-bg"
+            autoPlay
+            loop
+            muted
+            unmuteOnInteraction={false}
+          />
+          <div className="hero-overlay" />
+        </div>
+
+        <StandardPageHeader
+          tagline="Where wonders flow from ridges to reef"
+          title="ENTERPRISES"
+          statementContent={{
+            thin: "Experience the",
+            bold: "Island",
+            accent: "Relaxation"
+          }}
+          isStatic
+        />
+
+        <ControlsContainer className="controls-wrapper">
+          <SearchBar>
+            <Search size={20} color="#888" />
+            
+            {selectedCategories.length > 0 && (
+              <div style={{ display: 'flex', gap: '4px', marginLeft: '12px', alignItems: 'center' }}>
+                 {selectedCategories.map(cat => (
+                   <img key={cat} src={getMapIconUrl(cat)} alt={cat} title={cat} style={{ width: 18, height: 18, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))' }} />
+                 ))}
+                 <div style={{ width: '1px', height: '16px', background: 'rgba(0,0,0,0.1)', marginLeft: '4px' }} />
+              </div>
+            )}
+
+            <input
+              type="text"
+              placeholder="Search for attractions, hotels, restaurantss..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', padding: '4px', marginLeft: 'auto', display: 'flex', alignItems: 'center' }}
+              >
+                <X size={18} />
+              </button>
+            )}
+          </SearchBar>
+          <FilterAreaContainer>
+            <SharedCategoryScroller
+              categories={ENTERPRISE_CATEGORIES}
+              activeCategories={selectedCategories}
+              onSelect={setSelectedCategories}
+            />
+          </FilterAreaContainer>
+        </ControlsContainer>
+      </HeroContainer>
+
+      <Grid>
+        {search === '' && selectedCategories.length === 0 && featuredItems.length > 0 && (
+          <div style={{ gridColumn: '1/-1', marginBottom: '40px' }}>
+            <SectionHeader
+              subtitle="Elite Stays"
+              title={<>Featured <span style={{ color: 'var(--cta-blue)' }}>Enterprises</span></>}
+            />
+            <CentricCarousel
+              items={featuredItems}
+              renderItem={(item: any, isActive: boolean) => {
+                let badge: 'new' | 'top' | 'trending' | 'featured' | 'most-visited' | undefined = undefined;
+                if (item.featured) badge = 'featured';
+                else if (isNew(item)) badge = 'new';
+                else if (item.rating >= 4.8) badge = 'top';
+                else if (item.visits >= 50) badge = 'trending';
+
+                let displayCat = item.type || item.category || 'Stay';
+                if (Array.isArray(item.categories)) displayCat = item.categories[0];
+
+                return (
+                   <FeaturedCarouselCard 
+                     item={item}
+                     badge={badge}
+                     badges={getDynamicTags(item, enterprises)}
+                     categoryName={displayCat}
+                     onClick={() => handleOpenModal(item)}
+                   />
+                );
+              }}
+            />
+          </div>
+        )}
+
+        {search === '' && selectedCategories.length === 0 && recommendedItems.length > 0 && (
+          <div style={{ gridColumn: '1/-1', marginBottom: '8px', paddingTop: '8px', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+            <SectionHeader
+              subtitle="Tailored for You"
+              title={<>Recommended <span style={{ color: 'var(--accent-blue)' }}>Enterprises</span></>}
+            />
+            <Grid>
+              {recommendedItems.map((item: any, index: number) => renderCard(item, index))}
+            </Grid>
+          </div>
+        )}
+
+        {search === '' && selectedCategories.length === 0 && (
+          <div style={{ gridColumn: '1/-1', paddingTop: '8px', borderTop: '1px solid rgba(0,0,0,0.05)', marginBottom: '8px' }}>
+            <SectionHeader
+              subtitle="Collection"
+              title="All Enterprises"
+            />
+          </div>
+        )}
+
+        {filteredData.length > 0 ? (
+          filteredData.map((item: any, index: number) => renderCard(item, index))
+        ) : !loading ? (
+          <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '100px', background: 'rgba(255,255,255,0.7)', borderRadius: '32px', border: '1px solid #eee' }}>
+            <h2 style={{ color: '#2e75b6', marginBottom: '16px' }}>Bulusan Wonders Coming Soon!</h2>
+            <p style={{ color: '#666', fontSize: '1.1rem' }}>No enterprises found matching your criteria. We are constantly discovering new gems!</p>
+          </div>
+        ) : null}
+      </Grid>
+
+      <AnimatePresence>
+        {selectedItem && (
+          <EnterpriseDetailsPage
+            item={selectedItem}
+            onClose={closeModal}
+          />
+        )}
+      </AnimatePresence>
+      <AuthGuardPopup
+        isOpen={isAuthPopupOpen}
+        onClose={() => setIsAuthPopupOpen(false)}
+        actionName={authAction}
+      />
+    </PageContainer>
+  );
+};
+
+export default EnterprisesPage;

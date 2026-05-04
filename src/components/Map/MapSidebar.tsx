@@ -1,0 +1,461 @@
+import React, { useMemo, useState } from 'react';
+import styled from 'styled-components';
+import { Search, MapPin, Loader2, X, ChevronRight, Star, Zap, TrendingUp, Award, Users } from 'lucide-react';
+import { ATTRACTION_CATEGORIES, ENTERPRISE_CATEGORIES } from '../Admin/CategoryTagConfig';
+import SharedCategoryScroller from '../Common/SharedCategoryScroller';
+import { Link } from 'react-router-dom';
+import { getDynamicTags } from '../../utils/tagUtils';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const SidebarContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  background: white;
+
+  /* Desktop: must fill the sidebar's fixed height */
+  @media (min-width: 1024px) {
+    height: 100%;
+  }
+`;
+
+const ClassicHeader = styled.div`
+  padding: 16px 24px 8px;
+  background: white;
+  
+  .label {
+    text-transform: uppercase;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: var(--cta-blue);
+    margin-bottom: 6px;
+  }
+  
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--dark-blue);
+    line-height: 1.1;
+    margin-bottom: 4px;
+
+    @media (min-width: 1024px) {
+      font-size: 1.6rem;
+      margin-bottom: 8px;
+    }
+  }
+  
+  p {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 500;
+    margin-bottom: 8px;
+
+    /* Hide sub-description on mobile to save space */
+    @media (max-width: 1023px) {
+      display: none;
+    }
+  }
+`;
+
+const TourButton = styled.button`
+  width: 100%;
+  max-width: 320px;
+  padding: 10px;
+  background: #f8fafc;
+  border: 1px dashed var(--cta-blue);
+  color: var(--cta-blue);
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  &:hover { background: #eff6ff; }
+`;
+
+
+const DrawerHandle = styled.div`
+  display: none; /* Handle is now rendered by ToursAndMapPage's MobileSidebarHandle */
+`;
+
+const SearchSection = styled.div`
+  padding: 0 18px 16px;
+  background: white;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px; /* Reverted to Tighter Gap */
+  
+  & > * {
+    width: 100%;
+    max-width: 320px;
+  }
+`;
+
+const TabContainer = styled.div`
+  display: flex;
+  justify-content: stretch;
+  width: 100%;
+  max-width: 320px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #f1f5f9;
+  gap: 10px; /* Added gap to prevent overlap */
+`;
+
+const Tab = styled.button<{ $active: boolean }>`
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 8px 4px; /* Added horizontal padding */
+  font-size: 0.68rem; /* Slightly smaller to fit better */
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px; /* Reduced letter-spacing to prevent overflow */
+  color: ${props => props.$active ? 'var(--dark-blue)' : '#94a3b8'};
+  border-bottom: 2px solid ${props => props.$active ? 'var(--dark-blue)' : 'transparent'};
+  cursor: pointer;
+  white-space: nowrap;
+  text-align: center;
+  transition: all 0.2s;
+  &:hover { color: var(--dark-blue); }
+`;
+
+const SearchBar = styled.div`
+  display: flex;
+  align-items: center;
+  background: #f8fafc;
+  padding: 8px 14px;
+  border-radius: 30px;
+  border: 1px solid rgba(0,0,0,0.04);
+  margin-bottom: 0px;
+  transition: all 0.3s;
+  width: 100%;
+  max-width: 320px;
+  position: relative;
+
+  &:focus-within {
+    background: white;
+    border-color: var(--cta-blue);
+    box-shadow: 0 0 0 3px rgba(46, 117, 182, 0.08);
+  }
+
+  input {
+    border: none; outline: none; background: transparent;
+    font-size: 0.8rem; margin-left: 8px; width: 100%;
+    padding-right: 25px; /* Space for clear button */
+    color: #1e293b; font-weight: 500;
+    &::placeholder { color: #94a3b8; }
+  }
+
+  .clear-btn {
+    position: absolute;
+    right: 12px;
+    color: #94a3b8;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+    &:hover { color: var(--cta-blue); }
+  }
+`;
+
+const ResultsContainer = styled(motion.div)`
+  /* Mobile: no internal scroll — SidebarContent scrolls the whole drawer */
+  padding: 16px 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #fcfdfe;
+
+  /* Desktop: take remaining sidebar height, scroll internally */
+  @media (min-width: 1024px) {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.05); border-radius: 10px; }
+`;
+
+const ResultCard = styled(motion.div)<{ $active: boolean }>`
+  background: ${props => props.$active ? '#e0efff' : 'white'};
+  border-radius: 50px;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  height: 80px;
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto;
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: ${props => props.$active ? '0 15px 40px rgba(11, 33, 71, 0.12)' : '0 10px 30px rgba(0,0,0,0.03)'};
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+  z-index: ${props => props.$active ? '2' : '1'};
+
+  &:hover {
+    transform: ${props => props.$active ? 'none' : 'translateY(-3px)'};
+    box-shadow: 0 20px 50px rgba(0,0,0,0.08);
+    background: #f0f7ff;
+  }
+`;
+
+const CardImage = styled.div<{ $src: string }>`
+  position: absolute;
+  top: 0; left: 0;
+  width: 120px;
+  height: 100%;
+  background-image: url(${props => props.$src});
+  background-size: cover;
+  background-position: center;
+  z-index: 0;
+  -webkit-mask-image: linear-gradient(to right, black 20%, transparent 100%);
+  mask-image: linear-gradient(to right, black 20%, transparent 100%);
+`;
+
+const CardContent = styled.div`
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8px 30px 8px 105px;
+  text-shadow: 0 1px 3px rgba(255,255,255,1), 0 2px 6px rgba(255,255,255,0.8);
+
+  .meta {
+    font-size: 0.45rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--cta-blue);
+    margin-bottom: 2px;
+  }
+
+  h4 {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--dark-blue);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+  }
+
+  .loc {
+    font-size: 0.55rem;
+    color: #64748b;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .tags-row {
+    display: flex;
+    gap: 4px;
+    margin-top: 2px;
+    flex-wrap: wrap;
+    
+    .sm-tag {
+      font-size: 0.45rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 1.5px 5px;
+      border-radius: 12px;
+      color: white;
+      text-shadow: none;
+      letter-spacing: 0.5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+    }
+  }
+`;
+
+const DetailsBtn = styled.div<{ $active: boolean }>`
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  color: ${props => props.$active ? 'var(--cta-blue)' : '#94a3b8'};
+  background: ${props => props.$active ? '#e0efff' : 'rgba(0,0,0,0.02)'};
+  padding: 6px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: ${props => props.$active ? 1 : 0};
+  transition: all 0.2s;
+  ${ResultCard}:hover & {
+    opacity: 1;
+    color: var(--cta-blue);
+    background: #e0efff;
+  }
+`;
+
+const LoadingState = styled.div` display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; color: #94a3b8; gap: 12px; `;
+
+interface MapSidebarProps {
+  items: any[];
+  searchQuery: string;
+  setSearchQuery: (q: string) => void;
+  selectedCategories: string[];
+  setSelectedCategories: (cats: string[]) => void;
+  loading: boolean;
+  onItemClick?: (item: any) => void;
+  activeId?: string | null;
+  onOpenDashboard?: () => void;
+}
+
+const MapSidebar: React.FC<MapSidebarProps> = ({
+  items, searchQuery, setSearchQuery, selectedCategories, setSelectedCategories, loading, onItemClick, activeId, onOpenDashboard
+}) => {
+  const [activeTab, setActiveTab] = useState<'All' | 'Attraction' | 'Enterprise'>('All');
+
+  const displayItems = useMemo(() => {
+    if (activeTab === 'All') return items;
+    return items.filter(i => i.entityType === activeTab);
+  }, [items, activeTab]);
+
+  const uniqueTabCategories = useMemo(() => {
+    const source = activeTab === 'All' 
+      ? [...ATTRACTION_CATEGORIES, ...ENTERPRISE_CATEGORIES]
+      : activeTab === 'Attraction' ? ATTRACTION_CATEGORIES 
+      : ENTERPRISE_CATEGORIES;
+    
+    const seen = new Set();
+    return source.filter(c => {
+      if (seen.has(c.label)) return false;
+      seen.add(c.label);
+      return true;
+    });
+  }, [activeTab]);
+
+  return (
+    <SidebarContainer>
+      <DrawerHandle />
+      <ClassicHeader>
+        <div className="label">Interactive Discovery</div>
+        <h2>Pinpoint Your Next Move</h2>
+        <p>Explore Bulusan's finest in real-time.</p>
+      </ClassicHeader>
+
+      <SearchSection>
+        <TourButton onClick={onOpenDashboard}>
+           <Star size={14} /> My Travel Guides
+        </TourButton>
+        
+        <TabContainer>
+          {(['All', 'Attraction', 'Enterprise'] as const).map(t => (
+            <Tab key={t} $active={activeTab === t} onClick={() => setActiveTab(t)}>
+              {t === 'All' ? 'ALL' : `${t}s`}
+            </Tab>
+          ))}
+        </TabContainer>
+
+        <SearchBar>
+          <Search size={14} color="#94a3b8" />
+          <input 
+            type="text" 
+            placeholder="Search lake, hotel, falls..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <div className="clear-btn" onClick={() => setSearchQuery('')}>
+              <X size={14} />
+            </div>
+          )}
+        </SearchBar>
+
+        <SharedCategoryScroller 
+          categories={uniqueTabCategories}
+          activeCategories={selectedCategories}
+          onSelect={setSelectedCategories}
+        />
+      </SearchSection>
+
+      <ResultsContainer
+        initial="hidden"
+        animate="visible"
+        variants={{
+          visible: { transition: { staggerChildren: 0.05 } },
+          hidden: {}
+        }}
+      >
+        {loading ? (
+          <LoadingState><Loader2 className="animate-spin" size={24} /><p style={{ fontSize: '0.75rem' }}>Gathering sites...</p></LoadingState>
+        ) : displayItems.length === 0 ? (
+          <LoadingState><p style={{ fontSize: '0.75rem' }}>No matching discoveries.</p></LoadingState>
+        ) : (
+          <AnimatePresence>
+            {displayItems.map((item, index) => {
+              const itemId = `${item.entityType}-${item.firebaseId || item.id}`;
+              const isActive = activeId === itemId;
+              const categoryLabel = (Array.isArray(item.categories) ? item.categories : [((item as any).category || item.type || 'Others')])[0];
+              
+              return (
+                <ResultCard 
+                  key={itemId} 
+                  $active={isActive} 
+                  onClick={() => onItemClick?.(item)}
+                  variants={{
+                    hidden: { opacity: 0, y: 20 },
+                    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.23, 1, 0.32, 1] } }
+                  }}
+                  whileHover={{ y: -5, scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  layout
+                >
+                  <CardImage $src={item.photos?.[0] || item.img || ''} />
+                  <CardContent>
+                    <div className="meta">{categoryLabel} • {item.entityType}</div>
+                    <h4>{item.name}</h4>
+                    <div className="loc">{item.location}</div>
+                    {getDynamicTags(item, items).length > 0 && (
+                      <div className="tags-row">
+                         {getDynamicTags(item, items).slice(0, 3).map(tag => {
+                            let Icon = Star;
+                            let bgGradient = 'rgba(255, 215, 0, 0.3)';
+                            
+                            if (tag === 'New') { Icon = Zap; bgGradient = 'linear-gradient(135deg, #10b981, #059669)'; }
+                            else if (tag === 'Top Rated') { Icon = Star; bgGradient = 'linear-gradient(135deg, #f59e0b, #d97706)'; }
+                            else if (tag === 'Trending') { Icon = TrendingUp; bgGradient = 'linear-gradient(135deg, #ef4444, #dc2626)'; }
+                            else if (tag === 'Featured') { Icon = Award; bgGradient = 'linear-gradient(135deg, #3b82f6, #1d4ed8)'; }
+                            else if (tag === 'Most Visited') { Icon = Users; bgGradient = 'linear-gradient(135deg, #8b5cf6, #6d28d9)'; }
+
+                            return (
+                               <span key={tag} className="sm-tag" style={{ background: bgGradient }}>
+                                  <Icon size={8} fill={tag === 'Top Rated' || tag === 'New' ? 'white' : 'currentColor'} strokeWidth={3} /> {tag}
+                               </span>
+                            );
+                         })}
+                      </div>
+                    )}
+                  </CardContent>
+                  <DetailsBtn $active={isActive}>
+                    <ChevronRight size={14} strokeWidth={3} />
+                  </DetailsBtn>
+                </ResultCard>
+              );
+            })}
+          </AnimatePresence>
+        )}
+      </ResultsContainer>
+    </SidebarContainer>
+  );
+};
+
+export default MapSidebar;

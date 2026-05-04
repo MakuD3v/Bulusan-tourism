@@ -1,0 +1,217 @@
+// server/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(uuid())
+  name       String
+  email      String   @unique
+  password   String   // Added for JWT auth
+  role       String   @default("USER") // 'USER' | 'ADMIN'
+  avatar     String?
+  itinerary  Int[]    // Array of Tour IDs they are interested in
+  history    String[] // Array of visited location IDs/names
+  joinedDate DateTime @default(now())
+
+  customTours CustomUserTour[]
+  checkIns    CheckIn[]
+}
+
+model Attraction {
+  id              Int      @id @default(autoincrement())
+  name            String
+  categories      String[]
+  rating          Float    @default(0)
+  location        String
+  lat             Float
+  lng             Float
+  img             String
+  description     String   @db.Text
+  gallery         String[]
+  droneVideoId    String?
+  videoUrl        String?
+  metadata        Json?    // e.g., { entranceFee, hours, difficulty }
+  contactInfo     String?
+  visits          Int      @default(0)
+  dateAdded       DateTime @default(now())
+  tags            String[]
+  featured        Boolean  @default(false)
+  photos          String[]
+  isFreeAdmission Boolean  @default(false)
+
+  reviews         Review[]
+  offers          Offer[]
+}
+
+model Enterprise {
+  id              Int      @id @default(autoincrement())
+  name            String
+  categories      String[]
+  rating          Float    @default(0)
+  location        String
+  lat             Float
+  lng             Float
+  img             String
+  description     String   @db.Text
+  rates           String?
+  amenities       String[]
+  gallery         String[]
+  videoUrl        String?
+  metadata        Json?    // { hours, contact, website }
+  visits          Int      @default(0)
+  dateAdded       DateTime @default(now())
+  tags            String[]
+  featured        Boolean  @default(false)
+  photos          String[]
+
+  reviews         Review[]
+  offers          Offer[]
+}
+
+model Heritage {
+  id              Int      @id @default(autoincrement())
+  name            String
+  period          String
+  location        String
+  description     String   @db.Text
+  fullHistory     String   @db.Text
+  significance    String   @db.Text
+  img             String
+  gallery         String[]
+  videoUrl        String?
+  lat             Float
+  lng             Float
+  visits          Int      @default(0)
+  rating          Float    @default(0)
+  tags            String[]
+  photos          String[]
+
+  reviews         Review[]
+}
+
+model Offer {
+  id           String      @id @default(uuid())
+  name         String
+  price        String
+  image        String?
+
+  attractionId Int?
+  attraction   Attraction? @relation(fields: [attractionId], references: [id], onDelete: Cascade)
+  
+  enterpriseId Int?
+  enterprise   Enterprise? @relation(fields: [enterpriseId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id           Int      @id @default(autoincrement())
+  author       String
+  avatar       String
+  rating       Float
+  comment      String   @db.Text
+  date         DateTime @default(now())
+
+  attractionId Int?
+  attraction   Attraction? @relation(fields: [attractionId], references: [id], onDelete: Cascade)
+
+  enterpriseId Int?
+  enterprise   Enterprise? @relation(fields: [enterpriseId], references: [id], onDelete: Cascade)
+
+  heritageId   Int?
+  heritage     Heritage?   @relation(fields: [heritageId], references: [id], onDelete: Cascade)
+}
+
+model Tour {
+  id           Int      @id @default(autoincrement())
+  title        String
+  desc         String   @db.Text
+  image        String
+  duration     String
+  groupSize    String
+  price        String
+  highlights   String[]
+  visits       Int      @default(0)
+  rating       Float    @default(0)
+  dateAdded    DateTime @default(now())
+  tags         String[]
+
+  routes       Route[]
+}
+
+model Route {
+  id           Int      @id @default(autoincrement())
+  time         String
+  location     String
+  desc         String   @db.Text
+  type         String?  // 'Attraction' | 'Enterprise' | 'Custom'
+  referenceId  Int?
+  autoTime     Int?
+
+  tourId       Int
+  tour         Tour     @relation(fields: [tourId], references: [id], onDelete: Cascade)
+}
+
+model BlogPost {
+  id           Int      @id @default(autoincrement())
+  title        String
+  category     String
+  excerpt      String   @db.Text
+  content      String   @db.Text
+  authorName   String
+  authorAvatar String
+  date         DateTime @default(now())
+  image        String
+  readTime     String
+  status       String   @default("Published") // 'Published' | 'Under Review'
+}
+
+model Inquiry {
+  id           Int      @id @default(autoincrement())
+  sender       String
+  email        String
+  subject      String
+  message      String   @db.Text
+  date         DateTime @default(now())
+  status       String   @default("New") // 'New' | 'Read' | 'Replied'
+}
+
+model CheckIn {
+  id           Int      @id @default(autoincrement())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userName     String
+  locationId   String
+  locationName String
+  timestamp    DateTime @default(now())
+}
+
+model CustomUserTour {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  createdAt    DateTime @default(now())
+
+  destinations UserTourDestination[]
+}
+
+model UserTourDestination {
+  id           String   @id @default(uuid())
+  itemId       String
+  entityType   String   // 'Attraction' | 'Enterprise' | 'Heritage'
+  completed    Boolean  @default(false)
+
+  customTourId String
+  customTour   CustomUserTour @relation(fields: [customTourId], references: [id], onDelete: Cascade)
+}
+
+model GlobalStat {
+  id            Int @id @default(1)
+  totalVisitors Int @default(0)
+}

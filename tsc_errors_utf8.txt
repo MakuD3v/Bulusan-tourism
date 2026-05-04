@@ -1,0 +1,2 @@
+﻿src/components/Map/BulusanMap.tsx(170,7): error TS2353: Object literal may only specify known properties, and 'draggableWaypoints' does not exist in type 'RoutingControlOptions'.
+src/pages/LandingPage.tsx(8,47): error TS2339: Property 'bgLight' does not exist on type '{ primaryBlue: string; darkBlue: string; ctaBlue: string; softBlue: string; accentBlue: string; lightBg: string; white: string; textDark: string; textLight: string; }'.
