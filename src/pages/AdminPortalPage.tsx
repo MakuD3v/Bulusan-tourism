@@ -29,7 +29,7 @@ const PortalContainer = styled(motion.div).attrs({
 })`
   display: flex;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: var(--light-bg);
   padding: 16px;
   gap: 20px;
   overflow: hidden;
@@ -37,11 +37,11 @@ const PortalContainer = styled(motion.div).attrs({
 
 const Sidebar = styled.aside`
   width: 280px;
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: ${(props) => props.theme.glass.background};
+  backdrop-filter: ${(props) => props.theme.glass.filter};
+  border: ${(props) => props.theme.glass.border};
   border-radius: 24px;
-  color: #334155;
+  color: var(--text-dark);
   display: flex;
   flex-direction: column;
   box-shadow: 0 10px 40px rgba(0,0,0,0.05);
@@ -73,7 +73,7 @@ const NavItem = styled.div<{ $active: boolean }>`
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: ${(props) => props.$active ? 'var(--cta-blue)' : 'transparent'};
-  color: ${(props) => props.$active ? 'white' : '#64748b'};
+  color: ${(props) => props.$active ? 'white' : 'var(--text-light)'};
   font-weight: ${(props) => props.$active ? '700' : '600'};
 
   &:hover {
@@ -99,7 +99,7 @@ const MainContent = styled.main`
   
   &::-webkit-scrollbar { width: 8px; }
   &::-webkit-scrollbar-track { background: transparent; }
-  &::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+  &::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.3); border-radius: 10px; }
 `;
 
 const Header = styled.header`
@@ -120,12 +120,12 @@ const Header = styled.header`
     display: flex;
     align-items: center;
     gap: 12px;
-    background: #f8fafc;
+    background: var(--surface-bg);
     border: 1px solid rgba(0,0,0,0.05);
     padding: 8px 24px 8px 8px;
     border-radius: 30px;
     font-weight: 700;
-    color: #475569;
+    color: var(--text-dark);
     box-shadow: none;
     
     .avatar {
