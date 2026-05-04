@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Attraction, Enterprise, BlogPost } from '../../data/types';
-import { Search, User, Star, Building2, BookOpen, Clock, MapPin } from 'lucide-react';
+import { Search, User, Star, Building2, BookOpen, Clock, MapPin, Trash2 } from 'lucide-react';
 import { dbService } from '../../api/db';
 import AdminSearchBar from './AdminSearchBar';
 
@@ -237,9 +237,26 @@ const ModerationDashboard: React.FC<ModerationDashboardProps> = ({ attractions, 
                                 <div className="meta">
                                     <User size={12} /> {blog.authorName} · <Clock size={12} /> {blog.status || 'Under Review'}
                                 </div>
-                                <div style={{ marginTop: 12 }}>
+                                <div style={{ marginTop: 12, display: 'flex', gap: '8px', alignItems: 'center' }}>
                                     <button onClick={() => setSelectedBlog(blog)} style={{ padding: '6px 12px', borderRadius: 8, background: '#f1f5f9', border: 'none', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>
                                         View Content
+                                    </button>
+                                    <button 
+                                      onClick={async () => {
+                                          if (window.confirm(`Delete blog post: ${blog.title}?`)) {
+                                              try {
+                                                  await dbService.delete('blogs', blog.firebaseId || blog.id);
+                                                  window.location.reload();
+                                              } catch (e) {
+                                                  console.error("Failed to delete blog", e);
+                                                  alert("Failed to delete the blog post.");
+                                              }
+                                          }
+                                      }}
+                                      style={{ padding: '6px', borderRadius: 8, background: '#fee2e2', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                      title="Delete Blog"
+                                    >
+                                        <Trash2 size={14} />
                                     </button>
                                 </div>
                             </ContentCard>

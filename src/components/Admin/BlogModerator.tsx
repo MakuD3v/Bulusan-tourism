@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BlogPost } from '../../data/types';
-import { Eye } from 'lucide-react';
-
+import { Eye, Trash2 } from 'lucide-react';
+import { dbService } from '../../api/db';
 const GlassTable = styled.div`
   background: white;
   border-radius: 24px;
@@ -96,6 +96,23 @@ const BlogModerator: React.FC<BlogModeratorProps> = ({ blogPosts }) => {
                   <div className="action-btns" style={{ justifyContent: 'flex-end' }}>
                     <button onClick={() => setBlogPopup(post)} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                       <Eye size={18} /> View Digest
+                    </button>
+                    <button 
+                      className="delete" 
+                      onClick={async () => {
+                        if (window.confirm(`Delete blog post: ${post.title}?`)) {
+                          try {
+                            await dbService.delete('blogs', post.firebaseId || post.id);
+                            window.location.reload();
+                          } catch (e) {
+                            console.error("Failed to delete blog", e);
+                            alert("Failed to delete the blog post.");
+                          }
+                        }
+                      }} 
+                      style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+                    >
+                      <Trash2 size={18} />
                     </button>
                   </div>
                 </td>
