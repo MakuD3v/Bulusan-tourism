@@ -1,7 +1,8 @@
 import styled from 'styled-components';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, UserCircle, LogOut, Settings, LayoutDashboard, Menu, X } from 'lucide-react';
+import { Search, UserCircle, LogOut, Settings, LayoutDashboard, Menu, X, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { useThemeMode } from '../../hooks/useTheme';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import LogoImageSrc from '../../../assets/Logo_rev copy.png';
@@ -261,6 +262,7 @@ const Header = ({ isTransparent }: { isTransparent: boolean }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout, role } = useAuth();
+  const { mode, toggleTheme } = useThemeMode();
   const [showMenu, setShowMenu] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -314,6 +316,9 @@ const Header = ({ isTransparent }: { isTransparent: boolean }) => {
       </NavLinks>
 
       <IconGroup>
+        <button onClick={toggleTheme} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Toggle Dark Mode">
+          {mode === 'dark' ? <Sun size={22} /> : <Moon size={22} />}
+        </button>
         {user ? (
           <div style={{ position: 'relative' }}>
             <div

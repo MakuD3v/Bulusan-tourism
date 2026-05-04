@@ -2,13 +2,12 @@ import { createGlobalStyle } from 'styled-components';
 
 const GlobalStyles = createGlobalStyle`
   :root {
-    color-scheme: light;
-    --primary-blue: #0045A5;
-    --dark-blue: #0B2147;
-    --cta-blue: #2E75B6;
-    --light-bg: #F8FAFC;
-    --text-dark: #1E293B;
-    --text-light: #64748B;
+    --primary-blue: ${(props) => props.theme.colors.primaryBlue};
+    --dark-blue: ${(props) => props.theme.colors.darkBlue};
+    --cta-blue: ${(props) => props.theme.colors.ctaBlue};
+    --light-bg: ${(props) => props.theme.colors.lightBg};
+    --text-dark: ${(props) => props.theme.colors.textDark};
+    --text-light: ${(props) => props.theme.colors.textLight};
     
     /* Responsive Spacing Variables */
     --section-padding: clamp(3rem, 8vw, 6rem);
