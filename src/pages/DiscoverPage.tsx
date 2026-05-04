@@ -242,7 +242,7 @@ const FeaturedSection = styled(motion.section)`
 // ─── Promotional Section ──────────────────────────────────────────────────────
 const PromotionalSection = styled.section`
   padding: 120px 0;
-  background: ${(props) => props.theme.colors.darkBlue};
+  background: #0B2147;
   color: white;
   position: relative;
   overflow: hidden;

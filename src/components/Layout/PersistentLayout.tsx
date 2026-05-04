@@ -21,7 +21,7 @@ const MainContent = styled.main<{ $isHeroPage: boolean }>`
 import { Globe, Camera, MessageCircle, PlayCircle } from 'lucide-react';
 
 const Footer = styled.footer`
-  background: ${(props) => props.theme.colors.darkBlue};
+  background: #0B2147;
   color: white;
   padding: clamp(2rem, 4vw, 3rem) 2rem 1.5rem;
   position: relative;
