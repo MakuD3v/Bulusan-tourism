@@ -2,6 +2,7 @@ import { createGlobalStyle } from 'styled-components';
 
 const GlobalStyles = createGlobalStyle`
   :root {
+    color-scheme: light;
     --primary-blue: #0045A5;
     --dark-blue: #0B2147;
     --cta-blue: #2E75B6;
