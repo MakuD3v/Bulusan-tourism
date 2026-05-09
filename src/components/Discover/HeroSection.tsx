@@ -32,9 +32,9 @@ const HeroOverlay = styled.div`
   top: 0; left: 0; width: 100%; height: 100%;
   background: linear-gradient(
     to bottom,
-    rgba(11, 33, 71, 0.7) 0%,
-    rgba(11, 33, 71, 0.5) 50%,
-    rgba(11, 33, 71, 0.85) 100%
+    rgba(11, 33, 71, 0.4) 0%,
+    rgba(11, 33, 71, 0.2) 50%,
+    rgba(11, 33, 71, 0.7) 100%
   );
   z-index: 2;
 `;

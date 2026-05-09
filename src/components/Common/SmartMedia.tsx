@@ -80,10 +80,10 @@ const SmartMedia: React.FC<SmartMediaProps> = ({
     const videoId = getYouTubeId(src);
     
     if (videoId) {
-      const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&rel=0&modestbranding=1&iv_load_policy=3&showinfo=0&enablejsapi=1&origin=${window.location.origin}`;
+      const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&rel=0&modestbranding=1&iv_load_policy=3&showinfo=0&enablejsapi=1`;
 
       return (
-        <div className={className} style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', ...style }}>
+        <div className={className} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflow: 'hidden', zIndex: 0, ...style }}>
           <iframe
             src={embedUrl}
             style={{ 
@@ -91,15 +91,18 @@ const SmartMedia: React.FC<SmartMediaProps> = ({
               top: '50%',
               left: '50%',
               width: '100vw',
-              height: '56.25vw', // 16:9
+              height: '56.25vw', // 16:9 aspect ratio
               minHeight: '100vh',
-              minWidth: '177.77vh', // 16:9
+              minWidth: '177.77vh', // 16:9 aspect ratio
               transform: 'translate(-50%, -50%) scale(1.1)',
               border: 'none', 
               pointerEvents: 'none',
+              opacity: 1,
+              visibility: 'visible'
             }}
             title="YouTube background video"
-            allow="autoplay; encrypted-media; picture-in-picture"
+            allow="autoplay; encrypted-media; gyroscope; picture-in-picture"
+            loading="eager"
           />
         </div>
       );
