@@ -276,8 +276,8 @@ const ActionButton = styled.button<{ $primary?: boolean, $success?: boolean }>`
   transition: all 0.2s;
   border: none;
   
-  background: ${p => p.$success ? '#10b981' : p.$primary ? 'var(--dark-blue)' : 'var(--surface-bg)'};
-  color: ${p => (p.$primary || p.$success) ? 'white' : 'var(--text-dark)'};
+  background: ${p => p.$success ? '#10b981' : p.$primary ? 'var(--dark-blue)' : 'var(--light-bg)'};
+  color: ${p => (p.$primary || p.$success) ? 'var(--surface-bg)' : 'var(--text-dark)'};
   border: ${p => (p.$primary || p.$success) ? 'none' : '1px solid rgba(148, 163, 184, 0.2)'};
 
   &:hover {
