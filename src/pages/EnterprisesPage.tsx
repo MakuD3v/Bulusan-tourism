@@ -69,8 +69,8 @@ const HeroContainer = styled.div`
     top: 0; left: 0; width: 100%; height: 100%;
     background: linear-gradient(
       to bottom,
-      rgba(245, 248, 252, 0.4) 0%,
-      rgba(245, 248, 252, 0.8) 50%,
+      ${(props) => props.theme.colors.lightBg}66 0%,
+      ${(props) => props.theme.colors.lightBg}cc 50%,
       ${(props) => props.theme.colors.lightBg} 100%
     );
     z-index: 1;
@@ -251,22 +251,22 @@ const ImmersiveHeaderContainer = styled.div`
 
     span {
       font-size: 0.85rem;
-      color: #93c5fd;
+      color: ${(props) => props.theme.colors.ctaBlue};
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 2px;
       display: block;
       margin-bottom: 8px;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      text-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
     h2 {
       font-size: 3.5rem;
       font-family: 'Playfair Display', serif;
       margin: 0 0 16px 0;
-      background: linear-gradient(135deg, #fff 0%, #93c5fd 100%);
+      background: linear-gradient(135deg, ${(props) => props.theme.colors.darkBlue} 0%, ${(props) => props.theme.colors.ctaBlue} 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      text-shadow: 0 10px 20px rgba(0,0,0,0.05);
       line-height: 1.1;
       
       @media (max-width: 768px) {

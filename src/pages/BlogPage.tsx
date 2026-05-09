@@ -66,8 +66,8 @@ const BlogHeroContainer = styled.div`
     top: 0; left: 0; width: 100%; height: 100%;
     background: linear-gradient(
       to bottom,
-      rgba(245, 248, 252, 0.4) 0%,
-      rgba(245, 248, 252, 0.8) 50%,
+      ${(props) => props.theme.colors.lightBg}66 0%,
+      ${(props) => props.theme.colors.lightBg}cc 50%,
       ${(props) => props.theme.colors.lightBg} 100%
     );
     z-index: 1;
