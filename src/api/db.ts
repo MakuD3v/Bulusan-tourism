@@ -1,9 +1,12 @@
 import { apiClient } from '../api/client';
+import { invalidateCache } from '../hooks/useFirestore';
 
 export const dbService = {
     add: async (colName: string, data: any) => {
         try {
-            return await apiClient.post(`/${colName}`, data);
+            const res = await apiClient.post(`/${colName}`, data);
+            invalidateCache(colName);
+            return res;
         } catch (e) {
             console.error(`Error adding to ${colName}:`, e);
             throw e;
@@ -12,7 +15,9 @@ export const dbService = {
 
     delete: async (colName: string, id: string | number) => {
         try {
-            return await apiClient.delete(`/${colName}/${id}`);
+            const res = await apiClient.delete(`/${colName}/${id}`);
+            invalidateCache(colName);
+            return res;
         } catch (e) {
             console.error(`Error deleting from ${colName}:`, e);
             throw e;
@@ -21,7 +26,9 @@ export const dbService = {
 
     update: async (colName: string, id: string | number, data: any) => {
         try {
-            return await apiClient.put(`/${colName}/${id}`, data);
+            const res = await apiClient.put(`/${colName}/${id}`, data);
+            invalidateCache(colName);
+            return res;
         } catch (e) {
             console.error(`Error updating ${colName}:`, e);
             throw e;

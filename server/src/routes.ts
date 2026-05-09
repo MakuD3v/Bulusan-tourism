@@ -44,6 +44,19 @@ function formatPrismaPayload(body: any, isUpdate: boolean = false) {
       : { create: formattedOffers };
   }
 
+  if (data.reviews && Array.isArray(data.reviews)) {
+    const formattedReviews = data.reviews.map((r: any) => ({
+      author: r.author || 'Anonymous',
+      rating: Number(r.rating) || 0,
+      comment: r.comment || '',
+      avatar: r.avatar || '',
+      date: String(r.date || new Date().toLocaleDateString())
+    }));
+    data.reviews = isUpdate 
+      ? { deleteMany: {}, create: formattedReviews }
+      : { create: formattedReviews };
+  }
+
   if (data.routes && Array.isArray(data.routes)) {
     const formattedRoutes = data.routes.map((r: any) => ({ lat: Number(r.lat) || 0, lng: Number(r.lng) || 0, label: r.label || '', order: Number(r.order) || 0 }));
     data.routes = isUpdate 
@@ -148,13 +161,22 @@ router.post('/interaction/:collection/:id', async (req, res) => {
   }
 });
 
+router.get('/global-stats', async (req, res) => {
+  try {
+    const stat = await prisma.globalStat.findUnique({ where: { id: 1 } });
+    res.json(stat ? [stat] : [{ id: 1, totalVisitors: 0 }]);
+  } catch (e) {
+    res.status(500).json({ error: 'Error fetching stats' });
+  }
+});
+
 router.post('/global-stats', async (req, res) => {
   try {
     const { incrementVisitors } = req.body;
     const stat = await prisma.globalStat.upsert({
       where: { id: 1 },
       update: incrementVisitors ? { totalVisitors: { increment: 1 } } : {},
-      create: { id: 1, totalVisitors: 1 }
+      create: { id: 1, totalVisitors: incrementVisitors ? 1 : 0 }
     });
     res.json(stat);
   } catch (e) {

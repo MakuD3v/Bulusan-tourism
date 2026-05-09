@@ -285,7 +285,12 @@ const EnterpriseDetailsPage = ({ item: selectedItem, onClose }: { item: any, onC
   const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [itinerary, setItinerary] = useState<number[]>([]);
+  const [item, setItem] = useState(selectedItem);
   const [activeTab, setActiveTab] = useState<'reviews' | 'offers'>('reviews');
+
+  useEffect(() => {
+    setItem(selectedItem);
+  }, [selectedItem]);
 
   useEffect(() => {
     if (user) setItinerary(user.itinerary || []);
@@ -293,7 +298,8 @@ const EnterpriseDetailsPage = ({ item: selectedItem, onClose }: { item: any, onC
 
   if (!selectedItem) return null;
 
-  const toggleItinerary = async (itemId: number) => {
+  const toggleItinerary = async (baseId: number) => {
+    const itemId = baseId + 1000000; // Enterprise Offset to avoid ID collision with Attractions
     if (!user) {
       setAuthAction('save this to your itinerary');
       setIsAuthPopupOpen(true);
@@ -412,12 +418,12 @@ const EnterpriseDetailsPage = ({ item: selectedItem, onClose }: { item: any, onC
                     </ActionButton>
                     
                     <ActionButton 
-                      $primary={!itinerary.includes(selectedItem.id)} 
-                      $success={itinerary.includes(selectedItem.id)}
+                      $primary={!itinerary.includes(selectedItem.id + 1000000)} 
+                      $success={itinerary.includes(selectedItem.id + 1000000)}
                       onClick={() => toggleItinerary(selectedItem.id)}
                     >
-                      <Heart size={18} fill={itinerary.includes(selectedItem.id) ? 'white' : 'none'} />
-                      {itinerary.includes(selectedItem.id) ? 'Saved' : 'Save Landmark'}
+                      <Heart size={18} fill={itinerary.includes(selectedItem.id + 1000000) ? 'white' : 'none'} />
+                      {itinerary.includes(selectedItem.id + 1000000) ? 'Saved' : 'Save Landmark'}
                     </ActionButton>
                     
                     {selectedItem.metadata?.website && (
@@ -474,27 +480,27 @@ const EnterpriseDetailsPage = ({ item: selectedItem, onClose }: { item: any, onC
              {/* REVIEWS TAB CONTENT */}
              {activeTab === 'reviews' && (
                 <InfoCard>
-                  <h3><Star size={20} color="#f59e0b" fill="#f59e0b" /> Community Reviews</h3>
+                   <h3><Star size={20} color="#f59e0b" fill="#f59e0b" /> Community Reviews</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {selectedItem.reviews && selectedItem.reviews.length > 0 ? (
-                      selectedItem.reviews.map((review: any) => (
-                        <div key={review.id} style={{ background: '#f8fafc', padding: '16px', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
+                    {item.reviews && item.reviews.length > 0 ? (
+                      item.reviews.map((review: any) => (
+                        <div key={review.id} style={{ background: 'rgba(148, 163, 184, 0.05)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(148, 163, 184, 0.1)' }}>
                           <div style={{ display: 'flex', gap: '12px', marginBottom: '8px', alignItems: 'center' }}>
                             <img src={review.avatar} style={{ width: '32px', height: '32px', borderRadius: '50%' }} alt="Reviewer" />
                             <div>
-                              <div style={{ fontWeight: 'bold', fontSize: '0.85rem' }}>{review.author}</div>
-                              <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{review.date}</div>
+                              <div style={{ fontWeight: 'bold', fontSize: '0.85rem', color: 'var(--text-dark)' }}>{review.author}</div>
+                              <div style={{ fontSize: '0.7rem', color: 'var(--text-light)' }}>{review.date}</div>
                             </div>
                           </div>
-                          <p style={{ fontSize: '0.85rem', opacity: 0.8, color: '#334155' }}>"{review.comment}"</p>
+                          <p style={{ fontSize: '0.85rem', opacity: 0.8, color: 'var(--text-dark)' }}>"{review.comment}"</p>
                         </div>
                       ))
                     ) : (
-                      <p style={{ fontSize: '0.9rem', opacity: 0.5, fontStyle: 'italic' }}>No reviews yet. Be the first to share!</p>
+                      <p style={{ fontSize: '0.9rem', opacity: 0.5, fontStyle: 'italic', color: 'var(--text-light)' }}>No reviews yet. Be the first to share!</p>
                     )}
                   </div>
 
-                  <div style={{ marginTop: '24px', background: '#f8fafc', padding: '16px', borderRadius: '16px', border: '1px solid rgba(0,0,0,0.05)' }}>
+                  <div style={{ marginTop: '24px', background: 'rgba(148, 163, 184, 0.05)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(148, 163, 184, 0.1)' }}>
                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                       <div style={{ flex: 1 }}>
                         <StarRating rating={newRating} editable onChange={setNewRating} size={20} />
@@ -503,7 +509,7 @@ const EnterpriseDetailsPage = ({ item: selectedItem, onClose }: { item: any, onC
                           placeholder="Add a comment..."
                           value={newComment}
                           onChange={(e) => setNewComment(e.target.value)}
-                          style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', fontSize: '0.85rem', marginTop: '8px' }}
+                          style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', fontSize: '0.85rem', marginTop: '8px', color: 'var(--text-dark)' }}
                         />
                       </div>
                       <button
@@ -525,12 +531,15 @@ const EnterpriseDetailsPage = ({ item: selectedItem, onClose }: { item: any, onC
                             const totalRating = updatedReviews.reduce((acc, rev) => acc + rev.rating, 0);
                             const newAverage = Number((totalRating / updatedReviews.length).toFixed(1));
 
-                            await dbService.update('enterprises', selectedItem.firebaseId, { 
+                            await dbService.update('enterprises', item.firebaseId || item.id, { 
                               reviews: updatedReviews,
                               rating: newAverage
                             });
+                            
+                            // Optimistic update for current view
+                            setItem({ ...item, reviews: updatedReviews, rating: newAverage });
                             setNewComment(''); setNewRating(0);
-                          } catch (err) { alert('Failed'); } finally { setSubmitting(false); }
+                          } catch (err) { alert('Failed to post review'); } finally { setSubmitting(false); }
                         }}
                         style={{ background: 'var(--cta-blue)', color: 'white', padding: '8px 16px', borderRadius: '12px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
                       >

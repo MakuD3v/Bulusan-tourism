@@ -3,15 +3,15 @@ import { dbService } from '../../api/db';
 
 const VisitorTracker = () => {
     useEffect(() => {
-        const sessionKey = 'bulusan_session_tracked';
-        const hasTracked = sessionStorage.getItem(sessionKey);
+        const trackingKey = 'bulusan_visitor_tracked_v2';
+        const hasTracked = localStorage.getItem(trackingKey);
 
         if (!hasTracked) {
-            // Real-time increment
+            // Real-time increment for first-time visitor on this device
             dbService.updateGlobalStats(true);
-            sessionStorage.setItem(sessionKey, 'true');
+            localStorage.setItem(trackingKey, 'true');
         } else {
-            // Just initialize/ensure stats doc exists without incrementing
+            // Just fetch/init stats without incrementing
             dbService.updateGlobalStats(false);
         }
     }, []);

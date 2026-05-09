@@ -15,31 +15,50 @@ export async function preloadCollection(colName: string): Promise<void> {
     }
 }
 
+export function invalidateCache(colName?: string) {
+    if (colName) {
+        delete memoryCache[colName];
+    } else {
+        Object.keys(memoryCache).forEach(key => delete memoryCache[key]);
+    }
+}
+
 export function useFirestore<T>(colName: string, defaultValue: T[] = []) {
     const [data, setData] = useState<T[]>(memoryCache[colName] || defaultValue); 
     const [loading, setLoading] = useState(!memoryCache[colName]);
 
+    const loadData = async () => {
+        try {
+            const typeMap: Record<string, string> = {
+                'attractions': 'Attraction',
+                'enterprises': 'Enterprise',
+                'heritage': 'Heritage',
+                'blogs': 'Blog',
+                'tours': 'Tour'
+            };
+            const entityType = typeMap[colName] || 'Unknown';
+            const res = await apiClient.get(`/${colName}`);
+            const mapped = res.map((item: any) => ({ 
+                ...item, 
+                firebaseId: item.id.toString(),
+                entityType 
+            }));
+            memoryCache[colName] = mapped;
+            setData(mapped);
+        } catch (err) {
+            console.error(`Fetch error for ${colName}:`, err);
+            // Fallback to default
+            if (!memoryCache[colName]) setData(defaultValue);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const loadData = async () => {
-            try {
-                const res = await apiClient.get(`/${colName}`);
-                // IDB compatibility: map id to firebaseId if needed by UI
-                const mapped = res.map((item: any) => ({ ...item, firebaseId: item.id.toString() }));
-                memoryCache[colName] = mapped;
-                setData(mapped);
-            } catch (err) {
-                console.error(`Fetch error for ${colName}:`, err);
-                // Fallback to default
-                if (!memoryCache[colName]) setData(defaultValue);
-            } finally {
-                setLoading(false);
-            }
-        };
-        
         loadData();
     }, [colName]);
 
-    return { data, loading };
+    return { data, loading, refresh: loadData };
 }
 
 export function useUsers(initialData: User[] = []) {
@@ -78,14 +97,22 @@ export function useGlobalStats() {
     const [stats, setStats] = useState<any>({ totalVisitors: 0 });
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
+    const loadStats = () => {
+        setLoading(true);
         apiClient.get('/global-stats').then(res => {
             if (res.length > 0) {
                 setStats(res[0]);
             }
             setLoading(false);
         }).catch(() => setLoading(false));
+    };
+
+    useEffect(() => {
+        loadStats();
+        // Polling for real-time dashboard feel (every 30s)
+        const interval = setInterval(loadStats, 30000);
+        return () => clearInterval(interval);
     }, []);
 
-    return { stats, loading };
+    return { stats, loading, refresh: loadStats };
 }

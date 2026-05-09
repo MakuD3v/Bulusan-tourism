@@ -356,7 +356,7 @@ export default function AttractionsManager({ attractions }: { attractions?: any[
                   </FormGroup>
 
                   {/* Pricing / Offers Section */}
-                  <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '20px', border: '1px solid #e2e8f0', marginBottom: '32px' }}>
+                  <div style={{ background: 'rgba(148, 163, 184, 0.05)', padding: '24px', borderRadius: '20px', border: '1px solid rgba(148, 163, 184, 0.1)', marginBottom: '32px' }}>
                     <FormGroup style={{ marginBottom: 0 }}>
                       <label>Admission Options *</label>
                       <select required value={formData.pricingType || 'Offers'} onChange={e => setFormData({ ...formData, pricingType: e.target.value })}>
@@ -367,15 +367,15 @@ export default function AttractionsManager({ attractions }: { attractions?: any[
 
                     {formData.pricingType === 'Offers' && (
                       <div style={{ marginTop: '20px' }}>
-                        <label style={{ fontSize: '0.85rem', fontWeight: 800, color: '#475569', marginBottom: '12px', display: 'block' }}>Offers Builder</label>
+                        <label style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-light)', marginBottom: '12px', display: 'block' }}>Offers Builder</label>
                         
                         <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                          <input placeholder="Offer Name (e.g. Adult Entrance)" value={newOfferName} onChange={e => setNewOfferName(e.target.value)} style={{ flex: 1, minWidth: '200px', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }} />
-                          <input placeholder="Price" type="number" value={newOfferPrice} onChange={e => setNewOfferPrice(e.target.value)} style={{ width: '120px', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }} />
+                          <input placeholder="Offer Name (e.g. Adult Entrance)" value={newOfferName} onChange={e => setNewOfferName(e.target.value)} style={{ flex: 1, minWidth: '200px', padding: '12px', borderRadius: '12px', border: '1px solid rgba(148, 163, 184, 0.2)', background: 'var(--surface-bg)', color: 'var(--text-dark)' }} />
+                          <input placeholder="Price" type="number" value={newOfferPrice} onChange={e => setNewOfferPrice(e.target.value)} style={{ width: '120px', padding: '12px', borderRadius: '12px', border: '1px solid rgba(148, 163, 184, 0.2)', background: 'var(--surface-bg)', color: 'var(--text-dark)' }} />
                           
                           <div style={{ position: 'relative' }}>
                               <input type="file" accept="image/*" ref={offerImageInputRef} style={{ display: 'none' }} onChange={e => e.target.files && processOfferImage(e.target.files)} />
-                              <button type="button" onClick={() => offerImageInputRef.current?.click()} style={{ background: newOfferImage ? '#dcfce7' : 'white', border: '1px solid #e2e8f0', padding: '12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <button type="button" onClick={() => offerImageInputRef.current?.click()} style={{ background: newOfferImage ? 'rgba(34, 197, 94, 0.1)' : 'var(--surface-bg)', border: '1px solid rgba(148, 163, 184, 0.2)', color: 'var(--text-dark)', padding: '12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                   <ImageIcon size={16} /> {isUploadingOfferImg ? '...' : newOfferImage ? 'Uploaded' : 'Pic (Opt)'}
                               </button>
                               {newOfferImage && (
@@ -388,12 +388,12 @@ export default function AttractionsManager({ attractions }: { attractions?: any[
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           {offers.map((o) => (
-                             <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-bg)', padding: '12px 16px', borderRadius: '14px', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                             <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-bg)', padding: '12px 16px', borderRadius: '14px', border: '1px solid rgba(148, 163, 184, 0.1)', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                   {o.image ? <img src={o.image} alt={o.name} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover' }} /> : <div style={{ width: 40, height: 40, borderRadius: 8, background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ImageIcon size={16} color="#94a3b8" /></div>}
-                                   <span style={{ fontWeight: 700, color: '#334155' }}>{o.name}</span>
+                                   {o.image ? <img src={o.image} alt={o.name} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover' }} /> : <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(148, 163, 184, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ImageIcon size={16} color="var(--text-light)" /></div>}
+                                   <span style={{ fontWeight: 700, color: 'var(--text-dark)' }}>{o.name}</span>
                                </div>
-                               <span style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--cta-blue)', fontWeight: 900 }}>PHP {o.price} <button type="button" onClick={() => setOffers(offers.filter(x => x.id !== o.id))} style={{ background: '#fff1f2', border: 'none', color: '#ef4444', cursor: 'pointer', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14}/></button></span>
+                               <span style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--cta-blue)', fontWeight: 900 }}>PHP {o.price} <button type="button" onClick={() => setOffers(offers.filter(x => x.id !== o.id))} style={{ background: 'rgba(239, 68, 68, 0.1)', border: 'none', color: '#ef4444', cursor: 'pointer', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14}/></button></span>
                              </div>
                           ))}
                         </div>
@@ -438,7 +438,7 @@ export default function AttractionsManager({ attractions }: { attractions?: any[
                       {(isTagsExpanded ? ATTRACTION_TAGS : ATTRACTION_TAGS.slice(0, 8)).map(tag => {
                          const isActive = (formData.tags || []).includes(tag);
                          return (
-                            <button type="button" key={tag} onClick={() => isActive ? removeTag(tag) : addTag(tag)} style={{ background: isActive ? '#f0f7ff' : 'white', color: isActive ? 'var(--cta-blue)' : '#64748b', padding: '8px 16px', borderRadius: '30px', fontSize: '0.8rem', fontWeight: 700, border: isActive ? '1px solid var(--cta-blue)' : '1px solid #e2e8f0', cursor: 'pointer', transition: 'all 0.2s' }}>
+                            <button type="button" key={tag} onClick={() => isActive ? removeTag(tag) : addTag(tag)} style={{ background: isActive ? 'rgba(46, 117, 182, 0.1)' : 'var(--surface-bg)', color: isActive ? 'var(--cta-blue)' : 'var(--text-light)', padding: '8px 16px', borderRadius: '30px', fontSize: '0.8rem', fontWeight: 700, border: isActive ? '1px solid var(--cta-blue)' : '1px solid rgba(148, 163, 184, 0.2)', cursor: 'pointer', transition: 'all 0.2s' }}>
                               #{tag}
                             </button>
                          )

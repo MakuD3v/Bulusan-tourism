@@ -29,10 +29,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const res = await apiClient.get('/auth/me');
           setUser(res.user);
           localStorage.setItem('bulusan_user', JSON.stringify(res.user));
-        } catch {
-          setUser(null);
-          localStorage.removeItem('bulusan_user');
-          localStorage.removeItem('auth_token');
+        } catch (err: any) {
+          console.error("Session verification failed:", err);
+          // Only wipe session if it's an explicit auth failure (401/403)
+          const isAuthError = err.message?.includes('401') || err.message?.includes('403');
+          if (isAuthError) {
+            setUser(null);
+            localStorage.removeItem('bulusan_user');
+            localStorage.removeItem('auth_token');
+          } else if (stored) {
+            // Keep the cached user data for a seamless experience during network/server issues
+            try {
+              setUser(JSON.parse(stored));
+            } catch {
+              setUser(null);
+            }
+          }
         }
       }
       setLoading(false);

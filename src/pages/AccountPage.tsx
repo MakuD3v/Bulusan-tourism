@@ -341,8 +341,13 @@ export default function AccountPage() {
   }, [attractions, enterprises, heritage]);
 
   const itineraryItems = useMemo(() => {
-    if (!user) return [];
-    return unifiedList.filter(item => (user.itinerary || []).map(String).includes(String(item.id)));
+    if (!user?.itinerary) return [];
+    return unifiedList.filter(item => {
+      const globalId = item.entityType === 'Enterprise' ? item.id + 1000000 
+                     : item.entityType === 'Heritage' ? item.id + 2000000 
+                     : item.id;
+      return user.itinerary.includes(globalId);
+    });
   }, [user, unifiedList]);
 
   const myReviews = useMemo(() => {
@@ -375,9 +380,12 @@ export default function AccountPage() {
     } catch (err) { alert('Update failed.'); }
   };
 
-  const removeItem = async (id: number) => {
+  const removeItem = async (baseId: number, entityType: string) => {
     if (!confirm('Remove this place from your itinerary?')) return;
-    const newItinerary = (user?.itinerary || []).filter(iid => String(iid) !== String(id));
+    const globalId = entityType === 'Enterprise' ? baseId + 1000000 
+                   : entityType === 'Heritage' ? baseId + 2000000 
+                   : baseId;
+    const newItinerary = (user?.itinerary || []).filter(iid => String(iid) !== String(globalId));
     try {
       await updateUser({ itinerary: newItinerary });
     } catch (err) { console.error(err); }
@@ -461,7 +469,7 @@ export default function AccountPage() {
                       <div className="loc"><MapPin size={14}/> {item.location}</div>
                       <div className="actions">
                         <button className="map" onClick={() => navigate(`/explore?search=${encodeURIComponent(item.name)}`)}>Explore Map</button>
-                        <button className="remove" onClick={() => removeItem(item.id)}>Remove</button>
+                        <button className="remove" onClick={() => removeItem(item.id, item.entityType)}>Remove</button>
                       </div>
                     </div>
                   </WonderCard>
@@ -491,7 +499,7 @@ export default function AccountPage() {
               </div>
               <ItineraryGrid>
                 {itineraryItems.map(item => (
-                  <WonderCard key={item.id}>
+                  <WonderCard key={`${item.entityType}-${item.id}`}>
                     <div className="img-box" style={{ background: '#eee' }}>
                       <SmartMedia type="img" src={item.photos?.[0] || item.img} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       <div className="badge">{item.entityType}</div>
@@ -501,7 +509,7 @@ export default function AccountPage() {
                       <div className="loc"><MapPin size={14}/> {item.location || 'Bulusan'}</div>
                       <div className="actions">
                         <button className="map" onClick={() => navigate(`/explore?search=${encodeURIComponent(item.name)}`)}>Focus Map</button>
-                        <button className="remove" onClick={() => removeItem(item.id)}><Trash2 size={16}/></button>
+                        <button className="remove" onClick={() => removeItem(item.id, item.entityType)}><Trash2 size={16}/></button>
                       </div>
                     </div>
                   </WonderCard>

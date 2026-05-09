@@ -305,7 +305,7 @@ const CreateModalContent = styled(motion.div)`
 `;
 
 const BlogPage = () => {
-  const { data: blogPosts, loading } = useBlogs();
+  const { data: blogPosts, loading, refresh } = useBlogs();
   const { user } = useAuth();
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -352,6 +352,7 @@ const BlogPage = () => {
       };
 
       await dbService.add('blogs', post);
+      refresh();
       setShowCreateModal(false);
       setNewPost({ title: '', category: 'Travel Guide', excerpt: '', content: '' });
       setPostImage(null);

@@ -61,7 +61,7 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Incorrect password. Please try again.' });
     }
     const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, avatar: user.avatar } });
+    res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, avatar: user.avatar, itinerary: user.itinerary, history: user.history } });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -84,7 +84,7 @@ router.get('/me', authenticateToken, async (req: any, res: any) => {
   try {
     const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
     if (!user) return res.status(404).json({ error: 'User not found' });
-    res.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role, avatar: user.avatar } });
+    res.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role, avatar: user.avatar, itinerary: user.itinerary, history: user.history } });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
   }
