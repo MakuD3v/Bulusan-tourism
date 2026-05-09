@@ -6,6 +6,7 @@ interface AuthContextType {
   user: AppUser | null;
   role: 'USER' | 'ADMIN' | null;
   login: (email: string, password: string) => Promise<boolean>;
+  loginWithGoogle: (credential: string) => Promise<boolean>;
   signup: (name: string, email: string, password: string) => Promise<boolean>;
   logout: () => void;
   updateUser: (data: Partial<AppUser>) => Promise<void>;
@@ -56,6 +57,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const loginWithGoogle = async (credential: string): Promise<boolean> => {
+    try {
+      const res = await apiClient.post('/auth/google', { credential });
+      if (res.token) {
+        localStorage.setItem('auth_token', res.token);
+        localStorage.setItem('bulusan_user', JSON.stringify(res.user));
+        setUser(res.user);
+        return true;
+      }
+      return false;
+    } catch (error: any) {
+      console.error('Google login error', error);
+      throw new Error(error.message || 'Google Login failed');
+    }
+  };
+
   const signup = async (name: string, email: string, password: string): Promise<boolean> => {
     try {
       const res = await apiClient.post('/auth/register', { name, email, password });
@@ -90,7 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, role: user?.role || null, login, signup, logout, updateUser, loading, isDemoMode }}>
+    <AuthContext.Provider value={{ user, role: user?.role || null, login, loginWithGoogle, signup, logout, updateUser, loading, isDemoMode }}>
       {!loading && children}
     </AuthContext.Provider>
   );
