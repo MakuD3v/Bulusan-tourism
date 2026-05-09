@@ -24,7 +24,7 @@ const Overlay = styled(motion.div)`
 const Header = styled.div`
   padding: 24px 32px;
   background: var(--surface-bg);
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -35,7 +35,7 @@ const Header = styled.div`
   }
 
   button.close {
-    background: #f8fafc;
+    background: var(--light-bg);
     border: none;
     width: 48px; height: 48px;
     border-radius: 50%;
@@ -43,7 +43,7 @@ const Header = styled.div`
     cursor: pointer;
     color: var(--text-light);
     transition: all 0.2s;
-    &:hover { background: #e2e8f0; color: #0f172a; }
+    &:hover { background: var(--soft-blue); color: var(--text-dark); }
   }
 `;
 
@@ -61,8 +61,8 @@ const ContentArea = styled.div`
 // Sidebar lists user tours
 const TourListSidebar = styled.div`
   width: 350px;
-  background: #f8fafc;
-  border-right: 1px solid #e2e8f0;
+  background: var(--light-bg);
+  border-right: 1px solid rgba(148, 163, 184, 0.1);
   display: flex;
   flex-direction: column;
   padding: 24px;
@@ -71,12 +71,12 @@ const TourListSidebar = styled.div`
   @media (max-width: 768px) {
     width: 100%;
     border-right: none;
-    border-bottom: 2px solid #e2e8f0;
+    border-bottom: 2px solid rgba(148, 163, 184, 0.1);
   }
 `;
 
 const SelectTourCard = styled.div<{ $active: boolean }>`
-  background: ${props => props.$active ? 'white' : 'transparent'};
+  background: ${props => props.$active ? 'var(--surface-bg)' : 'transparent'};
   border: 1px solid ${props => props.$active ? 'var(--cta-blue)' : 'transparent'};
   padding: 16px;
   border-radius: 16px;
@@ -85,7 +85,7 @@ const SelectTourCard = styled.div<{ $active: boolean }>`
   transition: all 0.2s;
   box-shadow: ${props => props.$active ? '0 10px 25px rgba(46, 117, 182, 0.1)' : 'none'};
 
-  &:hover { background: var(--surface-bg); border-color: ${props => props.$active ? 'var(--cta-blue)' : '#e2e8f0'}; }
+  &:hover { background: var(--surface-bg); border-color: ${props => props.$active ? 'var(--cta-blue)' : 'rgba(148, 163, 184, 0.2)'}; }
 
   h3 { font-size: 1.1rem; color: var(--dark-blue); font-weight: 800; margin-bottom: 4px; }
   p { font-size: 0.8rem; color: var(--text-light); font-weight: 500; }
@@ -120,7 +120,7 @@ const BuilderView = styled.div`
 
 const DetailHeader = styled.div`
   padding: 24px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -145,7 +145,7 @@ const DetailHeader = styled.div`
       border: none;
       outline: none;
       background: transparent;
-      border-bottom: 2px dashed #cbd5e1;
+      border-bottom: 2px dashed rgba(148, 163, 184, 0.3);
       padding-bottom: 4px;
       width: 100%;
       max-width: 400px;
@@ -177,7 +177,7 @@ const DetailHeader = styled.div`
 
       &.primary { background: var(--cta-blue); color: white; &:hover { background: var(--dark-blue); transform: translateY(-2px); }}
       &.play { background: #10b981; color: white; &:hover { background: #059669; transform: translateY(-2px); }}
-      &.danger { background: #fee2e2; color: #ef4444; &:hover { background: #fecaca; }}
+      &.danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; &:hover { background: rgba(239, 68, 68, 0.2); }}
     }
   }
 `;
@@ -195,15 +195,15 @@ const BuilderContent = styled.div`
 
 const SelectedList = styled.div`
   width: 300px;
-  background: #f8fafc;
-  border-right: 1px solid #e2e8f0;
+  background: var(--light-bg);
+  border-right: 1px solid rgba(148, 163, 184, 0.1);
   padding: 24px;
   overflow-y: auto;
   
   @media (max-width: 768px) {
     width: 100%;
     border-right: none;
-    border-top: 2px solid #e2e8f0;
+    border-top: 2px solid rgba(148, 163, 184, 0.1);
     min-height: 250px;
   }
   
@@ -216,7 +216,7 @@ const SelectedList = styled.div`
     margin-bottom: 10px;
     display: flex;
     align-items: center;
-    border: 1px solid #e2e8f0;
+    border: 1px solid rgba(148, 163, 184, 0.1);
     
     .num { font-weight: 800; color: var(--cta-blue); margin-right: 12px; font-size: 1.2rem; }
     .info { flex: 1; overflow: hidden; }
@@ -233,7 +233,7 @@ const SelectedList = styled.div`
     padding: 0;
     position: relative;
     
-    .line { width: 2px; height: 18px; background: #e2e8f0; }
+    .line { width: 2px; height: 18px; background: rgba(148, 163, 184, 0.1); }
     .val { 
         font-size: 0.65rem; 
         font-weight: 800; 
@@ -258,7 +258,7 @@ const CatalogArea = styled.div`
   .search-bar {
     display: flex;
     align-items: center;
-    background: #f1f5f9;
+    background: var(--light-bg);
     padding: 12px 16px;
     border-radius: 12px;
     margin-bottom: 24px;
@@ -274,7 +274,7 @@ const CatalogArea = styled.div`
 
 const CatalogCard = styled.div<{ $selected: boolean }>`
   background: var(--surface-bg);
-  border: 2px solid ${props => props.$selected ? 'var(--cta-blue)' : '#e2e8f0'};
+  border: 2px solid ${props => props.$selected ? 'var(--cta-blue)' : 'rgba(148, 163, 184, 0.1)'};
   border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
@@ -296,7 +296,7 @@ const CatalogCard = styled.div<{ $selected: boolean }>`
     mask-image: linear-gradient(to bottom, black 30%, transparent 100%);
   }
   
-  .info { padding: 12px; position: relative; z-index: 1; text-shadow: 0 1px 3px rgba(255,255,255,0.8), 0 2px 6px rgba(255,255,255,1); }
+  .info { padding: 12px; position: relative; z-index: 1; text-shadow: none; }
   h5 { font-size: 0.9rem; margin-bottom: 2px; color: var(--dark-blue); font-weight: 800; }
   p { font-size: 0.7rem; color: var(--text-light); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
 

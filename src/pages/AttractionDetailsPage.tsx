@@ -14,7 +14,7 @@ import { getDynamicTags } from '../utils/tagUtils';
 const PageContainer = styled(motion.div)`
   position: fixed;
   top: 0; left: 0; width: 100vw; height: 100vh;
-  background: #f8fafc;
+  background: var(--surface-bg);
   z-index: 2000;
   display: flex;
   flex-direction: column;
@@ -33,8 +33,8 @@ const CloseButton = styled.button`
   top: 32px;
   right: 60px;
   background: var(--surface-bg);
-  border: 1px solid #e2e8f0;
-  color: #475569;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  color: var(--text-dark);
   padding: 10px 20px;
   border-radius: 30px;
   font-weight: 700;
@@ -47,8 +47,8 @@ const CloseButton = styled.button`
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 
   &:hover {
-    background: #f1f5f9;
-    color: var(--text-dark);
+    background: var(--soft-blue);
+    color: var(--cta-blue);
   }
 
   @media (max-width: 1024px) {
@@ -139,8 +139,7 @@ const DetailsScrollArea = styled.div`
   padding-right: 20px;
   padding-bottom: 20px;
   
-  &::-webkit-scrollbar { width: 6px; }
-  &::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+  &::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.4); border-radius: 10px; }
 
   @media (max-width: 1024px) {
     overflow-y: visible;
@@ -162,8 +161,7 @@ const RightColumn = styled.div`
   gap: 24px;
   padding-right: 20px;
 
-  &::-webkit-scrollbar { width: 6px; }
-  &::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+  &::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.4); border-radius: 10px; }
 
   @media (max-width: 1024px) {
     overflow-y: visible;
@@ -172,8 +170,8 @@ const RightColumn = styled.div`
 `;
 
 const InfoCard = styled.div<{ $glass?: boolean, $highlight?: boolean }>`
-  background: ${(props) => props.$highlight ? '#fffbeb' : props.$glass ? 'rgba(255, 255, 255, 0.5)' : 'white'};
-  border: 1px solid ${(props) => props.$highlight ? '#fde68a' : 'rgba(0,0,0,0.05)'};
+  background: ${(props) => props.$highlight ? 'var(--highlight-bg, #fffbeb)' : props.$glass ? 'rgba(255, 255, 255, 0.05)' : 'var(--surface-bg)'};
+  border: 1px solid ${(props) => props.$highlight ? 'var(--highlight-border, #fde68a)' : 'rgba(148, 163, 184, 0.1)'};
   padding: 32px;
   border-radius: 24px;
   box-shadow: ${(props) => props.theme.shadows.soft};
@@ -181,7 +179,7 @@ const InfoCard = styled.div<{ $glass?: boolean, $highlight?: boolean }>`
   h3 {
     font-size: 1.25rem;
     margin-bottom: 16px;
-    color: ${(props) => props.theme.colors.darkBlue};
+    color: var(--dark-blue);
     display: flex;
     align-items: center;
     gap: 12px;
@@ -208,15 +206,15 @@ const SwitcherHeader = styled.div`
 const SwitchButton = styled.button<{ $active: boolean }>`
   flex: 1;
   padding: 12px;
-  background: ${p => p.$active ? 'var(--cta-blue)' : 'transparent'};
-  color: ${p => p.$active ? 'white' : '#64748b'};
+  background: ${p => p.$active ? 'var(--cta-blue)' : 'rgba(148, 163, 184, 0.05)'};
+  color: ${p => p.$active ? 'white' : 'var(--text-light)'};
   border: none;
   border-radius: 12px;
   font-weight: 800;
   cursor: pointer;
   transition: all 0.2s;
   &:hover {
-    background: ${p => p.$active ? 'var(--cta-blue)' : '#f1f5f9'};
+    background: ${p => p.$active ? 'var(--cta-blue)' : 'rgba(148, 163, 184, 0.1)'};
     color: ${p => p.$active ? 'white' : 'var(--dark-blue)'};
   }
 `;
@@ -239,7 +237,7 @@ const OfferItem = styled.div`
   align-items: center;
   gap: 16px;
   background: var(--surface-bg);
-  border: 1px solid rgba(0,0,0,0.05);
+  border: 1px solid rgba(148, 163, 184, 0.1);
   padding: 16px;
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.02);
@@ -278,9 +276,9 @@ const ActionButton = styled.button<{ $primary?: boolean, $success?: boolean }>`
   transition: all 0.2s;
   border: none;
   
-  background: ${p => p.$success ? '#10b981' : p.$primary ? 'var(--dark-blue)' : '#f8fafc'};
-  color: ${p => (p.$primary || p.$success) ? 'white' : 'var(--dark-blue)'};
-  border: ${p => (p.$primary || p.$success) ? 'none' : '1px solid #e2e8f0'};
+  background: ${p => p.$success ? '#10b981' : p.$primary ? 'var(--dark-blue)' : 'var(--surface-bg)'};
+  color: ${p => (p.$primary || p.$success) ? 'white' : 'var(--text-dark)'};
+  border: ${p => (p.$primary || p.$success) ? 'none' : '1px solid rgba(148, 163, 184, 0.2)'};
 
   &:hover {
     transform: translateY(-2px);
