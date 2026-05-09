@@ -8,6 +8,7 @@ import { useAttractions, useEnterprises, useHeritage } from '../../hooks/useFire
 import { ATTRACTION_CATEGORIES, ENTERPRISE_CATEGORIES } from '../Admin/CategoryTagConfig';
 import SharedCategoryScroller from '../Common/SharedCategoryScroller';
 import { calculateDistance, formatDistance } from '../../utils/geoUtils';
+import { getMediaUrl } from '../../utils/mediaUtils';
 
 const ALL_CATEGORIES = [...ATTRACTION_CATEGORIES, ...ENTERPRISE_CATEGORIES];
 
@@ -485,7 +486,7 @@ export default function TourDashboard({ userId, onClose, onPlayTour }: Props) {
                       const isSelected = activeTour?.destinations.some(d => d.itemId === (item.firebaseId || item.id).toString());
                       return (
                         <CatalogCard key={`${item.entityType}-${item.id}`} $selected={!!isSelected} onClick={() => toggleDestination(item)}>
-                          <div className="img" style={{ backgroundImage: `url(${item.photos?.[0] || item.img || ''})` }} />
+                          <div className="img" style={{ backgroundImage: `url(${getMediaUrl(item.photos?.[0] || item.img || '')})` }} />
                           <div className="check"><Check size={14} /></div>
                           <div className="info">
                             <h5>{item.name}</h5>

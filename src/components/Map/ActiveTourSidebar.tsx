@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, CheckCircle2, Circle } from 'lucide-react';
 import { CustomUserTour, UserTourDestination } from '../../data/types';
 import { calculateDistance, formatDistance } from '../../utils/geoUtils';
+import { getMediaUrl } from '../../utils/mediaUtils';
 
 const SidebarContainer = styled.div`
   display: flex;
@@ -206,7 +207,7 @@ export default function ActiveTourSidebar({ tour, onExit, onUpdateTour, allItems
                   onClick={() => handleCardClick(item)}
                   layout
                 >
-                  <div className="bg-img" style={{ backgroundImage: `url(${item.photos?.[0] || item.img || ''})` }} />
+                  <div className="bg-img" style={{ backgroundImage: `url(${getMediaUrl(item.photos?.[0] || item.img || '')})` }} />
                   <div className="content-z">
                     <div
                       className="check-wrap"

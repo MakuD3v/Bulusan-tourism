@@ -4,6 +4,7 @@ import { Search, MapPin, Loader2, X, ChevronRight, Star, Zap, TrendingUp, Award,
 import { ATTRACTION_CATEGORIES, ENTERPRISE_CATEGORIES } from '../Admin/CategoryTagConfig';
 import SharedCategoryScroller from '../Common/SharedCategoryScroller';
 import { Link } from 'react-router-dom';
+import { getMediaUrl } from '../../utils/mediaUtils';
 import { getDynamicTags } from '../../utils/tagUtils';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -214,7 +215,7 @@ const CardImage = styled.div<{ $src: string }>`
   top: 0; left: 0;
   width: 120px;
   height: 100%;
-  background-image: url(${props => props.$src});
+  background-image: url(${props => getMediaUrl(props.$src)});
   background-size: cover;
   background-position: center;
   z-index: 0;

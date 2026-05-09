@@ -20,11 +20,10 @@ const PageContainer = styled(motion.div)`
   flex-direction: column;
 
   @media (max-width: 1024px) {
-    position: relative;
-    height: auto;
-    min-height: 100vh;
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
     overflow-y: auto;
-    z-index: 100;
+    z-index: 2100;
   }
 `;
 
@@ -429,7 +428,6 @@ const AttractionDetailsPage = ({ item: selectedItem, onClose }: { item: any, onC
 
                   <ActionButtonsGrid>
                     <ActionButton onClick={() => {
-                      onClose();
                       navigate(`/explore?lat=${selectedItem.coordinates?.lat}&lng=${selectedItem.coordinates?.lng}&name=${encodeURIComponent(selectedItem.name)}&autoRoute=true`);
                     }}>
                       <MapPin size={18}/> View on Map
