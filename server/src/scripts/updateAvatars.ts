@@ -16,7 +16,7 @@ async function updateExistingAvatars() {
         continue;
       }
 
-      const avatarUrl = `https://unavatar.io/${user.email.trim().toLowerCase()}?fallback=https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.name)}`;
+      const avatarUrl = `https://unavatar.io/google/${user.email.trim().toLowerCase()}?fallback=https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.name)}`;
 
       if (user.avatar !== avatarUrl) {
         await prisma.user.update({
