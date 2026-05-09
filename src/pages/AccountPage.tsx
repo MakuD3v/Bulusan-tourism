@@ -32,8 +32,8 @@ const PortalContainer = styled(motion.div).attrs({
 `;
 const Sidebar = styled.div`
   width: 280px;
-  background: var(--dark-blue);
-  color: var(--surface-bg);
+  background: ${(props) => props.theme.colors.darkBlue === '#F8FAFC' ? props.theme.colors.softBlue : props.theme.colors.darkBlue};
+  color: ${(props) => props.theme.colors.darkBlue === '#F8FAFC' ? '#F8FAFC' : '#FFFFFF'};
   display: flex;
   flex-direction: column;
   padding: 32px 0;
@@ -91,7 +91,7 @@ const Sidebar = styled.div`
     }
 
     span { 
-      color: var(--surface-bg); 
+      color: ${(props) => props.theme.colors.darkBlue === '#F8FAFC' ? '#F8FAFC' : '#FFFFFF'}; 
       font-family: 'Pacifico', cursive;
       font-weight: normal;
       text-transform: none;
@@ -123,8 +123,8 @@ const Sidebar = styled.div`
 
 const NavItem = styled.button<{ $active?: boolean }>`
   font-family: ${(props) => props.theme.fonts.body};
-  background: ${(props) => props.$active ? 'rgba(128,128,128,0.1)' : 'transparent'};
-  color: ${(props) => props.$active ? 'var(--surface-bg)' : 'var(--text-light)'};
+  background: ${(props) => props.$active ? 'rgba(128,128,128,0.2)' : 'transparent'};
+  color: ${(props) => props.$active ? (props.theme.colors.darkBlue === '#F8FAFC' ? '#3B82F6' : '#FFFFFF') : 'rgba(148,163,184,0.8)'};
   border: none;
   padding: 10px 16px;
   border-radius: 10px;
@@ -162,8 +162,8 @@ const NavItem = styled.button<{ $active?: boolean }>`
   }
 
   &:hover {
-    background: rgba(128,128,128,0.1);
-    color: var(--surface-bg);
+    background: rgba(128,128,128,0.2);
+    color: ${(props) => props.theme.colors.darkBlue === '#F8FAFC' ? '#3B82F6' : '#FFFFFF'};
     @media (max-width: 1024px) {
       background: transparent;
       color: ${(props) => props.theme.colors.ctaBlue};

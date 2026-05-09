@@ -37,8 +37,7 @@ router.post('/register', async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const emailHash = crypto.createHash('md5').update(email.trim().toLowerCase()).digest('hex');
-    const avatar = `https://www.gravatar.com/avatar/${emailHash}?d=identicon`;
+    const avatar = `https://unavatar.io/${email.trim().toLowerCase()}?fallback=https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}`;
     
     const user = await prisma.user.create({
       data: { name, email, password: hashedPassword, role: isAdmin ? 'ADMIN' : 'USER', avatar }

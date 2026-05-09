@@ -16,8 +16,7 @@ async function updateExistingAvatars() {
         continue;
       }
 
-      const emailHash = crypto.createHash('md5').update(user.email.trim().toLowerCase()).digest('hex');
-      const avatarUrl = `https://www.gravatar.com/avatar/${emailHash}?d=identicon`;
+      const avatarUrl = `https://unavatar.io/${user.email.trim().toLowerCase()}?fallback=https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.name)}`;
 
       if (user.avatar !== avatarUrl) {
         await prisma.user.update({
