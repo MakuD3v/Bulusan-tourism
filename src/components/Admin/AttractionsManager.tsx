@@ -24,9 +24,9 @@ const HeaderRow = styled.div`
 
 const Table = styled.table`
   width: 100%; border-collapse: collapse;
-  th, td { padding: 16px; text-align: left; border-bottom: 1px solid #eee; }
-  th { font-weight: 600; color: #666; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
-  td { color: #333; }
+  th, td { padding: 16px; text-align: left; border-bottom: 1px solid rgba(148, 163, 184, 0.1); }
+  th { font-weight: 600; color: var(--text-light); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+  td { color: var(--text-dark); }
   .row-actions { display: flex; gap: 8px; button { background: #f8fafc; border: 1px solid #e2e8f0; padding: 6px; border-radius: 6px; cursor: pointer; color: var(--text-light); &:hover { color: ${(props) => props.theme.colors.ctaBlue}; background: var(--surface-bg); } &.delete:hover { color: #ef4444; } } }
 `;
 
@@ -58,8 +58,8 @@ const RightPane = styled.div`
 
 const FormGroup = styled.div`
   display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px;
-  label { font-weight: 800; font-size: 0.9rem; color: #475569; display:flex; align-items: center; gap: 6px; }
-  input, textarea, select { padding: 16px 20px; border: 1px solid #e2e8f0; border-radius: 16px; font-size: 1rem; background: var(--surface-bg); outline: none; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); &:focus { border-color: var(--cta-blue); box-shadow: 0 0 0 4px rgba(46, 117, 182, 0.1); } }
+  label { font-weight: 800; font-size: 0.9rem; color: var(--text-light); display:flex; align-items: center; gap: 6px; }
+  input, textarea, select { padding: 16px 20px; border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 16px; font-size: 1rem; background: var(--surface-bg); color: var(--text-dark); outline: none; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); &:focus { border-color: var(--cta-blue); box-shadow: 0 0 0 4px rgba(46, 117, 182, 0.1); } }
   textarea { resize: vertical; min-height: 120px; }
 `;
 

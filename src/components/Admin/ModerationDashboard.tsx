@@ -26,7 +26,7 @@ const Column = styled.div`
 
 const ColumnHeader = styled.div`
   padding: 24px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -35,7 +35,7 @@ const ColumnHeader = styled.div`
     width: 40px;
     height: 40px;
     border-radius: 12px;
-    background: #f8fafc;
+    background: rgba(148, 163, 184, 0.05);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -63,7 +63,7 @@ const ScrollArea = styled.div`
 `;
 
 const ContentCard = styled(motion.div)`
-  background: #f8fbff;
+  background: rgba(148, 163, 184, 0.02);
   border: 1px solid rgba(0,0,0,0.03);
   padding: 16px;
   border-radius: 18px;
@@ -88,7 +88,7 @@ const ContentCard = styled(motion.div)`
   h4 {
     margin: 0 0 4px 0;
     font-size: 0.95rem;
-    color: #0f172a;
+    color: var(--text-dark);
   }
 
   .meta {
@@ -102,7 +102,7 @@ const ContentCard = styled(motion.div)`
 
   .content-preview {
     font-size: 0.85rem;
-    color: #334155;
+    color: var(--text-dark);
     line-height: 1.5;
     background: var(--surface-bg);
     padding: 12px;
@@ -238,7 +238,7 @@ const ModerationDashboard: React.FC<ModerationDashboardProps> = ({ attractions, 
                                     <User size={12} /> {blog.authorName} · <Clock size={12} /> {blog.status || 'Under Review'}
                                 </div>
                                 <div style={{ marginTop: 12, display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                    <button onClick={() => setSelectedBlog(blog)} style={{ padding: '6px 12px', borderRadius: 8, background: '#f1f5f9', border: 'none', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>
+                                    <button onClick={() => setSelectedBlog(blog)} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(148, 163, 184, 0.1)', color: 'var(--text-dark)', border: 'none', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>
                                         View Content
                                     </button>
                                     <button 
@@ -269,8 +269,8 @@ const ModerationDashboard: React.FC<ModerationDashboardProps> = ({ attractions, 
                     {selectedBlog && (
                         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} style={{ background: 'var(--surface-bg)', width: '90%', maxWidth: 700, padding: 40, borderRadius: 24 }}>
-                                <h2 style={{ fontSize: '1.8rem' }}>{selectedBlog.title}</h2>
-                                <p style={{ margin: '24px 0', lineHeight: 1.6, color: '#444' }}>{selectedBlog.content}</p>
+                                <h2 style={{ fontSize: '1.8rem', color: 'var(--text-dark)' }}>{selectedBlog.title}</h2>
+                                <p style={{ margin: '24px 0', lineHeight: 1.6, color: 'var(--text-dark)' }}>{selectedBlog.content}</p>
                                 <button onClick={() => setSelectedBlog(null)} style={{ background: 'var(--cta-blue)', color: 'white', border: 'none', padding: '12px 24px', borderRadius: 12, fontWeight: 700, cursor: 'pointer' }}>Close Preview</button>
                             </motion.div>
                         </div>

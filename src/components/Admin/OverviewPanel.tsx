@@ -26,7 +26,7 @@ const StatCard = styled(motion.div)`
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color: #94a3b8;
+    color: var(--text-light);
     
     .icon {
       width: 40px;
@@ -41,7 +41,7 @@ const StatCard = styled(motion.div)`
   .value {
     font-size: 2rem;
     font-weight: 800;
-    color: #0f172a;
+    color: var(--text-dark);
     font-family: ${p => p.theme.fonts.heading};
   }
 
@@ -66,23 +66,23 @@ const GlassTable = styled.div`
     th {
       text-align: left;
       padding: 20px 24px;
-      background: #f8fafc;
+      background: rgba(148, 163, 184, 0.05);
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 1px;
-      color: #94a3b8;
+      color: var(--text-light);
       font-weight: 700;
     }
 
     td {
       padding: 16px 24px;
-      border-bottom: 1px solid #f1f5f9;
-      color: #334155;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+      color: var(--text-dark);
       font-size: 0.95rem;
     }
 
     tr:hover td {
-      background: #f8fbff;
+      background: rgba(148, 163, 184, 0.05);
       cursor: pointer;
     }
   }
@@ -112,7 +112,7 @@ const ModalContent = styled(motion.div)`
 const SearchContainer = styled.div`
   display: flex;
   align-items: center;
-  background: #f8fafc;
+  background: rgba(148, 163, 184, 0.05);
   padding: 8px 16px;
   border-radius: 12px;
   border: 1px solid #e2e8f0;
@@ -124,6 +124,7 @@ const SearchContainer = styled.div`
     background: none;
     padding: 8px;
     width: 100%;
+    color: var(--text-dark);
     outline: none;
     font-size: 0.9rem;
   }
@@ -222,7 +223,7 @@ const OverviewPanel: React.FC<OverviewPanelProps> = ({
               <tr key={entity.firebaseId} onClick={() => setSelectedEntity(entity)}>
                 <td style={{ fontWeight: 700 }}>{entity.name}</td>
                 <td>
-                  <span style={{ padding: '4px 10px', borderRadius: '20px', background: '#f1f5f9', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-light)' }}>
+                  <span style={{ padding: '4px 10px', borderRadius: '20px', background: 'rgba(148, 163, 184, 0.1)', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-light)' }}>
                     {entity.type}
                   </span>
                 </td>
@@ -260,12 +261,12 @@ const OverviewPanel: React.FC<OverviewPanelProps> = ({
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '32px' }}>
-                <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '20px' }}>
-                  <div style={{ color: '#94a3b8', fontSize: '0.8rem', marginBottom: '4px' }}>Total Interactions</div>
+                <div style={{ background: 'rgba(148, 163, 184, 0.05)', padding: '20px', borderRadius: '20px' }}>
+                  <div style={{ color: 'var(--text-light)', fontSize: '0.8rem', marginBottom: '4px' }}>Total Interactions</div>
                   <div style={{ fontSize: '1.5rem', fontWeight: 900 }}>{selectedEntity.visits || 0}</div>
                 </div>
-                <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '20px' }}>
-                  <div style={{ color: '#94a3b8', fontSize: '0.8rem', marginBottom: '4px' }}>Average Rating</div>
+                <div style={{ background: 'rgba(148, 163, 184, 0.05)', padding: '20px', borderRadius: '20px' }}>
+                  <div style={{ color: 'var(--text-light)', fontSize: '0.8rem', marginBottom: '4px' }}>Average Rating</div>
                   <div style={{ fontSize: '1.5rem', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Star size={20} fill="#f1c40f" color="#f1c40f" /> {selectedEntity.rating || '0.0'}
                   </div>
