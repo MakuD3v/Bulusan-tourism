@@ -64,9 +64,10 @@ const FormGroup = styled.div`
 `;
 
 const DropZone = styled.div<{ $isDragActive: boolean }>`
-  border: 2px dashed ${p => p.$isDragActive ? 'var(--cta-blue)' : '#cbd5e1'}; background: ${p => p.$isDragActive ? '#f0f7ff' : '#f8fafc'};
+  border: 2px dashed ${p => p.$isDragActive ? 'var(--cta-blue)' : 'rgba(148, 163, 184, 0.3)'}; 
+  background: ${p => p.$isDragActive ? 'rgba(46, 117, 182, 0.1)' : 'rgba(255, 255, 255, 0.02)'};
   border-radius: 16px; padding: 32px; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 12px; color: #FFFFFF; margin-bottom: 20px;
-  &:hover { border-color: var(--cta-blue); background: #f0f7ff; }
+  &:hover { border-color: var(--cta-blue); background: rgba(255, 255, 255, 0.05); }
   input[type="file"] { display: none; }
 `;
 
