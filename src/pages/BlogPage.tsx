@@ -276,18 +276,20 @@ const CreateModalContent = styled(motion.div)`
   box-shadow: 0 30px 60px rgba(0,0,0,0.15);
   position: relative;
   z-index: 2001;
-
+  background: var(--surface-bg);
   form { display: flex; flex-direction: column; gap: 16px; }
-  h2 { margin-bottom: 24px; color: #333; }
+  h2 { margin-bottom: 24px; color: var(--text-dark); }
   .field { margin-bottom: 0px; }
-  label { display: block; margin-bottom: 8px; font-weight: 700; color: #555; }
+  label { display: block; margin-bottom: 8px; font-weight: 700; color: var(--text-light); }
   input, textarea, select {
     width: 100%;
     padding: 12px;
-    border: 1px solid #ddd;
+    border: 1px solid rgba(148, 163, 184, 0.2);
     border-radius: 12px;
     font-size: 1rem;
     font-family: inherit;
+    background: var(--surface-bg);
+    color: var(--text-dark);
   }
   button.submit {
     width: 100%;

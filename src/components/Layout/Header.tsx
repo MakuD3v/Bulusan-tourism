@@ -64,10 +64,10 @@ const LogoTextContent = styled.div<{ $transparent: boolean, $scrolled: boolean }
     font-family: inherit;
     font-size: 0.8rem;
     font-weight: 700;
-    color: ${(props) => (!props.$scrolled && props.$transparent ? '#f8fafc' : '#334155')};
+    color: #F8FAFC;
     letter-spacing: 2px;
     text-transform: uppercase;
-    opacity: 0.8;
+    opacity: 0.9;
 
     @media (max-width: 768px) {
       display: none;

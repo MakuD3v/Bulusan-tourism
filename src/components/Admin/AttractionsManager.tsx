@@ -52,8 +52,8 @@ const LeftPane = styled.div`
 `;
 
 const RightPane = styled.div`
-  flex: 1; padding: 40px; display: flex; flex-direction: column; background: rgba(148, 163, 184, 0.05); overflow-y: auto;
-  .map-container { flex: 1; background: var(--surface-bg); border-radius: 20px; border: 1px solid rgba(148, 163, 184, 0.2); margin-top: 16px; margin-bottom: 24px; min-height: 400px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+  flex: 1; padding: 40px; display: flex; flex-direction: column; background: var(--light-bg); overflow-y: auto;
+  .map-container { flex: 1; background: var(--surface-bg); border-radius: 20px; border: 1px solid rgba(148, 163, 184, 0.2); margin-top: 16px; margin-bottom: 24px; min-height: 600px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
 `;
 
 const FormGroup = styled.div`
@@ -336,7 +336,7 @@ export default function AttractionsManager({ attractions }: { attractions?: any[
                       {(isCategoriesExpanded ? ATTRACTION_CATEGORIES : ATTRACTION_CATEGORIES.slice(0, 5)).map(cat => {
                          const isActive = (formData.categories || []).includes(cat.label);
                          return (
-                            <button type="button" key={cat.label} onClick={() => isActive ? removeCategory(cat.label) : addCategory(cat.label)} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: isActive ? 'var(--cta-blue)' : 'white', color: isActive ? 'white' : '#64748b', padding: '10px 18px', borderRadius: '30px', border: isActive ? '1px solid var(--cta-blue)' : '1px solid #e2e8f0', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', boxShadow: isActive ? '0 4px 12px rgba(46,117,182,0.2)' : 'none' }}>
+                            <button type="button" key={cat.label} onClick={() => isActive ? removeCategory(cat.label) : addCategory(cat.label)} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: isActive ? 'var(--cta-blue)' : 'var(--surface-bg)', color: isActive ? 'white' : 'var(--text-dark)', padding: '10px 18px', borderRadius: '30px', border: isActive ? '1px solid var(--cta-blue)' : '1px solid rgba(148, 163, 184, 0.2)', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', boxShadow: isActive ? '0 4px 12px rgba(46,117,182,0.2)' : 'none' }}>
                               <img src={getMapIconUrl(cat.label)} alt="" style={{ height: 20, filter: isActive ? 'brightness(0) invert(1)' : 'none' }} />
                               {cat.label}
                             </button>
