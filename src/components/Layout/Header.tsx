@@ -323,9 +323,13 @@ const Header = ({ isTransparent }: { isTransparent: boolean }) => {
           <div style={{ position: 'relative' }}>
             <div
               onClick={() => setShowMenu(!showMenu)}
-              style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--cta-blue)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+              style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--cta-blue)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', overflow: 'hidden' }}
             >
-              {user.name.charAt(0)}
+              {user.avatar ? (
+                <img src={user.avatar} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                user.name.charAt(0)
+              )}
             </div>
             <AnimatePresence>
               {showMenu && (

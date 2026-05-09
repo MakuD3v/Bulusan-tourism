@@ -92,6 +92,15 @@ const GlobalStyles = createGlobalStyle`
     z-index: -1;
     pointer-events: none;
   }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
 `;
 
 export default GlobalStyles;

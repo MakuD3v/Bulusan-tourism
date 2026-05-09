@@ -1,0 +1,40 @@
+import { PrismaClient } from '@prisma/client';
+import crypto from 'crypto';
+
+const prisma = new PrismaClient();
+
+async function updateExistingAvatars() {
+  console.log('Starting avatar update for existing accounts...');
+
+  try {
+    const users = await prisma.user.findMany();
+    let updatedCount = 0;
+
+    for (const user of users) {
+      if (user.email.toLowerCase() === 'admin@bulusan.com') {
+        console.log(`Skipping admin account: ${user.email}`);
+        continue;
+      }
+
+      const emailHash = crypto.createHash('md5').update(user.email.trim().toLowerCase()).digest('hex');
+      const avatarUrl = `https://www.gravatar.com/avatar/${emailHash}?d=identicon`;
+
+      if (user.avatar !== avatarUrl) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { avatar: avatarUrl }
+        });
+        console.log(`Updated avatar for: ${user.email}`);
+        updatedCount++;
+      }
+    }
+
+    console.log(`Successfully updated ${updatedCount} user avatars!`);
+  } catch (error) {
+    console.error('Error updating avatars:', error);
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+updateExistingAvatars();

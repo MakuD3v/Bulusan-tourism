@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -15,13 +16,37 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'An account with this email already exists.' });
     }
     const isAdmin = ['admin@bulusan.com'].includes(email.toLowerCase());
+    
+    if (!isAdmin) {
+      if (email.toLowerCase().endsWith('@gmail.com') || process.env.HUNTER_API_KEY) {
+        if (process.env.HUNTER_API_KEY) {
+          try {
+            const hunterRes = await fetch(`https://api.hunter.io/v2/email-verifier?email=${encodeURIComponent(email)}&api_key=${process.env.HUNTER_API_KEY}`);
+            const hunterData = await hunterRes.json();
+            if (hunterData?.data?.result === 'undeliverable') {
+              return res.status(400).json({ error: 'This email address appears to be invalid or does not exist.' });
+            }
+          } catch (e) {
+            console.error('Email validation failed', e);
+          }
+        } else if (email.toLowerCase().includes('gmai.') || email.toLowerCase().includes('gmail.co') && !email.toLowerCase().endsWith('@gmail.com')) {
+          // Simple fallback typo check if API key is not present
+          return res.status(400).json({ error: 'Please enter a valid Gmail address (did you mean @gmail.com?).' });
+        }
+      }
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
+    const emailHash = crypto.createHash('md5').update(email.trim().toLowerCase()).digest('hex');
+    const avatar = `https://www.gravatar.com/avatar/${emailHash}?d=identicon`;
+    
     const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword, role: isAdmin ? 'ADMIN' : 'USER' }
+      data: { name, email, password: hashedPassword, role: isAdmin ? 'ADMIN' : 'USER', avatar }
     });
     const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, avatar: user.avatar } });
   } catch (error) {
+    console.error('Register error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -40,6 +65,7 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, avatar: user.avatar } });
   } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
