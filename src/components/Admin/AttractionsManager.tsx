@@ -58,7 +58,7 @@ const RightPane = styled.div`
 
 const FormGroup = styled.div`
   display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px;
-  label { font-weight: 800; font-size: 0.9rem; color: #FFFFFF; display:flex; align-items: center; gap: 6px; }
+  label { font-weight: 800; font-size: 0.9rem; color: var(--text-dark); display:flex; align-items: center; gap: 6px; }
   input, textarea, select { padding: 16px 20px; border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 16px; font-size: 1rem; background: var(--surface-bg); color: var(--text-dark); outline: none; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); &:focus { border-color: var(--cta-blue); box-shadow: 0 0 0 4px rgba(46, 117, 182, 0.1); } }
   textarea { resize: vertical; min-height: 120px; }
 `;
@@ -66,7 +66,7 @@ const FormGroup = styled.div`
 const DropZone = styled.div<{ $isDragActive: boolean }>`
   border: 2px dashed ${p => p.$isDragActive ? 'var(--cta-blue)' : 'rgba(148, 163, 184, 0.3)'}; 
   background: ${p => p.$isDragActive ? 'rgba(46, 117, 182, 0.1)' : 'rgba(255, 255, 255, 0.02)'};
-  border-radius: 16px; padding: 32px; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 12px; color: #FFFFFF; margin-bottom: 20px;
+  border-radius: 16px; padding: 32px; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--text-dark); margin-bottom: 20px;
   &:hover { border-color: var(--cta-blue); background: rgba(255, 255, 255, 0.05); }
   input[type="file"] { display: none; }
 `;
@@ -404,28 +404,28 @@ export default function AttractionsManager({ attractions }: { attractions?: any[
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '32px' }}>
                     <FormGroup style={{ marginBottom: 0 }}>
-                      <label>Opening Time *</label>
+                      <label style={{ color: 'var(--text-dark)' }}>Opening Time *</label>
                       <input type="time" required value={formData.openingTime || ''} onChange={e => setFormData({ ...formData, openingTime: e.target.value })} />
                     </FormGroup>
                     <FormGroup style={{ marginBottom: 0 }}>
-                      <label>Closing Time *</label>
+                      <label style={{ color: 'var(--text-dark)' }}>Closing Time *</label>
                       <input type="time" required value={formData.closingTime || ''} onChange={e => setFormData({ ...formData, closingTime: e.target.value })} />
                     </FormGroup>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '32px' }}>
                     <FormGroup style={{ marginBottom: 0 }}>
-                      <label>Contact Number *</label>
+                      <label style={{ color: 'var(--text-dark)' }}>Contact Number *</label>
                       <input required value={formData.contactInfo || ''} onChange={e => setFormData({ ...formData, contactInfo: e.target.value })} placeholder="e.g. +639123456789" />
                     </FormGroup>
                     <FormGroup style={{ marginBottom: 0 }}>
-                      <label>Website URL (Optional)</label>
+                      <label style={{ color: 'var(--text-dark)' }}>Website URL (Optional)</label>
                       <input type="url" value={formData.website || ''} onChange={e => setFormData({ ...formData, website: e.target.value })} placeholder="https://example.com" />
                     </FormGroup>
                   </div>
 
                   <FormGroup style={{ marginBottom: '40px' }}>
-                    <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--text-dark)' }}>
                         <span>Tags</span>
                         <button type="button" onClick={() => setIsTagsExpanded(!isTagsExpanded)} style={{ background:'none', border:'none', color:'var(--cta-blue)', cursor:'pointer', fontSize:'0.85rem', fontWeight:'bold' }}>
                             {isTagsExpanded ? 'Hide' : 'Show All'}
@@ -454,8 +454,8 @@ export default function AttractionsManager({ attractions }: { attractions?: any[
                   </FormGroup>
 
                   <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '32px' }}>
-                    <label style={{ fontWeight: 800, fontSize: '0.9rem', color: 'white', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                       <ImageIcon size={18} color="white" /> Photos (Min 1, Max 5) *
+                    <label style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-dark)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                       <ImageIcon size={18} color="var(--text-dark)" /> Photos (Min 1, Max 5) *
                     </label>
                     <DropZone 
                       $isDragActive={dragActive}
@@ -465,7 +465,7 @@ export default function AttractionsManager({ attractions }: { attractions?: any[
                       onDrop={e => { e.preventDefault(); setDragActive(false); processFiles(e.dataTransfer.files); }}
                       onClick={() => fileInputRef.current?.click()}
                     >
-                      <UploadCloud size={40} color="white" strokeWidth={1.5} />
+                      <UploadCloud size={40} color="var(--text-dark)" strokeWidth={1.5} />
                       <div style={{ fontSize: '1.1rem' }}><strong>{isUploadingPhotos ? 'Uploading...' : 'Drop images here'}</strong> or click to browse</div>
                       <div style={{ fontSize: '0.85rem', opacity: 0.7 }}>First image uploaded will be the thumbnail</div>
                       <input type="file" multiple accept="image/*" ref={fileInputRef} onChange={e => e.target.files && processFiles(e.target.files)} />
@@ -485,8 +485,8 @@ export default function AttractionsManager({ attractions }: { attractions?: any[
                   </div>
                   
                   <div style={{ marginTop: '32px', paddingBottom: '40px' }}>
-                      <label style={{ fontWeight: 800, fontSize: '0.9rem', color: 'white', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Film size={18} color="white" /> Promo Video (Optional)
+                      <label style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-dark)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Film size={18} color="var(--text-dark)" /> Promo Video (Optional)
                      </label>
                      <DropZone 
                       $isDragActive={dragActive}
@@ -496,7 +496,7 @@ export default function AttractionsManager({ attractions }: { attractions?: any[
                       onDrop={e => { e.preventDefault(); setDragActive(false); processVideo(e.dataTransfer.files); }}
                       onClick={() => videoInputRef.current?.click()}
                     >
-                      <Film size={40} color="white" strokeWidth={1.5} />
+                      <Film size={40} color="var(--text-dark)" strokeWidth={1.5} />
                       <div style={{ fontSize: '1.1rem' }}><strong>{isUploadingVideo ? 'Uploading Video (This may take a few minutes)...' : 'Drop video here'}</strong> or click to browse</div>
                       <input type="file" accept="video/mp4,video/webm" ref={videoInputRef} onChange={e => e.target.files && processVideo(e.target.files)} />
                     </DropZone>
@@ -518,7 +518,7 @@ export default function AttractionsManager({ attractions }: { attractions?: any[
                 
                 <RightPane>
                   <label style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-dark)', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                    <Map size={22} color="white" strokeWidth={2.5} /> Pinpoint Location
+                    <Map size={22} color="var(--text-dark)" strokeWidth={2.5} /> Pinpoint Location
                   </label>
                   <div className="map-container">
                     <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8' }}>Initializing high-precision map...</div>}>
