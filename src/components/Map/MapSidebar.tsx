@@ -62,7 +62,7 @@ const TourButton = styled.button`
   width: 100%;
   max-width: 320px;
   padding: 10px;
-  background: #f8fafc;
+  background: var(--surface-bg);
   border: 1px dashed var(--cta-blue);
   color: var(--cta-blue);
   border-radius: 12px;
@@ -76,7 +76,7 @@ const TourButton = styled.button`
   align-items: center;
   justify-content: center;
   gap: 8px;
-  &:hover { background: #eff6ff; }
+  &:hover { background: rgba(46, 117, 182, 0.05); }
 `;
 
 
@@ -87,7 +87,7 @@ const DrawerHandle = styled.div`
 const SearchSection = styled.div`
   padding: 0 18px 16px;
   background: var(--surface-bg);
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -105,7 +105,7 @@ const TabContainer = styled.div`
   width: 100%;
   max-width: 320px;
   margin-bottom: 20px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
   gap: 10px; /* Added gap to prevent overlap */
 `;
 
@@ -130,10 +130,10 @@ const Tab = styled.button<{ $active: boolean }>`
 const SearchBar = styled.div`
   display: flex;
   align-items: center;
-  background: #f8fafc;
+  background: var(--surface-bg);
   padding: 8px 14px;
   border-radius: 30px;
-  border: 1px solid rgba(0,0,0,0.04);
+  border: 1px solid rgba(148, 163, 184, 0.1);
   margin-bottom: 0px;
   transition: all 0.3s;
   width: 100%;
@@ -173,7 +173,7 @@ const ResultsContainer = styled(motion.div)`
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: #fcfdfe;
+  background: var(--light-bg);
 
   /* Desktop: take remaining sidebar height, scroll internally */
   @media (min-width: 1024px) {
@@ -187,7 +187,7 @@ const ResultsContainer = styled(motion.div)`
 `;
 
 const ResultCard = styled(motion.div)<{ $active: boolean }>`
-  background: ${props => props.$active ? '#e0efff' : 'white'};
+  background: ${props => props.$active ? 'var(--soft-blue)' : 'var(--surface-bg)'};
   border-radius: 50px;
   display: flex;
   position: relative;
@@ -205,7 +205,7 @@ const ResultCard = styled(motion.div)<{ $active: boolean }>`
   &:hover {
     transform: ${props => props.$active ? 'none' : 'translateY(-3px)'};
     box-shadow: 0 20px 50px rgba(0,0,0,0.08);
-    background: #f0f7ff;
+    background: var(--soft-blue);
   }
 `;
 
@@ -231,7 +231,7 @@ const CardContent = styled.div`
   flex-direction: column;
   justify-content: center;
   padding: 8px 30px 8px 105px;
-  text-shadow: 0 1px 3px rgba(255,255,255,1), 0 2px 6px rgba(255,255,255,0.8);
+  text-shadow: none;
 
   .meta {
     font-size: 0.45rem;
@@ -290,7 +290,7 @@ const DetailsBtn = styled.div<{ $active: boolean }>`
   transform: translateY(-50%);
   z-index: 2;
   color: ${props => props.$active ? 'var(--cta-blue)' : '#94a3b8'};
-  background: ${props => props.$active ? '#e0efff' : 'rgba(0,0,0,0.02)'};
+  background: ${props => props.$active ? 'var(--soft-blue)' : 'rgba(255,255,255,0.05)'};
   padding: 6px;
   border-radius: 50%;
   display: flex;
@@ -301,7 +301,7 @@ const DetailsBtn = styled.div<{ $active: boolean }>`
   ${ResultCard}:hover & {
     opacity: 1;
     color: var(--cta-blue);
-    background: #e0efff;
+    background: var(--soft-blue);
   }
 `;
 
