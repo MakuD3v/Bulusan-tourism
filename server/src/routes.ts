@@ -28,6 +28,39 @@ router.post('/upload', authenticateToken, upload.single('file'), (req, res) => {
 });
 
 // Generic CRUD factory
+function formatPrismaPayload(body: any, isUpdate: boolean = false) {
+  const data = { ...body };
+  
+  if (data.coordinates) {
+    data.lat = Number(data.coordinates.lat) || 0;
+    data.lng = Number(data.coordinates.lng) || 0;
+    delete data.coordinates;
+  }
+  
+  if (data.offers && Array.isArray(data.offers)) {
+    const formattedOffers = data.offers.map((o: any) => ({ name: o.name, price: String(o.price), image: o.image || '' }));
+    data.offers = isUpdate 
+      ? { deleteMany: {}, create: formattedOffers }
+      : { create: formattedOffers };
+  }
+
+  if (data.routes && Array.isArray(data.routes)) {
+    const formattedRoutes = data.routes.map((r: any) => ({ lat: Number(r.lat) || 0, lng: Number(r.lng) || 0, label: r.label || '', order: Number(r.order) || 0 }));
+    data.routes = isUpdate 
+      ? { deleteMany: {}, create: formattedRoutes }
+      : { create: formattedRoutes };
+  }
+
+  delete data.pricingType;
+  delete data.openingTime;
+  delete data.closingTime;
+  delete data.website;
+  delete data.firebaseId;
+  delete data.id;
+
+  return data;
+}
+
 const createCrudRoutes = (model: any, include?: any) => {
   const r = Router();
   r.get('/', async (req, res) => {
@@ -53,22 +86,26 @@ const createCrudRoutes = (model: any, include?: any) => {
 
   r.post('/', authenticateToken, async (req, res) => {
     try {
-      const data = await model.create({ data: req.body });
+      const payload = formatPrismaPayload(req.body);
+      const data = await model.create({ data: payload });
       res.json(data);
-    } catch (e) {
-      res.status(500).json({ error: 'Error creating data', details: e });
+    } catch (e: any) {
+      console.error('Create error:', e.message);
+      res.status(500).json({ error: 'Error creating data', details: e.message });
     }
   });
 
   r.put('/:id', authenticateToken, async (req, res) => {
     try {
+      const payload = formatPrismaPayload(req.body, true);
       const data = await model.update({ 
         where: { id: isNaN(Number(req.params.id)) ? req.params.id : Number(req.params.id) },
-        data: req.body
+        data: payload
       });
       res.json(data);
-    } catch (e) {
-      res.status(500).json({ error: 'Error updating data', details: e });
+    } catch (e: any) {
+      console.error('Update error:', e.message);
+      res.status(500).json({ error: 'Error updating data', details: e.message });
     }
   });
 
