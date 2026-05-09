@@ -82,6 +82,16 @@ export const authenticateToken = (req: any, res: any, next: any) => {
   });
 };
 
+router.get('/me', authenticateToken, async (req: any, res: any) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role, avatar: user.avatar } });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 router.put('/promote', authenticateToken, async (req: any, res: any) => {
   const { targetEmail } = req.body;
   if (!targetEmail) return res.status(400).json({ error: 'Target email is required' });

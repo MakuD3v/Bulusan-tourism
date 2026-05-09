@@ -21,7 +21,7 @@ const PortalContainer = styled(motion.div).attrs({
   display: flex;
   min-height: 100vh;
   width: 100%;
-  background: #f8fafc;
+  background: var(--light-bg);
   overflow-x: hidden;
   position: relative;
 
@@ -32,8 +32,8 @@ const PortalContainer = styled(motion.div).attrs({
 `;
 const Sidebar = styled.div`
   width: 280px;
-  background: ${(props) => props.theme.colors.darkBlue};
-  color: white;
+  background: var(--dark-blue);
+  color: var(--surface-bg);
   display: flex;
   flex-direction: column;
   padding: 32px 0;
@@ -91,7 +91,7 @@ const Sidebar = styled.div`
     }
 
     span { 
-      color: white; 
+      color: var(--surface-bg); 
       font-family: 'Pacifico', cursive;
       font-weight: normal;
       text-transform: none;
@@ -123,8 +123,8 @@ const Sidebar = styled.div`
 
 const NavItem = styled.button<{ $active?: boolean }>`
   font-family: ${(props) => props.theme.fonts.body};
-  background: ${(props) => props.$active ? 'rgba(255,255,255,0.1)' : 'transparent'};
-  color: ${(props) => props.$active ? 'white' : 'rgba(255,255,255,0.6)'};
+  background: ${(props) => props.$active ? 'rgba(128,128,128,0.1)' : 'transparent'};
+  color: ${(props) => props.$active ? 'var(--surface-bg)' : 'var(--text-light)'};
   border: none;
   padding: 10px 16px;
   border-radius: 10px;
@@ -162,8 +162,8 @@ const NavItem = styled.button<{ $active?: boolean }>`
   }
 
   &:hover {
-    background: rgba(255,255,255,0.1);
-    color: white;
+    background: rgba(128,128,128,0.1);
+    color: var(--surface-bg);
     @media (max-width: 1024px) {
       background: transparent;
       color: ${(props) => props.theme.colors.ctaBlue};
@@ -205,7 +205,7 @@ const Header = styled.div`
 
   h1 { 
     font-size: 2.8rem; 
-    color: ${(props) => props.theme.colors.darkBlue}; 
+    color: var(--dark-blue); 
     font-family: ${(props) => props.theme.fonts.heading};
     font-weight: 900;
     letter-spacing: -1px;

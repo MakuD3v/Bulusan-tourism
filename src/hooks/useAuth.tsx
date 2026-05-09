@@ -26,10 +26,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const token = localStorage.getItem('auth_token');
       if (stored && token) {
         try {
-          // You might optionally want to verify the token with the server here:
-          // const res = await apiClient.get('/auth/me');
-          // setUser(res.user);
-          setUser(JSON.parse(stored));
+          const res = await apiClient.get('/auth/me');
+          setUser(res.user);
+          localStorage.setItem('bulusan_user', JSON.stringify(res.user));
         } catch {
           setUser(null);
           localStorage.removeItem('bulusan_user');
