@@ -78,7 +78,21 @@ const createCrudRoutes = (model: any, include?: any) => {
   const r = Router();
   r.get('/', async (req, res) => {
     try {
-      const data = await model.findMany({ include });
+      // Determine default sorting field
+      let orderBy: any = undefined;
+      const modelName = (model as any).name || '';
+      
+      if (['Attraction', 'Enterprise', 'Tour', 'BlogPost', 'Inquiry', 'CheckIn'].includes(modelName)) {
+        orderBy = { dateAdded: 'desc' };
+      } else if (modelName === 'User') {
+        orderBy = { joinedDate: 'desc' };
+      } else if (modelName === 'Review') {
+        orderBy = { date: 'desc' };
+      } else {
+        orderBy = { id: 'desc' };
+      }
+
+      const data = await model.findMany({ include, orderBy });
       res.json(data);
     } catch (e) {
       res.status(500).json({ error: 'Error fetching data', details: e });

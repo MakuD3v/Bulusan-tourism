@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, ArrowRight } from 'lucide-react';
 import { useBlogs } from '../../hooks/useFirestore';
+import { getMediaUrl } from '../../utils/mediaUtils';
 
 const SectionWrapper = styled.section`
   padding: 60px 24px;
@@ -242,7 +243,7 @@ const FeaturedBlogSection = () => {
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
-          <img src={featuredBlog.image || '/default-placeholder.jpg'} alt={featuredBlog.title} />
+          <img src={getMediaUrl(featuredBlog.image) || '/default-placeholder.jpg'} alt={featuredBlog.title} />
         </ImageWrapper>
 
         <TextContent
@@ -261,7 +262,7 @@ const FeaturedBlogSection = () => {
 
           <Footer>
             <AuthorInfo>
-              <img src={featuredBlog.authorAvatar || `https://i.pravatar.cc/150?u=${featuredBlog.authorName}`} alt={featuredBlog.authorName} />
+              <img src={getMediaUrl(featuredBlog.authorAvatar) || `https://i.pravatar.cc/150?u=${featuredBlog.authorName}`} alt={featuredBlog.authorName} />
               <div className="details">
                 <span className="name">{featuredBlog.authorName || 'Local Explorer'}</span>
                 <span className="date">{featuredBlog.date || 'Recently'} • {featuredBlog.readTime || '5 min read'}</span>

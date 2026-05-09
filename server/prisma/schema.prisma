@@ -19,6 +19,8 @@ model User {
   joinedDate  DateTime         @default(now())
   checkIns    CheckIn[]
   customTours CustomUserTour[]
+
+  @@index([joinedDate])
 }
 
 model Attraction {
@@ -44,6 +46,9 @@ model Attraction {
   isFreeAdmission Boolean  @default(false)
   offers          Offer[]
   reviews         Review[]
+
+  @@index([dateAdded])
+  @@index([visits])
 }
 
 model Enterprise {
@@ -68,6 +73,9 @@ model Enterprise {
   photos      String[]
   offers      Offer[]
   reviews     Review[]
+
+  @@index([dateAdded])
+  @@index([visits])
 }
 
 model Heritage {
@@ -88,6 +96,8 @@ model Heritage {
   tags         String[]
   photos       String[]
   reviews      Review[]
+
+  @@index([visits])
 }
 
 model Offer {
@@ -114,6 +124,8 @@ model Review {
   attraction   Attraction? @relation(fields: [attractionId], references: [id], onDelete: Cascade)
   enterprise   Enterprise? @relation(fields: [enterpriseId], references: [id], onDelete: Cascade)
   heritage     Heritage?   @relation(fields: [heritageId], references: [id], onDelete: Cascade)
+
+  @@index([date])
 }
 
 model Tour {
@@ -130,6 +142,9 @@ model Tour {
   dateAdded  DateTime @default(now())
   tags       String[]
   routes     Route[]
+
+  @@index([dateAdded])
+  @@index([visits])
 }
 
 model Route {
@@ -156,6 +171,8 @@ model BlogPost {
   image        String
   readTime     String
   status       String   @default("Published")
+
+  @@index([date])
 }
 
 model Inquiry {

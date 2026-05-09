@@ -9,9 +9,7 @@ import { apiClient } from '../api/client';
 export const uploadFile = async (file: File, path?: string): Promise<string> => {
     try {
         const res = await apiClient.upload(file);
-        // Calculate the base URL (strip /api if present)
-        const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api$/, '');
-        return `${baseUrl}${res.url}`;
+        return res.url;
     } catch (error) {
         console.error('Upload failed:', error);
         throw error;

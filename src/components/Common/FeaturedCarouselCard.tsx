@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { Star, MapPin, Zap, TrendingUp, Award, Users } from 'lucide-react';
 import { getMapIconUrl } from '../Admin/CategoryTagConfig';
+import { getMediaUrl } from '../../utils/mediaUtils';
 
 const CardContainer = styled(motion.div)<{ $bg: string }>`
   width: 100%;
@@ -142,7 +143,7 @@ interface FeaturedCarouselCardProps {
 const FeaturedCarouselCard: React.FC<FeaturedCarouselCardProps> = ({ item, badge, badges = [], categoryName, onClick }) => {
   return (
     <CardContainer 
-      $bg={item.photos?.[0] || item.img}
+      $bg={getMediaUrl(item.photos?.[0] || item.img)}
       onClick={onClick}
     >
       <div className="badges-wrapper">

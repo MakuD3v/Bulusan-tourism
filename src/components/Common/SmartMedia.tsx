@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { getMediaUrl } from '../../utils/mediaUtils';
 
 interface SmartMediaProps {
   src: string;
@@ -67,10 +68,48 @@ const SmartMedia: React.FC<SmartMediaProps> = ({
     }
   }, [src]);
 
+  const isYouTube = src.includes('youtube.com') || src.includes('youtu.be');
+  
+  if (isYouTube && type === 'video') {
+    const getYouTubeId = (url: string) => {
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+      const match = url.match(regExp);
+      return (match && match[2].length === 11) ? match[2] : null;
+    };
+    
+    const videoId = getYouTubeId(src);
+    
+    if (videoId) {
+      const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&rel=0&modestbranding=1&iv_load_policy=3&showinfo=0&enablejsapi=1&origin=${window.location.origin}`;
+
+      return (
+        <div className={className} style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', ...style }}>
+          <iframe
+            src={embedUrl}
+            style={{ 
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              width: '100vw',
+              height: '56.25vw', // 16:9
+              minHeight: '100vh',
+              minWidth: '177.77vh', // 16:9
+              transform: 'translate(-50%, -50%) scale(1.1)',
+              border: 'none', 
+              pointerEvents: 'none',
+            }}
+            title="YouTube background video"
+            allow="autoplay; encrypted-media; picture-in-picture"
+          />
+        </div>
+      );
+    }
+  }
+
   if (type === 'img') {
     return (
       <img
-        src={src}
+        src={getMediaUrl(src)}
         alt={alt}
         className={className}
         style={style}
@@ -83,7 +122,7 @@ const SmartMedia: React.FC<SmartMediaProps> = ({
   return (
     <video
       ref={videoRef}
-      src={src}
+      src={getMediaUrl(src)}
       className={className}
       style={style}
       controls={controls}

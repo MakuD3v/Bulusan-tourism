@@ -8,6 +8,7 @@ import { ENTERPRISE_CATEGORIES, ENTERPRISE_TAGS, getMapIconUrl } from './Categor
 import { uploadFile } from '../../api/storage';
 import { compressImage } from '../../utils/imageUtils';
 import { useAlert } from '../Common/AlertProvider';
+import { getMediaUrl } from '../../utils/mediaUtils';
 
 const MapPicker = lazy(() => import('./MapPicker'));
 
@@ -378,7 +379,7 @@ export default function EnterprisesManager({ enterprises }: { enterprises?: any[
                           {offers.map((o) => (
                              <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-bg)', padding: '12px 16px', borderRadius: '14px', border: '1px solid rgba(148, 163, 184, 0.1)', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                   {o.image ? <img src={o.image} alt={o.name} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover' }} /> : <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(148, 163, 184, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ImageIcon size={16} color="var(--text-light)" /></div>}
+                                   {o.image ? <img src={getMediaUrl(o.image)} alt={o.name} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover' }} /> : <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(148, 163, 184, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ImageIcon size={16} color="var(--text-light)" /></div>}
                                    <span style={{ fontWeight: 700, color: 'var(--text-dark)' }}>{o.name}</span>
                                </div>
                                <span style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--cta-blue)', fontWeight: 900 }}>PHP {o.price} <button type="button" onClick={() => setOffers(offers.filter(x => x.id !== o.id))} style={{ background: 'rgba(239, 68, 68, 0.1)', border: 'none', color: '#ef4444', cursor: 'pointer', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14}/></button></span>
@@ -462,7 +463,7 @@ export default function EnterprisesManager({ enterprises }: { enterprises?: any[
                         {photos.map((p, i) => (
                           <PreviewItem key={i}>
                             {i === 0 && <div className="badge">Thumbnail</div>}
-                            <img src={p} alt={`Preview ${i}`} />
+                            <img src={getMediaUrl(p)} alt={`Preview ${i}`} />
                             <button type="button" onClick={() => setPhotos(prev => prev.filter((_, idx) => idx !== i))}><X size={14}/></button>
                           </PreviewItem>
                         ))}
@@ -489,7 +490,7 @@ export default function EnterprisesManager({ enterprises }: { enterprises?: any[
                     {videoUrl && (
                         <PreviewItem style={{ width: '200px', height: '150px', marginTop: '16px' }}>
                             <div className="badge" style={{ background: 'var(--cta-blue)'}}>Featured Promo</div>
-                            <video src={videoUrl} autoPlay muted loop />
+                            <video src={getMediaUrl(videoUrl)} autoPlay muted loop />
                             <button type="button" onClick={() => setVideoUrl('')}><X size={14}/></button>
                         </PreviewItem>
                     )}

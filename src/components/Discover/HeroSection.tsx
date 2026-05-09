@@ -299,7 +299,7 @@ const HeroSection = () => {
       <HeroContainer>
         <VideoBgWrapper>
           <SmartMedia
-            src="/Bulusan Lake_Informative Video.mp4"
+            src="https://youtu.be/sBFeTzfXeu8"
             type="video"
             className="video-bg"
             autoPlay

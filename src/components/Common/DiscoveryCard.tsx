@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { MapPin, Star, Heart, Zap, TrendingUp, Award, Users } from 'lucide-react';
 import { getMapIconUrl } from '../Admin/CategoryTagConfig';
+import { getMediaUrl } from '../../utils/mediaUtils';
 
 const CardWrapper = styled(motion.div)`
   background: var(--surface-bg);
@@ -258,7 +259,7 @@ const DiscoveryCard: React.FC<DiscoveryCardProps> = ({
       onClick={onClick}
     >
       <div className="image-container">
-        <img src={image} alt={title} />
+        <img src={getMediaUrl(image)} alt={title} />
         <div className="overlay" />
         <div className="badges-wrapper">
           {(!badges || badges.length === 0) && (

@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { PlayCircle } from 'lucide-react';
 import SmartMedia from './SmartMedia';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getMediaUrl } from '../../utils/mediaUtils';
 
 const GalleryContainer = styled.div`
   width: 100%;
@@ -156,7 +157,7 @@ export default function GalleryWithThumbnails({ videoUrl, images }: Props) {
               $active={currentIndex === i} 
               onClick={() => setCurrentIndex(i)}
             >
-              <img src={img} alt={`Thumbnail ${i + 1}`} />
+              <img src={getMediaUrl(img)} alt={`Thumbnail ${i + 1}`} />
             </Thumbnail>
           ))}
         </ThumbnailsRow>
