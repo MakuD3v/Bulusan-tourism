@@ -323,13 +323,9 @@ const Header = ({ isTransparent }: { isTransparent: boolean }) => {
           <div style={{ position: 'relative' }}>
             <div
               onClick={() => setShowMenu(!showMenu)}
-              style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--cta-blue)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', overflow: 'hidden' }}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--cta-blue)' }}
             >
-              {user.avatar ? (
-                <img src={user.avatar} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : (
-                user.name.charAt(0)
-              )}
+              <UserCircle size={26} strokeWidth={2.5} />
             </div>
             <AnimatePresence>
               {showMenu && (
@@ -354,7 +350,7 @@ const Header = ({ isTransparent }: { isTransparent: boolean }) => {
             </AnimatePresence>
           </div>
         ) : (
-          <Link to="/login" style={{ color: !isScrolled && isTransparent && !isMobileMenuOpen ? 'white' : 'var(--dark-blue)', display: 'flex' }}><UserCircle size={22} /></Link>
+          <Link to="/login" style={{ color: !isScrolled && isTransparent && !isMobileMenuOpen ? 'rgba(255,255,255,0.7)' : '#94a3b8', display: 'flex', transition: 'color 0.2s' }}><UserCircle size={26} strokeWidth={2} /></Link>
         )}
 
         <MobileMenuBtn onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>

@@ -3,12 +3,10 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { OAuth2Client } from 'google-auth-library';
 
 const router = Router();
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key';
-const googleClient = new OAuth2Client();
 
 router.post('/register', async (req, res) => {
   const { name, email, password } = req.body;
@@ -19,11 +17,29 @@ router.post('/register', async (req, res) => {
     }
     const isAdmin = ['admin@bulusan.com'].includes(email.toLowerCase());
     
+    if (!isAdmin) {
+      if (email.toLowerCase().endsWith('@gmail.com') || process.env.HUNTER_API_KEY) {
+        if (process.env.HUNTER_API_KEY) {
+          try {
+            const hunterRes = await fetch(`https://api.hunter.io/v2/email-verifier?email=${encodeURIComponent(email)}&api_key=${process.env.HUNTER_API_KEY}`);
+            const hunterData = await hunterRes.json();
+            if (hunterData?.data?.result === 'undeliverable') {
+              return res.status(400).json({ error: 'This email address appears to be invalid or does not exist.' });
+            }
+          } catch (e) {
+            console.error('Email validation failed', e);
+          }
+        } else if (email.toLowerCase().includes('gmai.') || email.toLowerCase().includes('gmail.co') && !email.toLowerCase().endsWith('@gmail.com')) {
+          // Simple fallback typo check if API key is not present
+          return res.status(400).json({ error: 'Please enter a valid Gmail address (did you mean @gmail.com?).' });
+        }
+      }
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
-    const avatar = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}`;
     
     const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword, role: isAdmin ? 'ADMIN' : 'USER', avatar }
+      data: { name, email, password: hashedPassword, role: isAdmin ? 'ADMIN' : 'USER', avatar: null }
     });
     const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, avatar: user.avatar } });
@@ -49,50 +65,6 @@ router.post('/login', async (req, res) => {
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Server error' });
-  }
-});
-
-router.post('/google', async (req, res) => {
-  const { credential } = req.body;
-  if (!credential) return res.status(400).json({ error: 'No credential provided' });
-
-  try {
-    const ticket = await googleClient.verifyIdToken({
-      idToken: credential,
-    });
-    const payload = ticket.getPayload();
-    if (!payload) return res.status(400).json({ error: 'Invalid Google token' });
-
-    const { email, name, picture } = payload;
-    if (!email) return res.status(400).json({ error: 'Email not provided by Google' });
-
-    let user = await prisma.user.findUnique({ where: { email } });
-    
-    if (!user) {
-      const randomPassword = crypto.randomBytes(16).toString('hex');
-      const hashedPassword = await bcrypt.hash(randomPassword, 10);
-      user = await prisma.user.create({
-        data: {
-          name: name || 'Google User',
-          email,
-          password: hashedPassword,
-          role: email.toLowerCase() === 'admin@bulusan.com' ? 'ADMIN' : 'USER',
-          avatar: picture || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name || 'G')}`,
-        }
-      });
-    } else if (picture && user.avatar !== picture) {
-      // Update existing user with fresh Google picture
-      user = await prisma.user.update({
-        where: { email },
-        data: { avatar: picture }
-      });
-    }
-
-    const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, avatar: user.avatar } });
-  } catch (error) {
-    console.error('Google auth error:', error);
-    res.status(500).json({ error: 'Server error during Google Authentication' });
   }
 });
 

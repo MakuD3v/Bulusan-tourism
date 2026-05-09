@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { User, Mail, Lock, UserPlus, Loader2, CheckCircle2 } from 'lucide-react';
-import { GoogleLogin } from '@react-oauth/google';
 
 const AuthContainer = styled.div`
   min-height: 100vh;
@@ -173,7 +172,7 @@ const SignUpPage = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
-    const { signup, loginWithGoogle } = useAuth();
+    const { signup } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -191,25 +190,6 @@ const SignUpPage = () => {
             }
         } catch (err: any) {
             setError(err.message || 'Something went wrong. Please try again.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleGoogleSuccess = async (credentialResponse: any) => {
-        setLoading(true);
-        setError('');
-        try {
-            if (credentialResponse.credential) {
-                const success = await loginWithGoogle(credentialResponse.credential);
-                if (success) {
-                    navigate('/discover');
-                } else {
-                    setError('Google Login failed.');
-                }
-            }
-        } catch (err: any) {
-            setError(err.message || 'Google Login failed.');
         } finally {
             setLoading(false);
         }
@@ -285,24 +265,6 @@ const SignUpPage = () => {
                             {loading ? <Loader2 className="animate-spin" /> : <>Start Exploring <UserPlus size={20} /></>}
                         </ActionButton>
                     </form>
-                )}
-
-                {!success && (
-                    <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '12px' }}>
-                            <div style={{ height: '1px', background: 'rgba(255,255,255,0.2)', flex: 1 }} />
-                            <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>or</span>
-                            <div style={{ height: '1px', background: 'rgba(255,255,255,0.2)', flex: 1 }} />
-                        </div>
-                        <GoogleLogin 
-                            onSuccess={handleGoogleSuccess} 
-                            onError={() => setError('Google Login Failed')}
-                            theme="filled_black"
-                            shape="pill"
-                            text="continue_with"
-                            width="350"
-                        />
-                    </div>
                 )}
 
                 <p style={{ marginTop: '32px', color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem' }}>

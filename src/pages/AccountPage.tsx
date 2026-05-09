@@ -412,11 +412,7 @@ export default function AccountPage() {
           </div>
           <div className="user-card">
             <div className="avatar">
-              {user.avatar ? (
-                <img src={user.avatar} alt="Profile" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-              ) : (
-                user.name.charAt(0)
-              )}
+              <UserIcon size={24} />
             </div>
             <div>
               <div style={{ fontWeight: 800, color: 'var(--text-dark)' }}>{user.name}</div>
