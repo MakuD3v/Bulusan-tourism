@@ -48,7 +48,8 @@ const Content = styled(motion.div)`
       letter-spacing: 12px;
       color: ${(props) => props.theme.colors.ctaBlue};
       margin-bottom: 24px;
-      opacity: 0.6;
+      opacity: 0.9;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.1);
       margin-left: 12px; /* For balance due to tracking */
 
       @media (max-width: 768px) {
@@ -64,6 +65,7 @@ const Content = styled(motion.div)`
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       padding-bottom: 10px;
+      filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1));
     }
 
     .statement { 
