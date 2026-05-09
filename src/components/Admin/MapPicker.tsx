@@ -14,7 +14,7 @@ L.Icon.Default.mergeOptions({
 
 const MapWrapper = styled.div`
   width: 100%;
-  height: 400px;
+  height: 100%;
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid #ddd;

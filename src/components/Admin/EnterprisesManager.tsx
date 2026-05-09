@@ -53,19 +53,19 @@ const LeftPane = styled.div`
 
 const RightPane = styled.div`
   flex: 1; padding: 40px; display: flex; flex-direction: column; background: var(--light-bg); overflow-y: auto;
-  .map-container { flex: 1; background: var(--surface-bg); border-radius: 20px; border: 1px solid rgba(148, 163, 184, 0.2); margin-top: 16px; margin-bottom: 24px; min-height: 600px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+  .map-container { flex: 1; background: var(--surface-bg); border-radius: 20px; border: 1px solid rgba(148, 163, 184, 0.2); margin-top: 16px; margin-bottom: 24px; min-height: 500px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
 `;
 
 const FormGroup = styled.div`
   display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px;
-  label { font-weight: 800; font-size: 0.9rem; color: var(--text-light); display:flex; align-items: center; gap: 6px; }
+  label { font-weight: 800; font-size: 0.9rem; color: #FFFFFF; display:flex; align-items: center; gap: 6px; }
   input, textarea, select { padding: 16px 20px; border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 16px; font-size: 1rem; background: var(--surface-bg); color: var(--text-dark); outline: none; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); &:focus { border-color: var(--cta-blue); box-shadow: 0 0 0 4px rgba(46, 117, 182, 0.1); } }
   textarea { resize: vertical; min-height: 120px; }
 `;
 
 const DropZone = styled.div<{ $isDragActive: boolean }>`
   border: 2px dashed ${p => p.$isDragActive ? 'var(--cta-blue)' : '#cbd5e1'}; background: ${p => p.$isDragActive ? '#f0f7ff' : '#f8fafc'};
-  border-radius: 16px; padding: 32px; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--text-light); margin-bottom: 20px;
+  border-radius: 16px; padding: 32px; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 12px; color: #FFFFFF; margin-bottom: 20px;
   &:hover { border-color: var(--cta-blue); background: #f0f7ff; }
   input[type="file"] { display: none; }
 `;
@@ -439,8 +439,8 @@ export default function EnterprisesManager({ enterprises }: { enterprises?: any[
                   </FormGroup>
 
                   <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '32px' }}>
-                    <label style={{ fontWeight: 800, fontSize: '0.9rem', color: '#475569', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                       <ImageIcon size={18} color="var(--cta-blue)" /> Photos (Min 1, Max 5) *
+                    <label style={{ fontWeight: 800, fontSize: '0.9rem', color: 'white', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                       <ImageIcon size={18} color="white" /> Photos (Min 1, Max 5) *
                     </label>
                     <DropZone 
                       $isDragActive={dragActive}
@@ -450,7 +450,7 @@ export default function EnterprisesManager({ enterprises }: { enterprises?: any[
                       onDrop={e => { e.preventDefault(); setDragActive(false); processFiles(e.dataTransfer.files); }}
                       onClick={() => fileInputRef.current?.click()}
                     >
-                      <UploadCloud size={40} color="var(--cta-blue)" strokeWidth={1.5} />
+                      <UploadCloud size={40} color="white" strokeWidth={1.5} />
                       <div style={{ fontSize: '1.1rem' }}><strong>{isUploadingPhotos ? 'Uploading...' : 'Drop images here'}</strong> or click to browse</div>
                       <div style={{ fontSize: '0.85rem', opacity: 0.7 }}>First image uploaded will be the thumbnail</div>
                       <input type="file" multiple accept="image/*" ref={fileInputRef} onChange={e => e.target.files && processFiles(e.target.files)} />
@@ -470,8 +470,8 @@ export default function EnterprisesManager({ enterprises }: { enterprises?: any[
                   </div>
                   
                   <div style={{ marginTop: '32px', paddingBottom: '40px' }}>
-                     <label style={{ fontWeight: 800, fontSize: '0.9rem', color: '#475569', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Film size={18} color="var(--cta-blue)" /> Promo Video (Optional)
+                     <label style={{ fontWeight: 800, fontSize: '0.9rem', color: 'white', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Film size={18} color="white" /> Promo Video (Optional)
                      </label>
                      <DropZone 
                       $isDragActive={dragActive}
@@ -481,7 +481,7 @@ export default function EnterprisesManager({ enterprises }: { enterprises?: any[
                       onDrop={e => { e.preventDefault(); setDragActive(false); processVideo(e.dataTransfer.files); }}
                       onClick={() => videoInputRef.current?.click()}
                     >
-                      <Film size={40} color="var(--cta-blue)" strokeWidth={1.5} />
+                      <Film size={40} color="white" strokeWidth={1.5} />
                       <div style={{ fontSize: '1.1rem' }}><strong>{isUploadingVideo ? 'Uploading Video (This may take a few minutes)...' : 'Drop video here'}</strong> or click to browse</div>
                       <input type="file" accept="video/mp4,video/webm" ref={videoInputRef} onChange={e => e.target.files && processVideo(e.target.files)} />
                     </DropZone>
@@ -503,7 +503,7 @@ export default function EnterprisesManager({ enterprises }: { enterprises?: any[
                 
                 <RightPane>
                   <label style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-dark)', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                    <Map size={22} color="var(--cta-blue)" strokeWidth={2.5} /> Pinpoint Location
+                    <Map size={22} color="white" strokeWidth={2.5} /> Pinpoint Location
                   </label>
                   <div className="map-container">
                     <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8' }}>Initializing high-precision map...</div>}>
