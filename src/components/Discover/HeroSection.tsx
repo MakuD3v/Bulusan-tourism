@@ -70,8 +70,8 @@ const HeroContent = styled(motion.div)`
     line-height: 1.05;
     margin-bottom: 24px;
     letter-spacing: -3px;
-    color: white;
-    text-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    color: #ffffff;
+    text-shadow: 0 10px 40px rgba(0,0,0,0.5);
 
     @media (max-width: 768px) {
       letter-spacing: -1px;
@@ -103,10 +103,10 @@ const HeroContent = styled(motion.div)`
     .main-title {
       display: block;
       font-style: normal;
-      background: linear-gradient(to bottom, #fff 40%, rgba(255,255,255,0.7) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+      color: #ffffff;
+      background: none;
+      -webkit-text-fill-color: #ffffff;
+      text-shadow: 0 10px 30px rgba(0,0,0,0.3);
     }
 
     .statement { 
@@ -120,8 +120,8 @@ const HeroContent = styled(motion.div)`
       letter-spacing: 3px;
       text-transform: uppercase;
       margin-top: 24px;
-      color: white;
-      opacity: 0.85;
+      color: #ffffff;
+      opacity: 1;
 
       @media (max-width: 768px) {
         font-size: 0.28em;
