@@ -39,21 +39,21 @@ const FormModalContent = styled(motion.div)`
 `;
 
 const ModalHeader = styled.div`
-  padding: 32px 48px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;
+  padding: 32px 48px; border-bottom: 1px solid rgba(148, 163, 184, 0.1); display: flex; justify-content: space-between; align-items: center;
   h3 { font-family: ${(props) => props.theme.fonts.heading}; font-size: 2.2rem; color: ${(props) => props.theme.colors.darkBlue}; font-weight: 800; letter-spacing: -0.5px; margin: 0; }
-  button { background: #f8fafc; border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #94a3b8; transition: all 0.2s; &:hover { background: #fee2e2; color: #ef4444; } }
+  button { background: rgba(148, 163, 184, 0.05); border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-light); transition: all 0.2s; &:hover { background: #fee2e2; color: #ef4444; } }
 `;
 
 const SplitLayout = styled.div` display: flex; flex: 1; overflow: hidden; @media (max-width: 1024px) { flex-direction: column; overflow-y: auto; } `;
 
 const LeftPane = styled.div`
-  flex: 1.3; padding: 40px 48px; overflow-y: auto; border-right: 1px solid #f1f5f9;
+  flex: 1.3; padding: 40px 48px; overflow-y: auto; border-right: 1px solid rgba(148, 163, 184, 0.1);
   &::-webkit-scrollbar { width: 6px; } &::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 `;
 
 const RightPane = styled.div`
-  flex: 1; padding: 40px; display: flex; flex-direction: column; background: #f8fafc; overflow-y: auto;
-  .map-container { flex: 1; background: var(--surface-bg); border-radius: 20px; border: 1px solid #e2e8f0; margin-top: 16px; margin-bottom: 24px; min-height: 400px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+  flex: 1; padding: 40px; display: flex; flex-direction: column; background: rgba(148, 163, 184, 0.05); overflow-y: auto;
+  .map-container { flex: 1; background: var(--surface-bg); border-radius: 20px; border: 1px solid rgba(148, 163, 184, 0.2); margin-top: 16px; margin-bottom: 24px; min-height: 400px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
 `;
 
 const FormGroup = styled.div`
