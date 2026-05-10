@@ -26,20 +26,12 @@ const storage = new CloudinaryStorage({
   } as any
 });
 
-const upload = multer({ 
-  storage,
-  limits: {
-    fileSize: 50 * 1024 * 1024 // 50MB limit
-  }
-});
+const upload = multer({ storage });
 
 // File Upload endpoint
 router.post('/upload', authenticateToken, upload.single('file'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded' });
-  }
-  // Cloudinary returns the full secure URL in path (or secure_url in some versions)
-  const url = (req.file as any).path || (req.file as any).secure_url;
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const url = (req.file as any).path;
   res.json({ url });
 });
 
