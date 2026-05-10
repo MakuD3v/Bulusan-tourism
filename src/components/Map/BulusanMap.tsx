@@ -594,8 +594,24 @@ const BulusanMap = ({ items, searchQuery = '', selectedCategories = [], focusLat
     localStorage.setItem('isLocationEnabled', isTracking.toString());
     if (isTracking && "geolocation" in navigator) {
       watchId.current = navigator.geolocation.watchPosition(
-        (pos) => setUserLocation(L.latLng(pos.coords.latitude, pos.coords.longitude)),
-        () => { setIsTracking(false); }, { enableHighAccuracy: true }
+        (pos) => {
+          // If accuracy is worse than 3km, it's almost certainly an IP-based guess (like Bacolod)
+          // We only accept accurate GPS fixes (ideally < 100m, but 3000m for safety)
+          if (pos.coords.accuracy > 3000) {
+            console.warn('Inaccurate location signal detected, ignoring IP fallback...');
+            return;
+          }
+          setUserLocation(L.latLng(pos.coords.latitude, pos.coords.longitude));
+        },
+        (err) => { 
+          console.error('Geolocation error:', err);
+          setIsTracking(false); 
+        }, 
+        { 
+          enableHighAccuracy: true, 
+          maximumAge: 0, 
+          timeout: 10000 
+        }
       );
     } else if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current);
     return () => { if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current); };
