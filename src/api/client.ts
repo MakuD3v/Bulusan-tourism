@@ -1,17 +1,20 @@
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 async function handleResponse(res: Response) {
+  const text = await res.text();
+  let data;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch (e) {
+    // Not JSON or empty
+  }
+
   if (!res.ok) {
-    let message = `Request failed (${res.status})`;
-    try {
-      const body = await res.json();
-      message = body.error || body.message || message;
-    } catch {
-      message = (await res.text()) || message;
-    }
+    const message = data?.error || data?.message || text || `Request failed (${res.status})`;
     throw new Error(message);
   }
-  return res.json();
+  
+  return data;
 }
 
 export const apiClient = {

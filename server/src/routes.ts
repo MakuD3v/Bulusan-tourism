@@ -26,7 +26,12 @@ const storage = new CloudinaryStorage({
   } as any
 });
 
-const upload = multer({ storage });
+const upload = multer({ 
+  storage,
+  limits: {
+    fileSize: 50 * 1024 * 1024 // 50MB limit
+  }
+});
 
 // File Upload endpoint
 router.post('/upload', authenticateToken, upload.single('file'), (req, res) => {
