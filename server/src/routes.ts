@@ -1,20 +1,31 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import multer from 'multer';
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import path from 'path';
 import { authenticateToken } from './auth';
 
 const router = Router();
 const prisma = new PrismaClient();
 
-// Multer config for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, path.join(__dirname, '../../uploads/')),
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
+// Cloudinary configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
+
+// Multer config for Cloudinary storage
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'bulusan-tourism',
+    allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'mp4'],
+    resource_type: 'auto'
+  } as any
+});
+
 const upload = multer({ storage });
 
 // File Upload endpoint
@@ -22,8 +33,8 @@ router.post('/upload', authenticateToken, upload.single('file'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
-  // Return the path relative to server root
-  const url = `/uploads/${req.file.filename}`;
+  // Cloudinary returns the full secure URL in path (or secure_url in some versions)
+  const url = (req.file as any).path || (req.file as any).secure_url;
   res.json({ url });
 });
 

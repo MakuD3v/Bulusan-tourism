@@ -20,8 +20,16 @@ export const getMediaUrl = (path: string | undefined | null): string => {
   }
 
   // Prepend the API base URL (stripping /api suffix if present)
-  const apiBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api$/, '');
+  let apiBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api$/, '');
   
+  // CRITICAL: If we are in production (not localhost) but apiBase is localhost, 
+  // it means VITE_API_URL is missing in the environment. 
+  // We should try to use the current origin instead if possible, or just return the path.
+  if (typeof window !== 'undefined' && !window.location.hostname.includes('localhost') && apiBase.includes('localhost')) {
+    // If the path is relative and starts with /uploads, it's likely served by the same host
+    if (path.startsWith('/uploads')) return path;
+  }
+
   // Ensure the path starts with a slash
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   
