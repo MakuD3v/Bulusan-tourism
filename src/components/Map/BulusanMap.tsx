@@ -258,36 +258,93 @@ const TravelStatsOverlay = styled(motion.div)`
   position: absolute; 
   bottom: 24px; 
   right: 24px; 
-  background: rgba(255, 255, 255, 0.95); 
+  background: var(--surface-bg); 
   backdrop-filter: blur(12px); 
-  padding: 20px; 
-  border-radius: 24px; 
-  box-shadow: 0 20px 50px rgba(0,0,0,0.15); 
+  padding: 24px; 
+  border-radius: 28px; 
+  box-shadow: 0 20px 60px rgba(0,0,0,0.18), 0 10px 20px rgba(0,0,0,0.05); 
   z-index: 1000; 
-  width: 300px; 
-  border: 1px solid rgba(255,255,255,0.4);
+  width: 320px; 
+  border: 1px solid rgba(0,0,0,0.05);
 
   @media (max-width: 1024px) {
     bottom: auto;
-    top: 70px; 
-    left: 20px; /* Nudge slightly more to center if necessary, but keep left as per vision */
+    top: 80px; 
+    left: 20px; 
     right: auto;
-    width: min(240px, 80vw); /* Cap width more strictly on mobile */
-    padding: 10px;
-    transform: scale(0.85);
-    transform-origin: top left;
-
-    h4 { display: none; } /* Hide header to save space on mobile */
-    .stats-content { margin-bottom: 6px; gap: 12px; }
-    .mode-selection { margin-bottom: 6px; padding: 2px; }
-    .stat-item .val { font-size: 0.9rem !important; }
-    .stat-item .lab { font-size: 0.5rem !important; }
+    width: min(280px, 85vw); 
+    padding: 16px;
+    transform: none; /* Removed scale for better readability */
+    
+    h4 { display: block; font-size: 0.75rem; margin-bottom: 10px; }
+    .stats-content { margin-bottom: 12px; gap: 15px; }
+    .mode-selection { margin-bottom: 12px; }
+    .stat-item .val { font-size: 1.1rem !important; }
+    .stat-item .lab { font-size: 0.6rem !important; }
   }
 
-  h4 { margin-bottom: 15px; font-size: 0.9rem; color: var(--dark-blue); font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
-  .stats-content { display: flex; justify-content: space-between; margin-bottom: 20px; .stat-item { flex: 1; .val { font-size: 1.2rem; font-weight: 800; color: var(--dark-blue); } .lab { font-size: 0.65rem; color: var(--text-light); font-weight: 600; text-transform: uppercase; } } }
-  .mode-selection { display: flex; background: #f1f5f9; padding: 4px; border-radius: 12px; margin-bottom: 12px; justify-content: space-between; }
-  .close-row { display: flex; gap: 8px; button { flex: 1; padding: 10px; border-radius: 10px; border: none; font-weight: 700; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; &.primary { background: var(--dark-blue); color: white; } &.secondary { background: #e2e8f0; color: #475569; } } }
+  h4 { margin-bottom: 18px; font-size: 0.85rem; color: var(--text-dark); font-weight: 800; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8; }
+  
+  .stats-content { 
+    display: flex; 
+    justify-content: space-between; 
+    margin-bottom: 24px; 
+    
+    .stat-item { 
+      flex: 1; 
+      .val { 
+        font-size: 1.4rem; 
+        font-weight: 800; 
+        color: var(--dark-blue); 
+        line-height: 1.1;
+      } 
+      .lab { 
+        font-size: 0.7rem; 
+        color: var(--text-light); 
+        font-weight: 700; 
+        text-transform: uppercase; 
+        margin-top: 4px;
+        letter-spacing: 0.5px;
+      } 
+    } 
+  }
+  
+  .mode-selection { 
+    display: flex; 
+    background: #f1f5f9; 
+    padding: 5px; 
+    border-radius: 14px; 
+    margin-bottom: 16px; 
+    justify-content: space-between; 
+    border: 1px solid rgba(0,0,0,0.03);
+  }
+  
+  .close-row { 
+    display: flex; 
+    gap: 10px; 
+    button { 
+      flex: 1; 
+      padding: 12px; 
+      border-radius: 12px; 
+      border: none; 
+      font-weight: 800; 
+      font-size: 0.8rem; 
+      cursor: pointer; 
+      transition: all 0.2s; 
+      
+      &.primary { 
+        background: var(--cta-blue); 
+        color: white;
+        box-shadow: 0 4px 12px rgba(46, 117, 182, 0.2);
+        &:hover { background: var(--dark-blue); }
+      } 
+      &.secondary { 
+        background: #f1f5f9; 
+        color: #64748b; 
+        &:hover { background: #e2e8f0; }
+      } 
+    } 
+  }
 `;
 
 const ModeButton = styled.button<{ $active: boolean }>`
@@ -327,36 +384,48 @@ function RoutingEngine({ waypoints, mode, onUpdate }: { waypoints: L.LatLng[], m
     }
     if (routingControlRef.current) map.removeControl(routingControlRef.current);
     
+    // Select accurate OSRM service based on mode
+    let serviceUrl = 'https://routing.openstreetmap.de/routed-car/route/v1';
+    let profile = 'driving';
+    
+    if (mode === 'cycling') {
+      serviceUrl = 'https://routing.openstreetmap.de/routed-bike/route/v1';
+      profile = 'cycling';
+    } else if (mode === 'walking') {
+      serviceUrl = 'https://routing.openstreetmap.de/routed-foot/route/v1';
+      profile = 'foot';
+    }
+
     routingControlRef.current = (L.Routing as any).control({
       waypoints,
       router: (L.Routing as any).osrmv1({
-        serviceUrl: `https://router.project-osrm.org/route/v1`,
-        profile: mode // Explicit profile selection
+        serviceUrl: serviceUrl,
+        profile: profile,
+        useHints: false // Better for frequent updates/tracking
       }),
-      lineOptions: { styles: [{ color: '#2e75b6', opacity: 0.8, weight: 6 }] } as any,
+      lineOptions: { 
+        styles: [
+          { color: '#1e293b', opacity: 0.2, weight: 10 }, // Shadow
+          { color: '#2e75b6', opacity: 0.9, weight: 6 }   // Main line
+        ] 
+      } as any,
       addWaypoints: false,
-      fitSelectedRoutes: false, // Don't snap to bounds every time we move
+      draggableWaypoints: false,
+      fitSelectedRoutes: false,
       show: false,
       createMarker: () => null
     }).addTo(map);
 
-    // ERROR HANDLING
-    routingControlRef.current.on('routingerror', (e: any) => {
-      console.error('Routing error:', e);
-    });
-    
     routingControlRef.current.on('routesfound', (e: any) => {
       const summary = e.routes[0].summary;
       const distanceKm = summary.totalDistance / 1000;
       
-      // Manual time estimation based on mode since demo-server defaults to driving
-      // Speeds in km/h: Driving (35), Cycling (12), Walking (4.5)
+      // Manual time estimation based on mode for higher accuracy
       let estimatedMinutes = 0;
       if (mode === 'driving') estimatedMinutes = (distanceKm / 35) * 60;
       else if (mode === 'cycling') estimatedMinutes = (distanceKm / 12) * 60;
       else if (mode === 'walking') estimatedMinutes = (distanceKm / 4.5) * 60;
 
-      // Ensure at least 1 minute if distance is > 0
       if (distanceKm > 0.01) estimatedMinutes = Math.max(1, Math.round(estimatedMinutes));
       else estimatedMinutes = 0;
 
@@ -533,11 +602,18 @@ const BulusanMap = ({ items, searchQuery = '', selectedCategories = [], focusLat
   }, [isTracking]);
 
   useEffect(() => {
-    if (isTracking && userLocation && selection.length === 2) {
-      // Live Update: Keep the start point of the route pinned to the moving user
-      setSelection(prev => [userLocation, prev[1]]);
+    if (isTracking && userLocation) {
+      if (selection.length === 2) {
+        // Live Update: Keep the start point of the route pinned to the moving user
+        setSelection(prev => [userLocation, prev[1]]);
+      }
+      
+      // Center map on user if tracking is active and no specific focus is set
+      if (mapInstance && !focusLat) {
+        mapInstance.panTo(userLocation, { animate: true });
+      }
     }
-  }, [userLocation, isTracking]);
+  }, [userLocation, isTracking, mapInstance, focusLat]);
 
   useEffect(() => {
     if (!mapInstance) return;
@@ -592,18 +668,24 @@ const BulusanMap = ({ items, searchQuery = '', selectedCategories = [], focusLat
             <h4>Travel Estimates</h4>
             
             <div className="stats-content">
-              <div className="stat-item"><div className="val">{routeInfo.distance}</div><div className="lab">Distance</div></div>
-              <div className="stat-item" style={{ textAlign: 'right' }}><div className="val">{routeInfo.time}</div><div className="lab">Arrival</div></div>
+              <div className="stat-item">
+                <div className="val">{routeInfo.distance}</div>
+                <div className="lab">Distance</div>
+              </div>
+              <div className="stat-item" style={{ textAlign: 'right' }}>
+                <div className="val" style={{ color: '#10b981' }}>{routeInfo.time}</div>
+                <div className="lab">Arrival</div>
+              </div>
             </div>
 
             <div className="mode-selection">
-              <ModeButton $active={travelMode === 'driving'} onClick={() => setTravelMode('driving')} title="Driving Mode"><Car size={18} /></ModeButton>
-              <ModeButton $active={travelMode === 'cycling'} onClick={() => setTravelMode('cycling')} title="Cycling Mode"><Bike size={18} /></ModeButton>
-              <ModeButton $active={travelMode === 'walking'} onClick={() => setTravelMode('walking')} title="Walking Mode"><Footprints size={18} /></ModeButton>
+              <ModeButton $active={travelMode === 'driving'} onClick={() => setTravelMode('driving')} title="Driving Mode"><Car size={20} /></ModeButton>
+              <ModeButton $active={travelMode === 'cycling'} onClick={() => setTravelMode('cycling')} title="Cycling Mode"><Bike size={20} /></ModeButton>
+              <ModeButton $active={travelMode === 'walking'} onClick={() => setTravelMode('walking')} title="Walking Mode"><Footprints size={20} /></ModeButton>
             </div>
 
             <div className="close-row">
-              <button className="primary" onClick={() => { setSelection([]); setRouteInfo(null); }}>Clear Route</button>
+              <button className="primary" onClick={() => { setSelection([]); setRouteInfo(null); }}>Exit Navigation</button>
             </div>
           </TravelStatsOverlay>
         )}
@@ -642,7 +724,26 @@ const BulusanMap = ({ items, searchQuery = '', selectedCategories = [], focusLat
         <RoutingEngine waypoints={selection} mode={travelMode} onUpdate={setRouteInfo} />
 
         {isTracking && userLocation && (
-          <Marker position={userLocation} icon={new L.DivIcon({ className: 'user-pin', html: `<div style="background: #3b82f6; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.2);"></div>`, iconSize: [20, 20], iconAnchor: [10, 10] })} />
+          <Marker 
+            position={userLocation} 
+            icon={new L.DivIcon({ 
+              className: 'user-pin', 
+              html: `
+                <div style="position: relative;">
+                  <div style="background: #3b82f6; width: 14px; height: 14px; border-radius: 50%; border: 2.5px solid white; box-shadow: 0 0 10px rgba(59, 130, 246, 0.5); z-index: 2; position: relative;"></div>
+                  <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #3b82f6; width: 30px; height: 30px; border-radius: 50%; opacity: 0.2; animation: userPulse 2s infinite ease-out; z-index: 1;"></div>
+                </div>
+                <style>
+                  @keyframes userPulse {
+                    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0.5; }
+                    100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+                  }
+                </style>
+              `, 
+              iconSize: [30, 30], 
+              iconAnchor: [15, 15] 
+            })} 
+          />
         )}
 
         {processedItems.map(item => {
