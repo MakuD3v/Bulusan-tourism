@@ -1,10 +1,8 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
-import multer from 'multer';
 import { v2 as cloudinary } from 'cloudinary';
-import { CloudinaryStorage } from 'multer-storage-cloudinary';
-import path from 'path';
 import { authenticateToken } from './auth';
+import multer from 'multer';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -16,23 +14,27 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Multer config for Cloudinary storage
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'bulusan-tourism',
-    allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'mp4'],
-    resource_type: 'auto'
-  } as any
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 }
 });
 
-const upload = multer({ storage });
-
 // File Upload endpoint
-router.post('/upload', authenticateToken, upload.single('file'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  const url = (req.file as any).path;
-  res.json({ url });
+router.post('/upload', authenticateToken, upload.single('file'), (req: any, res: any) => {
+  if (!req.file) return res.status(400).json({ error: 'No file received' });
+
+  const stream = cloudinary.uploader.upload_stream(
+    { folder: 'bulusan-tourism', resource_type: 'auto' },
+    (error: any, result: any) => {
+      if (error) {
+        console.error('Cloudinary upload error:', error);
+        return res.status(500).json({ error: error.message });
+      }
+      res.json({ url: result.secure_url });
+    }
+  );
+
+  stream.end(req.file.buffer);
 });
 
 // Generic CRUD factory

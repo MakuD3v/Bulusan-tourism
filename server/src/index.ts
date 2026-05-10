@@ -24,11 +24,29 @@ if (!fs.existsSync(uploadDir)) {
 // Serve uploaded files statically
 app.use('/uploads', express.static(uploadDir));
 
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api', apiRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
+});
+
+app.get('/api/version', (req, res) => {
+  res.json({ version: '1.0.5', timestamp: '2026-05-10T10:34:00Z' });
+});
+
+// Global Error Handler
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('CRITICAL SERVER ERROR:', err);
+  res.status(err.status || 500).json({ 
+    error: err.message || 'Internal Server Error',
+    stack: err.stack 
+  });
 });
 
 app.listen(PORT, () => {
