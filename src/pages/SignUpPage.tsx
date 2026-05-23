@@ -3,7 +3,7 @@ import styled, { keyframes } from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { User, Mail, Lock, UserPlus, Loader2, CheckCircle2, ArrowLeft, Clock } from 'lucide-react';
+import { User, Mail, Lock, UserPlus, Loader2, CheckCircle2, ArrowLeft, Clock, KeyRound } from 'lucide-react';
 
 const SplitContainer = styled.div`
   min-height: 100vh;
@@ -317,9 +317,11 @@ const SignUpPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [ownerPending, setOwnerPending] = useState(false);
+  const [showVerification, setShowVerification] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verifying, setVerifying] = useState(false);
   
-  const { signup } = useAuth();
+  const { signup, verifyCode } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -331,11 +333,8 @@ const SignUpPage = () => {
       const result = await signup(name, email, password, { role });
       if (result.success) {
         if (result.requiresVerification) {
-          // Owner registration: show pending state then redirect to /owner-pending
-          setOwnerPending(true);
-          setTimeout(() => navigate('/owner-pending'), 2800);
+          setShowVerification(true);
         } else {
-          // Regular user: success then redirect to /discover
           setSuccess(true);
           setTimeout(() => navigate('/discover'), 2000);
         }
@@ -346,6 +345,32 @@ const SignUpPage = () => {
       setError(err.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setVerifying(true);
+    setError('');
+
+    try {
+      const result = await verifyCode(email, verificationCode);
+      if (result.success) {
+        setSuccess(true);
+        setTimeout(() => {
+          if (role === 'OWNER') {
+            navigate('/owner-pending');
+          } else {
+            navigate('/discover');
+          }
+        }, 2000);
+      } else {
+        setError('Verification failed.');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Invalid verification code.');
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -376,23 +401,62 @@ const SignUpPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          {success || ownerPending ? (
+          {success ? (
             <SuccessCard
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
             >
-              {ownerPending ? <Clock size={48} color="#fbbf24" /> : <CheckCircle2 size={48} color="#2ecc71" />}
+              <CheckCircle2 size={48} color="#2ecc71" />
               <div>
-                <h3 style={{ fontSize: '1.4rem', color: '#fff', marginBottom: '8px' }}>
-                  {ownerPending ? 'Check Your Email!' : 'Account Created!'}
+                <h3 style={{ fontSize: '1.4rem', color: '#fff', margin: '8px 0' }}>
+                  Verification Successful!
                 </h3>
                 <p style={{ color: '#a3b899' }}>
-                  {ownerPending
-                    ? `Hi ${name}! We sent a verification link to ${email}. Click it to start the approval process. Redirecting…`
+                  {role === 'OWNER'
+                    ? `Welcome, ${name}! Redirecting to owner status page...`
                     : `Welcome, ${name}! Preparing your discovery guide…`}
                 </p>
               </div>
             </SuccessCard>
+          ) : showVerification ? (
+            <>
+              <Title>Verify Email</Title>
+              <Subtitle>We sent a 6-digit code to <strong>{email}</strong>.</Subtitle>
+              
+              <form onSubmit={handleVerify}>
+                {error && (
+                  <ErrorMsg
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    {error}
+                  </ErrorMsg>
+                )}
+
+                <InputGroup>
+                  <label>Verification Code</label>
+                  <div className="input-wrapper">
+                    <KeyRound size={18} />
+                    <input
+                      type="text"
+                      placeholder="123456"
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value)}
+                      maxLength={6}
+                      required
+                    />
+                  </div>
+                </InputGroup>
+
+                <ActionButton type="submit" disabled={verifying}>
+                  {verifying ? (
+                    <Loader2 className="animate-spin" size={18} />
+                  ) : (
+                    <>Verify & Continue <CheckCircle2 size={18} /></>
+                  )}
+                </ActionButton>
+              </form>
+            </>
           ) : (
             <>
               <Title>Create an account</Title>
@@ -480,7 +544,7 @@ const SignUpPage = () => {
                     >
                       <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', margin: '20px 0 16px', paddingTop: '20px' }} />
                       <div style={{ background: 'rgba(43, 108, 176, 0.08)', border: '1px solid rgba(144, 205, 244, 0.12)', borderRadius: '12px', padding: '14px 18px', fontSize: '0.88rem', color: '#7b9dce', lineHeight: 1.6 }}>
-                        <strong style={{ color: '#90cdf4' }}>Owner Account</strong> — After registering, you'll verify your email then await admin approval. You can add your attractions &amp; enterprises from your owner dashboard once approved.
+                        <strong style={{ color: '#90cdf4' }}>Owner Account</strong> — After registering and verifying your email, you will await admin approval.
                       </div>
                     </motion.div>
                   )}

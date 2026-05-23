@@ -20,12 +20,11 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-async function sendVerificationEmail(email: string, name: string, token: string) {
-  const verifyUrl = `${CLIENT_URL}/verify-email?token=${token}`;
+async function sendVerificationEmail(email: string, name: string, code: string) {
   await transporter.sendMail({
     from: `"Bulusan Tourism" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: 'Verify your Owner Account — Bulusan Tourism',
+    subject: 'Verify your Account — Bulusan Tourism',
     html: `
       <div style="font-family: 'Segoe UI', sans-serif; max-width: 520px; margin: 0 auto; background: #030a1c; color: #e2ecf7; border-radius: 20px; overflow: hidden;">
         <div style="background: linear-gradient(135deg, #2b6cb0, #1a365d); padding: 40px; text-align: center;">
@@ -34,11 +33,13 @@ async function sendVerificationEmail(email: string, name: string, token: string)
         </div>
         <div style="padding: 40px;">
           <h2 style="margin-top: 0;">Hi ${name} 👋</h2>
-          <p style="color: #9faed4; line-height: 1.7;">You've registered as an <strong style="color: #90cdf4;">Owner</strong> on Bulusan Tourism. Before your account can be reviewed by our admin team, please verify your email address.</p>
+          <p style="color: #9faed4; line-height: 1.7;">Thank you for registering on Bulusan Tourism. Please verify your email address by entering the code below:</p>
           <div style="text-align: center; margin: 32px 0;">
-            <a href="${verifyUrl}" style="background: linear-gradient(135deg, #2b6cb0, #1a365d); color: white; padding: 16px 40px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 1rem; display: inline-block;">Verify My Email</a>
+            <div style="background: rgba(255, 255, 255, 0.05); border: 2px dashed #2b6cb0; display: inline-block; padding: 16px 40px; border-radius: 12px; font-weight: 800; font-size: 2rem; letter-spacing: 4px;">
+              ${code}
+            </div>
           </div>
-          <p style="color: #7b8cbe; font-size: 0.85rem;">This link expires in 24 hours. If you did not register, you can safely ignore this email.</p>
+          <p style="color: #7b8cbe; font-size: 0.85rem;">This code expires in 24 hours. If you did not register, you can safely ignore this email.</p>
         </div>
       </div>
     `,
@@ -138,39 +139,8 @@ router.post('/register', registerLimiter, async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const assignedRole = isAdmin ? 'ADMIN' : (role === 'OWNER' ? 'OWNER' : 'USER');
 
-    if (assignedRole === 'OWNER') {
-      // Owner: create account with email verification required
-      const verificationToken = crypto.randomBytes(32).toString('hex');
-      const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
-
-      await prisma.user.create({
-        data: {
-          name,
-          email,
-          password: hashedPassword,
-          role: assignedRole,
-          avatar: null,
-          emailVerified: false,
-          approvalStatus: 'PENDING',
-          verificationToken,
-          verificationTokenExpiry,
-        },
-      });
-
-      // Send verification email (non-blocking — don't fail if email fails)
-      try {
-        await sendVerificationEmail(email, name, verificationToken);
-      } catch (emailErr) {
-        console.error('Failed to send verification email:', emailErr);
-      }
-
-      return res.json({
-        success: true,
-        requiresVerification: true,
-        message: 'Account created. Please check your email to verify your account.',
-      });
-    } else {
-      // Regular USER or ADMIN: immediate activation
+    if (isAdmin) {
+      // ADMIN: immediate activation
       const user = await prisma.user.create({
         data: {
           name,
@@ -195,6 +165,39 @@ router.post('/register', registerLimiter, async (req, res) => {
           approvalStatus: user.approvalStatus,
         },
       });
+    } else {
+      // USER and OWNER: 6-digit code verification required
+      const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
+      const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
+
+      await prisma.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+          role: assignedRole,
+          avatar: null,
+          emailVerified: false,
+          approvalStatus: assignedRole === 'OWNER' ? 'PENDING' : 'APPROVED',
+          verificationToken,
+          verificationTokenExpiry,
+        },
+      });
+
+      // Send verification email
+      try {
+        await sendVerificationEmail(email, name, verificationToken);
+      } catch (emailErr) {
+        console.error('Failed to send verification email:', emailErr);
+      }
+
+      return res.json({
+        success: true,
+        requiresVerification: true,
+        email: email,
+        role: assignedRole,
+        message: 'Account created. Please check your email for the verification code.',
+      });
     }
   } catch (error) {
     console.error('Register error:', error);
@@ -202,26 +205,27 @@ router.post('/register', registerLimiter, async (req, res) => {
   }
 });
 
-// ─── Verify Email ─────────────────────────────────────────────────────────────
-router.get('/verify-email', async (req, res) => {
-  const { token } = req.query;
-  if (!token || typeof token !== 'string') {
-    return res.status(400).json({ error: 'Invalid verification token.' });
+// ─── Verify Email Code ────────────────────────────────────────────────────────
+router.post('/verify-code', async (req, res) => {
+  const { email, code } = req.body;
+  if (!email || !code || typeof code !== 'string') {
+    return res.status(400).json({ error: 'Email and verification code are required.' });
   }
 
   try {
     const user = await prisma.user.findFirst({
       where: {
-        verificationToken: token,
+        email: email,
+        verificationToken: code,
         verificationTokenExpiry: { gt: new Date() },
       },
     });
 
     if (!user) {
-      return res.status(400).json({ error: 'Verification link is invalid or has expired.' });
+      return res.status(400).json({ error: 'Verification code is invalid or has expired.' });
     }
 
-    await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: user.id },
       data: {
         emailVerified: true,
@@ -230,10 +234,26 @@ router.get('/verify-email', async (req, res) => {
       },
     });
 
-    // Redirect to pending page
-    return res.redirect(`${CLIENT_URL}/owner-pending?verified=true`);
+    // Generate token since user is now verified
+    const token = jwt.sign({ userId: updatedUser.id, role: updatedUser.role }, JWT_SECRET, { expiresIn: '7d' });
+    
+    return res.json({
+      success: true,
+      token,
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        avatar: updatedUser.avatar,
+        itinerary: updatedUser.itinerary,
+        history: updatedUser.history,
+        approvalStatus: updatedUser.approvalStatus,
+        emailVerified: updatedUser.emailVerified,
+      },
+    });
   } catch (error) {
-    console.error('Verify email error:', error);
+    console.error('Verify code error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });

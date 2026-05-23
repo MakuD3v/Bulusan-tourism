@@ -7,6 +7,7 @@ interface AuthContextType {
   role: 'USER' | 'ADMIN' | 'OWNER' | null;
   login: (email: string, password: string) => Promise<{ success: boolean; requiresVerification?: boolean }>;
   signup: (name: string, email: string, password: string, additionalDetails?: any) => Promise<{ success: boolean; requiresVerification?: boolean }>;
+  verifyCode: (email: string, code: string) => Promise<{ success: boolean }>;
   logout: () => void;
   updateUser: (data: Partial<AppUser>) => Promise<void>;
   loading: boolean;
@@ -70,12 +71,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const res = await apiClient.post('/auth/register', { name, email, password, ...additionalDetails });
       
-      // Owner registration — email verification required, no token issued yet
       if (res.requiresVerification) {
         return { success: true, requiresVerification: true };
       }
       
-      // Regular user — immediate login
+      // Admin creation
       if (res.token) {
         localStorage.setItem('auth_token', res.token);
         localStorage.setItem('bulusan_user', JSON.stringify(res.user));
@@ -86,6 +86,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error: any) {
       console.error('Signup error', error);
       throw new Error(error.message || 'Error signing up');
+    }
+  };
+
+  const verifyCode = async (email: string, code: string) => {
+    try {
+      const res = await apiClient.post('/auth/verify-code', { email, code });
+      if (res.token && res.user) {
+        localStorage.setItem('auth_token', res.token);
+        localStorage.setItem('bulusan_user', JSON.stringify(res.user));
+        setUser(res.user);
+        return { success: true };
+      }
+      return { success: false };
+    } catch (error: any) {
+      console.error('Verify code error', error);
+      throw new Error(error.message || 'Invalid or expired code');
     }
   };
 
@@ -107,7 +123,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, role: user?.role || null, login, signup, logout, updateUser, loading, isDemoMode }}>
+    <AuthContext.Provider value={{ user, role: user?.role || null, login, signup, verifyCode, logout, updateUser, loading, isDemoMode }}>
       {!loading && children}
     </AuthContext.Provider>
   );
