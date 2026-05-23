@@ -25,16 +25,25 @@ const VideoPane = styled.div`
   overflow: hidden;
   background: #000;
 
+  /* Dim the video slightly overall */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(3, 10, 28, 0.35);
+    z-index: 2;
+  }
+
+  /* Directional fade: heavy on the right to bleed into form panel,
+     lighter vignette on top/bottom for cinematic feel */
   &::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-      to right,
-      rgba(3, 10, 28, 0.1) 0%,
-      rgba(3, 10, 28, 0.95) 100%
-    );
-    z-index: 2;
+    background:
+      linear-gradient(to right,  transparent 40%, rgba(3, 10, 28, 1) 100%),
+      linear-gradient(to bottom, rgba(3, 10, 28, 0.6) 0%, transparent 20%, transparent 80%, rgba(3, 10, 28, 0.6) 100%);
+    z-index: 3;
   }
 
   @media (max-width: 1024px) {
