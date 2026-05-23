@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 import rateLimit from 'express-rate-limit';
 
 const router = Router();
@@ -11,18 +11,10 @@ const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key_change_in_production';
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
-// ─── Emergency Live Server Fallbacks ──────────────────────────────────────────
-const EMAIL_USER = 'bulusan.tourism.noreply@gmail.com';
-const EMAIL_PASS = 'mjaoavjpgwjdqbnv';
-
-// ─── Email Transporter ───────────────────────────────────────────────────────
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: EMAIL_USER,
-    pass: EMAIL_PASS,
-  },
-});
+// ─── SendGrid Setup ───────────────────────────────────────────────────────────
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY!;
+const FROM_EMAIL = process.env.FROM_EMAIL || 'bulusan.tourism.noreply@gmail.com';
+sgMail.setApiKey(SENDGRID_API_KEY);
 
 // ─── Generate Secure 8-char Alphanumeric Code (XXXX-XXXX format) ─────────────
 function generateVerificationCode(): string {
@@ -38,8 +30,8 @@ function generateVerificationCode(): string {
 
 async function sendVerificationEmail(email: string, name: string, code: string) {
   const year = new Date().getFullYear();
-  await transporter.sendMail({
-    from: `"Bulusan Tourism" <${EMAIL_USER}>`,
+  await sgMail.send({
+    from: { name: 'Bulusan Tourism', email: FROM_EMAIL },
     to: email,
     subject: `${code} is your Bulusan Tourism verification code`,
     html: `
@@ -50,7 +42,6 @@ async function sendVerificationEmail(email: string, name: string, code: string) 
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background:#060e24;padding:40px 16px;">
     <tr><td align="center">
       <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="560" style="max-width:560px;width:100%;">
-
         <!-- HEADER -->
         <tr><td style="background:linear-gradient(135deg,#1a3a5c 0%,#0d2240 50%,#1a3a5c 100%);border-radius:20px 20px 0 0;padding:40px 48px;text-align:center;border-bottom:1px solid rgba(144,205,244,0.15);">
           <div style="display:inline-flex;align-items:center;gap:12px;">
@@ -61,34 +52,28 @@ async function sendVerificationEmail(email: string, name: string, code: string) 
             </div>
           </div>
         </td></tr>
-
         <!-- BODY -->
         <tr><td style="background:#0a1628;padding:48px;border-left:1px solid rgba(255,255,255,0.05);border-right:1px solid rgba(255,255,255,0.05);">
           <p style="margin:0 0 8px;font-size:0.85rem;font-weight:600;color:#63b3ed;letter-spacing:1.5px;text-transform:uppercase;">Email Verification</p>
           <h1 style="margin:0 0 20px;font-size:1.8rem;font-weight:800;color:#e2ecf7;line-height:1.2;">Hi ${name}, verify your email ✉️</h1>
           <p style="margin:0 0 32px;font-size:0.98rem;color:#8faac8;line-height:1.75;">You're almost there! Enter the verification code below in the Bulusan Tourism app to confirm your email address and activate your account.</p>
-
           <!-- CODE BOX -->
           <div style="background:linear-gradient(135deg,rgba(43,108,176,0.12),rgba(26,54,93,0.2));border:1.5px solid rgba(99,179,237,0.3);border-radius:16px;padding:32px;text-align:center;margin:0 0 32px;">
             <p style="margin:0 0 12px;font-size:0.75rem;font-weight:700;color:#63b3ed;letter-spacing:3px;text-transform:uppercase;">Your verification code</p>
             <div style="font-family:'Courier New',Courier,monospace;font-size:2.8rem;font-weight:900;color:#e2ecf7;letter-spacing:8px;line-height:1;margin:0 0 16px;text-shadow:0 0 30px rgba(99,179,237,0.4);">${code}</div>
             <div style="display:inline-block;background:rgba(99,179,237,0.08);border:1px solid rgba(99,179,237,0.2);border-radius:20px;padding:6px 16px;font-size:0.78rem;color:#63b3ed;font-weight:600;">⏱ Expires in 24 hours</div>
           </div>
-
           <!-- SECURITY NOTICE -->
           <div style="background:rgba(245,158,11,0.06);border-left:3px solid rgba(245,158,11,0.5);border-radius:0 10px 10px 0;padding:16px 20px;margin:0 0 32px;">
             <p style="margin:0;font-size:0.83rem;color:#c4a05a;line-height:1.6;"><strong style="color:#f6ad55;">🔒 Security tip:</strong> Bulusan Tourism will never ask for this code over the phone or chat. Never share it with anyone.</p>
           </div>
-
           <p style="margin:0;font-size:0.83rem;color:#556080;line-height:1.6;">Didn't create an account? You can safely ignore this email. Someone may have typed your email by mistake.</p>
         </td></tr>
-
         <!-- FOOTER -->
         <tr><td style="background:#070f20;border-radius:0 0 20px 20px;padding:28px 48px;text-align:center;border-top:1px solid rgba(255,255,255,0.04);border-left:1px solid rgba(255,255,255,0.05);border-right:1px solid rgba(255,255,255,0.05);border-bottom:1px solid rgba(255,255,255,0.05);">
           <p style="margin:0 0 8px;font-size:0.8rem;color:#3a4d6e;">© ${year} Bulusan Tourism. All rights reserved.</p>
           <p style="margin:0;font-size:0.78rem;color:#2a3a54;">Municipality of Bulusan, Sorsogon, Philippines</p>
         </td></tr>
-
       </table>
     </td></tr>
   </table>
@@ -100,8 +85,8 @@ async function sendVerificationEmail(email: string, name: string, code: string) 
 
 async function sendApprovalEmail(email: string, name: string) {
   const dashboardUrl = `${CLIENT_URL}/owner-dashboard`;
-  await transporter.sendMail({
-    from: `"Bulusan Tourism" <${EMAIL_USER}>`,
+  await sgMail.send({
+    from: { name: 'Bulusan Tourism', email: FROM_EMAIL },
     to: email,
     subject: '🎉 Your Owner Account is Approved — Bulusan Tourism',
     html: `
@@ -173,21 +158,19 @@ router.get('/test-email', async (req, res) => {
   if (!targetEmail) return res.status(400).json({ error: 'Please provide an ?email= parameter' });
 
   try {
-    await transporter.verify(); // Test SMTP connection first
-    await transporter.sendMail({
-      from: `"Bulusan Tourism" <${EMAIL_USER}>`,
+    await sgMail.send({
+      from: { name: 'Bulusan Tourism', email: FROM_EMAIL },
       to: targetEmail,
-      subject: 'Live Server Email Test',
-      text: 'If you are receiving this, the live server email configuration is perfectly working!',
+      subject: 'Live Server Email Test — SendGrid',
+      text: 'If you are receiving this, SendGrid is working perfectly on your live server!',
     });
-    res.json({ success: true, message: `Test email sent successfully to ${targetEmail}` });
+    res.json({ success: true, message: `Test email sent via SendGrid to ${targetEmail}` });
   } catch (error: any) {
-    console.error('Test email failed:', error);
+    console.error('SendGrid test failed:', error?.response?.body || error);
     res.status(500).json({ 
       success: false, 
-      error: error.message, 
-      stack: error.stack,
-      hint: "If you see 'Invalid login' or 'Application-specific password required', it means your EMAIL_PASS on the live server is incorrect or missing."
+      error: error.message,
+      details: error?.response?.body,
     });
   }
 });
