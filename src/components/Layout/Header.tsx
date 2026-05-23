@@ -342,6 +342,9 @@ const Header = ({ isTransparent }: { isTransparent: boolean }) => {
                   {role === 'ADMIN' && (
                     <MenuLink to="/admin-portal" onClick={() => setShowMenu(false)}><LayoutDashboard size={16} /> Admin Dashboard</MenuLink>
                   )}
+                  {role === 'OWNER' && (
+                    <MenuLink to="/owner-dashboard" onClick={() => setShowMenu(false)}><LayoutDashboard size={16} /> Owner Dashboard</MenuLink>
+                  )}
                   <LogoutBtn onClick={() => { logout(); navigate('/'); setShowMenu(false); }}>
                     <LogOut size={16} /> Sign Out
                   </LogoutBtn>
