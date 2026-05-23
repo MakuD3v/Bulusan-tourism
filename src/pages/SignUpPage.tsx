@@ -439,13 +439,22 @@ const SignUpPage = () => {
                     <KeyRound size={18} />
                     <input
                       type="text"
-                      placeholder="123456"
+                      placeholder="XXXX-XXXX"
                       value={verificationCode}
-                      onChange={(e) => setVerificationCode(e.target.value)}
-                      maxLength={6}
+                      onChange={(e) => {
+                        // auto-format: uppercase, insert dash after 4 chars
+                        let val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                        if (val.length > 4) val = val.slice(0, 4) + '-' + val.slice(4, 8);
+                        setVerificationCode(val);
+                      }}
+                      maxLength={9}
                       required
+                      style={{ letterSpacing: '4px', fontFamily: 'monospace', fontSize: '1.1rem' }}
                     />
                   </div>
+                  <p style={{ fontSize: '0.78rem', color: '#5c70b8', marginTop: '6px', marginLeft: '4px' }}>
+                    Enter the 8-character code from your email (e.g. K4X9-2BQR)
+                  </p>
                 </InputGroup>
 
                 <ActionButton type="submit" disabled={verifying}>
