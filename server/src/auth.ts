@@ -12,8 +12,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key_change_in_prod
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
 // ─── Emergency Live Server Fallbacks ──────────────────────────────────────────
-const EMAIL_USER = process.env.EMAIL_USER || 'bulusan.tourism.noreply@gmail.com';
-const EMAIL_PASS = process.env.EMAIL_PASS || 'mjaoavjpgwjdqbnv';
+const EMAIL_USER = 'bulusan.tourism.noreply@gmail.com';
+const EMAIL_PASS = 'mjaoavjpgwjdqbnv';
 
 // ─── Email Transporter ───────────────────────────────────────────────────────
 const transporter = nodemailer.createTransport({
