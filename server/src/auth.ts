@@ -11,12 +11,16 @@ const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key_change_in_production';
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
+// ─── Emergency Live Server Fallbacks ──────────────────────────────────────────
+const EMAIL_USER = process.env.EMAIL_USER || 'bulusan.tourism.noreply@gmail.com';
+const EMAIL_PASS = process.env.EMAIL_PASS || 'mjaoavjpgwjdqbnv';
+
 // ─── Email Transporter ───────────────────────────────────────────────────────
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: EMAIL_USER,
+    pass: EMAIL_PASS,
   },
 });
 
@@ -35,7 +39,7 @@ function generateVerificationCode(): string {
 async function sendVerificationEmail(email: string, name: string, code: string) {
   const year = new Date().getFullYear();
   await transporter.sendMail({
-    from: `"Bulusan Tourism" <${process.env.EMAIL_USER}>`,
+    from: `"Bulusan Tourism" <${EMAIL_USER}>`,
     to: email,
     subject: `${code} is your Bulusan Tourism verification code`,
     html: `
@@ -97,7 +101,7 @@ async function sendVerificationEmail(email: string, name: string, code: string) 
 async function sendApprovalEmail(email: string, name: string) {
   const dashboardUrl = `${CLIENT_URL}/owner-dashboard`;
   await transporter.sendMail({
-    from: `"Bulusan Tourism" <${process.env.EMAIL_USER}>`,
+    from: `"Bulusan Tourism" <${EMAIL_USER}>`,
     to: email,
     subject: '🎉 Your Owner Account is Approved — Bulusan Tourism',
     html: `
@@ -171,12 +175,12 @@ router.get('/test-email', async (req, res) => {
   try {
     await transporter.verify(); // Test SMTP connection first
     await transporter.sendMail({
-      from: `"Bulusan Tourism" <${process.env.EMAIL_USER}>`,
+      from: `"Bulusan Tourism" <${EMAIL_USER}>`,
       to: targetEmail,
       subject: 'Live Server Email Test',
       text: 'If you are receiving this, the live server email configuration is perfectly working!',
     });
-    res.json({ success: true, message: \`Test email sent successfully to \${targetEmail}\` });
+    res.json({ success: true, message: `Test email sent successfully to ${targetEmail}` });
   } catch (error: any) {
     console.error('Test email failed:', error);
     res.status(500).json({ 
