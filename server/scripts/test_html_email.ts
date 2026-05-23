@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
-
 dotenv.config();
 
 const transporter = nodemailer.createTransport({
@@ -12,13 +10,15 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-async function sendVerificationEmail(email: string, name: string, code: string) {
-  const year = new Date().getFullYear();
-  await transporter.sendMail({
-    from: \`"Bulusan Tourism" <\${process.env.EMAIL_USER}>\`,
-    to: email,
-    subject: \`\${code} is your Bulusan Tourism verification code\`,
-    html: \`
+const code = 'ABCD-1234';
+const name = 'Maku';
+const email = 'makuyangsen@gmail.com';
+
+transporter.sendMail({
+  from: \`"Bulusan Tourism" <\${process.env.EMAIL_USER}>\`,
+  to: email,
+  subject: \`\${code} is your Bulusan Tourism verification code\`,
+  html: \`
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Verify Your Email</title></head>
@@ -55,7 +55,7 @@ async function sendVerificationEmail(email: string, name: string, code: string) 
         </td></tr>
         <!-- FOOTER -->
         <tr><td style="background:#070f20;border-radius:0 0 20px 20px;padding:28px 48px;text-align:center;border-top:1px solid rgba(255,255,255,0.04);border-left:1px solid rgba(255,255,255,0.05);border-right:1px solid rgba(255,255,255,0.05);border-bottom:1px solid rgba(255,255,255,0.05);">
-          <p style="margin:0 0 8px;font-size:0.8rem;color:#3a4d6e;">© \${year} Bulusan Tourism. All rights reserved.</p>
+          <p style="margin:0 0 8px;font-size:0.8rem;color:#3a4d6e;">© 2026 Bulusan Tourism. All rights reserved.</p>
           <p style="margin:0;font-size:0.78rem;color:#2a3a54;">Municipality of Bulusan, Sorsogon, Philippines</p>
         </td></tr>
       </table>
@@ -63,10 +63,6 @@ async function sendVerificationEmail(email: string, name: string, code: string) 
   </table>
 </body>
 </html>
-    \`,
-  });
-}
-
-sendVerificationEmail(process.env.EMAIL_USER!, 'Test Owner', 'ABCD-1234')
-  .then(() => console.log('HTML Email sent successfully'))
-  .catch(console.error);
+  \`
+}).then(() => console.log('Email sent successfully'))
+  .catch((e) => console.error('Failed to send email:', e));

@@ -163,6 +163,31 @@ export const authenticateToken = (req: any, res: any, next: any) => {
   });
 };
 
+// ─── Test Email Setup ─────────────────────────────────────────────────────────
+router.get('/test-email', async (req, res) => {
+  const targetEmail = req.query.email as string;
+  if (!targetEmail) return res.status(400).json({ error: 'Please provide an ?email= parameter' });
+
+  try {
+    await transporter.verify(); // Test SMTP connection first
+    await transporter.sendMail({
+      from: `"Bulusan Tourism" <${process.env.EMAIL_USER}>`,
+      to: targetEmail,
+      subject: 'Live Server Email Test',
+      text: 'If you are receiving this, the live server email configuration is perfectly working!',
+    });
+    res.json({ success: true, message: \`Test email sent successfully to \${targetEmail}\` });
+  } catch (error: any) {
+    console.error('Test email failed:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message, 
+      stack: error.stack,
+      hint: "If you see 'Invalid login' or 'Application-specific password required', it means your EMAIL_PASS on the live server is incorrect or missing."
+    });
+  }
+});
+
 // ─── Register ─────────────────────────────────────────────────────────────────
 router.post('/register', registerLimiter, async (req, res) => {
   const { name, email, password, role } = req.body;
