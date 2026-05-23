@@ -13,7 +13,11 @@ export async function preloadCollection(colName: string): Promise<void> {
     if (memoryCache[colName] && (Date.now() - memoryCache[colName].timestamp < CACHE_TTL)) return;
     try {
         const data = await apiClient.get(`/${colName}`);
-        memoryCache[colName] = { data, timestamp: Date.now() };
+        if (Array.isArray(data)) {
+            memoryCache[colName] = { data, timestamp: Date.now() };
+        } else {
+            console.warn(`Preload returned non-array for ${colName}:`, data);
+        }
     } catch (err) {
         console.error(`Preload failed for ${colName}:`, err);
     }
@@ -30,12 +34,14 @@ export function invalidateCache(colName?: string) {
 }
 
 export function useFirestore<T>(colName: string, defaultValue: T[] = []) {
-    const [data, setData] = useState<T[]>(memoryCache[colName]?.data || defaultValue); 
-    const [loading, setLoading] = useState(!memoryCache[colName]);
+    const cached = memoryCache[colName]?.data;
+    const initialData = Array.isArray(cached) ? cached : defaultValue;
+    const [data, setData] = useState<T[]>(initialData); 
+    const [loading, setLoading] = useState(!Array.isArray(cached));
 
     const loadData = async (force: boolean = false) => {
         // If data is fresh and not forced, skip fetch
-        if (!force && memoryCache[colName] && (Date.now() - memoryCache[colName].timestamp < CACHE_TTL)) {
+        if (!force && Array.isArray(memoryCache[colName]?.data) && (Date.now() - memoryCache[colName].timestamp < CACHE_TTL)) {
             setLoading(false);
             return;
         }
@@ -50,16 +56,21 @@ export function useFirestore<T>(colName: string, defaultValue: T[] = []) {
             };
             const entityType = typeMap[colName] || 'Unknown';
             const res = await apiClient.get(`/${colName}`);
-            const mapped = res.map((item: any) => ({ 
-                ...item, 
-                firebaseId: item.id.toString(),
-                entityType 
-            }));
-            memoryCache[colName] = { data: mapped, timestamp: Date.now() };
-            setData(mapped);
+            if (Array.isArray(res)) {
+                const mapped = res.map((item: any) => ({ 
+                    ...item, 
+                    firebaseId: item.id.toString(),
+                    entityType 
+                }));
+                memoryCache[colName] = { data: mapped, timestamp: Date.now() };
+                setData(mapped);
+            } else {
+                console.warn(`Fetch returned non-array for ${colName}:`, res);
+                if (!Array.isArray(memoryCache[colName]?.data)) setData(defaultValue);
+            }
         } catch (err) {
             console.error(`Fetch error for ${colName}:`, err);
-            if (!memoryCache[colName]) setData(defaultValue);
+            if (!Array.isArray(memoryCache[colName]?.data)) setData(defaultValue);
         } finally {
             setLoading(false);
         }
