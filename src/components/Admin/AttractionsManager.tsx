@@ -10,6 +10,8 @@ import { compressImage } from '../../utils/imageUtils';
 import { useAlert } from '../Common/AlertProvider';
 import { getMediaUrl } from '../../utils/mediaUtils';
 
+import { useAuth } from '../../hooks/useAuth';
+
 const MapPicker = lazy(() => import('./MapPicker'));
 
 const ManagerContainer = styled(motion.div)`
@@ -87,6 +89,7 @@ const SubmitBtn = styled.button`
 `;
 
 export default function AttractionsManager({ attractions }: { attractions?: any[] }) {
+  const { role, user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<any>({});
@@ -112,7 +115,11 @@ export default function AttractionsManager({ attractions }: { attractions?: any[
   const videoInputRef = useRef<HTMLInputElement>(null);
   const offerImageInputRef = useRef<HTMLInputElement>(null);
 
-  const filtered = (attractions || []).filter(item => 
+  const myAttractions = role === 'OWNER'
+    ? (attractions || []).filter(item => item.ownerId === user?.id)
+    : (attractions || []);
+
+  const filtered = myAttractions.filter(item => 
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -277,7 +284,9 @@ export default function AttractionsManager({ attractions }: { attractions?: any[
         <h2>Manage Attractions</h2>
         <div className="actions">
           <AdminSearchBar value={searchTerm} onChange={setSearchTerm} placeholder="Search attractions..." style={{ minWidth: '250px' }} />
-          <button className="add-btn" onClick={() => handleOpenModal()}><Plus size={18} /> Add New</button>
+          {role !== 'OWNER' && (
+            <button className="add-btn" onClick={() => handleOpenModal()}><Plus size={18} /> Add New</button>
+          )}
         </div>
       </HeaderRow>
       
@@ -300,7 +309,9 @@ export default function AttractionsManager({ attractions }: { attractions?: any[
               <td>
                 <div className="row-actions">
                   <button onClick={() => handleOpenModal(item)}><Edit2 size={16} /></button>
-                  <button className="delete" onClick={() => handleDelete(item.firebaseId)}><Trash2 size={16} /></button>
+                  {role !== 'OWNER' && (
+                    <button className="delete" onClick={() => handleDelete(item.firebaseId)}><Trash2 size={16} /></button>
+                  )}
                 </div>
               </td>
             </tr>

@@ -8,17 +8,19 @@ datasource db {
 }
 
 model User {
-  id          String           @id @default(uuid())
-  name        String
-  email       String           @unique
-  password    String
-  role        String           @default("USER")
-  avatar      String?
-  itinerary   Int[]
-  history     String[]
-  joinedDate  DateTime         @default(now())
-  checkIns    CheckIn[]
-  customTours CustomUserTour[]
+  id              String           @id @default(uuid())
+  name            String
+  email           String           @unique
+  password        String
+  role            String           @default("USER")
+  avatar          String?
+  itinerary       Int[]
+  history         String[]
+  joinedDate      DateTime         @default(now())
+  checkIns        CheckIn[]
+  customTours     CustomUserTour[]
+  ownedAttraction Attraction?
+  ownedEnterprise Enterprise?
 
   @@index([joinedDate])
 }
@@ -47,6 +49,9 @@ model Attraction {
   offers          Offer[]
   reviews         Review[]
 
+  ownerId         String?  @unique
+  owner           User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
   @@index([dateAdded])
   @@index([visits])
 }
@@ -66,6 +71,7 @@ model Enterprise {
   gallery     String[]
   videoUrl    String?
   metadata    Json?
+  contactInfo String?
   visits      Int      @default(0)
   dateAdded   DateTime @default(now())
   tags        String[]
@@ -73,6 +79,9 @@ model Enterprise {
   photos      String[]
   offers      Offer[]
   reviews     Review[]
+
+  ownerId     String?  @unique
+  owner       User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
 
   @@index([dateAdded])
   @@index([visits])

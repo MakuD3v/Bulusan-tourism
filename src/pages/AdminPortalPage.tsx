@@ -142,7 +142,18 @@ const Header = styled.header`
 `;
 
 const AdminPortalPage = () => {
-    const [activeTab, setActiveTab] = useState<'overview' | 'attractions' | 'enterprises' | 'heritage' | 'moderation' | 'inbox' | 'admin_management'>('overview');
+    const { role, logout, isDemoMode, user } = useAuth();
+
+    const getInitialTab = () => {
+        if (role === 'OWNER') {
+            if (user?.ownedAttraction) return 'attractions';
+            if (user?.ownedEnterprise) return 'enterprises';
+            return 'attractions';
+        }
+        return 'overview';
+    };
+
+    const [activeTab, setActiveTab] = useState<'overview' | 'attractions' | 'enterprises' | 'heritage' | 'moderation' | 'inbox' | 'admin_management'>(getInitialTab);
     
     // Type any has been kept for hooks where strict entity models might missing properties on the fly, 
     // but the sub-components correctly typed.
@@ -151,27 +162,45 @@ const AdminPortalPage = () => {
     const { data: heritageItems } = useHeritage([]);
     const { data: blogPosts } = useBlogs([]);
     const { data: inboxInquiries } = useInquiries();
-    const { role, logout, isDemoMode, user } = useAuth();
 
     const handleLogout = () => { logout(); window.location.href = '/discover'; };
 
     React.useEffect(() => {
-        // No-op for SQL version
-    }, [isDemoMode]);
-
+        if (role === 'OWNER') {
+            if (user?.ownedAttraction) {
+                setActiveTab('attractions');
+            } else if (user?.ownedEnterprise) {
+                setActiveTab('enterprises');
+            }
+        }
+    }, [role, user]);
 
     return (
         <PortalContainer>
             <Sidebar>
                 <div className="logo">BULU<span>SAN</span></div>
                 <nav>
-                    <NavItem $active={activeTab === 'overview'} onClick={() => setActiveTab('overview')}><BarChart3 size={20} /> Overview</NavItem>
-                    <NavItem $active={activeTab === 'attractions'} onClick={() => setActiveTab('attractions')}><MapPin size={20} /> Manage Attractions</NavItem>
-                    <NavItem $active={activeTab === 'enterprises'} onClick={() => setActiveTab('enterprises')}><MapPin size={20} /> Manage Enterprises</NavItem>
-                    <NavItem $active={activeTab === 'moderation'} onClick={() => setActiveTab('moderation')}><FileText size={20} /> Content Moderation</NavItem>
-                    <NavItem $active={activeTab === 'inbox'} onClick={() => setActiveTab('inbox')}><Mail size={20} /> Inquiry Inbox</NavItem>
-                    {user?.email === 'admin@bulusan.com' && (
-                        <NavItem $active={activeTab === 'admin_management'} onClick={() => setActiveTab('admin_management')}><ShieldAlert size={20} /> Admin Management</NavItem>
+                    {role === 'ADMIN' && (
+                        <>
+                            <NavItem $active={activeTab === 'overview'} onClick={() => setActiveTab('overview')}><BarChart3 size={20} /> Overview</NavItem>
+                            <NavItem $active={activeTab === 'attractions'} onClick={() => setActiveTab('attractions')}><MapPin size={20} /> Manage Attractions</NavItem>
+                            <NavItem $active={activeTab === 'enterprises'} onClick={() => setActiveTab('enterprises')}><MapPin size={20} /> Manage Enterprises</NavItem>
+                            <NavItem $active={activeTab === 'moderation'} onClick={() => setActiveTab('moderation')}><FileText size={20} /> Content Moderation</NavItem>
+                            <NavItem $active={activeTab === 'inbox'} onClick={() => setActiveTab('inbox')}><Mail size={20} /> Inquiry Inbox</NavItem>
+                            {user?.email === 'admin@bulusan.com' && (
+                                <NavItem $active={activeTab === 'admin_management'} onClick={() => setActiveTab('admin_management')}><ShieldAlert size={20} /> Admin Management</NavItem>
+                            )}
+                        </>
+                    )}
+                    {role === 'OWNER' && (
+                        <>
+                            {user?.ownedAttraction && (
+                                <NavItem $active={activeTab === 'attractions'} onClick={() => setActiveTab('attractions')}><MapPin size={20} /> My Attraction</NavItem>
+                            )}
+                            {user?.ownedEnterprise && (
+                                <NavItem $active={activeTab === 'enterprises'} onClick={() => setActiveTab('enterprises')}><MapPin size={20} /> My Enterprise</NavItem>
+                            )}
+                        </>
                     )}
                 </nav>
                 <div style={{ padding: '32px' }}>

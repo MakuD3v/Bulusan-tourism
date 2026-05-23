@@ -79,7 +79,7 @@ const AdminRoute = () => {
 
   if (loading) return null;
 
-  if (role !== 'ADMIN') {
+  if (role !== 'ADMIN' && role !== 'OWNER') {
     return <Navigate to="/discover" replace />;
   }
 

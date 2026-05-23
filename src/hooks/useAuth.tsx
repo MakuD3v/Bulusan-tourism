@@ -4,9 +4,9 @@ import { apiClient } from '../api/client';
 
 interface AuthContextType {
   user: AppUser | null;
-  role: 'USER' | 'ADMIN' | null;
+  role: 'USER' | 'ADMIN' | 'OWNER' | null;
   login: (email: string, password: string) => Promise<boolean>;
-  signup: (name: string, email: string, password: string) => Promise<boolean>;
+  signup: (name: string, email: string, password: string, additionalDetails?: any) => Promise<boolean>;
   logout: () => void;
   updateUser: (data: Partial<AppUser>) => Promise<void>;
   loading: boolean;
@@ -68,9 +68,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signup = async (name: string, email: string, password: string): Promise<boolean> => {
+  const signup = async (name: string, email: string, password: string, additionalDetails?: any): Promise<boolean> => {
     try {
-      const res = await apiClient.post('/auth/register', { name, email, password });
+      const res = await apiClient.post('/auth/register', { name, email, password, ...additionalDetails });
       if (res.token) {
         localStorage.setItem('auth_token', res.token);
         localStorage.setItem('bulusan_user', JSON.stringify(res.user));

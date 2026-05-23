@@ -1,278 +1,609 @@
 import React, { useState } from 'react';
-import styled from 'styled-components';
-import { motion } from 'framer-motion';
+import styled, { keyframes } from 'styled-components';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { User, Mail, Lock, UserPlus, Loader2, CheckCircle2 } from 'lucide-react';
+import { User, Mail, Lock, UserPlus, Loader2, CheckCircle2, ArrowLeft, Building2, Landmark, Phone, MapPin, AlignLeft, Compass } from 'lucide-react';
 
-const AuthContainer = styled.div`
+const SplitContainer = styled.div`
   min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  background: #030a1c; /* Slate black-navy base */
+  font-family: ${(props) => props.theme.fonts.body};
   overflow: hidden;
-  background: #0a192f;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
-const BackgroundImage = styled.div`
+const VideoPane = styled.div`
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to right,
+      rgba(3, 10, 28, 0.1) 0%,
+      rgba(3, 10, 28, 0.95) 100%
+    );
+    z-index: 2;
+  }
+
+  @media (max-width: 1024px) {
+    display: none;
+  }
+`;
+
+const IframeWrapper = styled.div`
   position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: url('/bulusan_drone_auth_bg.png') center/cover no-repeat;
-  filter: brightness(0.6);
+  top: 50%;
+  left: 50%;
+  width: 100vw;
+  height: 56.25vw;
+  min-height: 100vh;
+  min-width: 177.77vh;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
   z-index: 1;
+
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+`;
+
+const FormPane = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 40px;
+  position: relative;
+  z-index: 3;
+  overflow-y: auto;
+  background: radial-gradient(circle at 80% 20%, rgba(18, 48, 92, 0.15) 0%, transparent 60%);
+
+  @media (max-width: 480px) {
+    padding: 32px 16px;
+  }
+`;
+
+const BackButton = styled(motion.button)`
+  position: absolute;
+  top: 32px;
+  left: 40px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #9faed4;
+  padding: 8px 16px;
+  border-radius: 30px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #e2ecf7;
+    transform: translateX(-3px);
+  }
 `;
 
 const GlassCard = styled(motion.div)`
   width: 100%;
-  max-width: 500px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 32px;
-  padding: 48px;
-  position: relative;
-  z-index: 10;
-  box-shadow: 0 25px 50px rgba(0,0,0,0.3);
-  text-align: center;
+  max-width: 540px;
+  background: rgba(8, 20, 48, 0.45);
+  backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 28px;
+  padding: 40px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
 
   @media (max-width: 480px) {
-    padding: 32px 24px;
-    border-radius: 24px;
-    max-width: 90vw;
+    padding: 32px 20px;
+    border-radius: 20px;
   }
 `;
 
-const Title = styled.h1`
+const Title = styled.h2`
   font-family: ${(props) => props.theme.fonts.heading};
-  font-size: 3rem;
-  color: white;
-  margin-bottom: 8px;
-  font-weight: 900;
-  letter-spacing: -1px;
-
-  @media (max-width: 480px) {
-    font-size: 2rem;
-  }
+  font-size: 2.2rem;
+  color: #e2ecf7;
+  margin-bottom: 6px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  text-align: left;
 `;
 
 const Subtitle = styled.p`
-  color: ${(props) => props.theme.colors.accentBlue};
-  margin-bottom: 48px;
-  font-size: 0.7rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 4px;
+  color: #7b8cbe;
+  margin-bottom: 28px;
+  font-size: 0.95rem;
+  text-align: left;
+`;
 
-  @media (max-width: 480px) {
-    margin-bottom: 32px;
-    letter-spacing: 2px;
+const ToggleContainer = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 32px;
+`;
+
+const ToggleBtn = styled.button<{ $active: boolean }>`
+  background: ${(props) => (props.$active ? 'linear-gradient(135deg, #2b6cb0 0%, #1a365d 100%)' : 'transparent')};
+  color: ${(props) => (props.$active ? '#fff' : '#9faed4')};
+  border: none;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    color: #fff;
   }
 `;
 
 const InputGroup = styled.div`
-  position: relative;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   text-align: left;
 
   label {
     display: block;
-    color: rgba(255,255,255,0.8);
+    color: #9faed4;
     font-size: 0.85rem;
     font-weight: 600;
     margin-bottom: 8px;
-    margin-left: 4px;
+    margin-left: 2px;
   }
 
   .input-wrapper {
     position: relative;
+    
     svg {
       position: absolute;
       left: 16px;
       top: 50%;
       transform: translateY(-50%);
-      color: rgba(255,255,255,0.4);
+      color: #5c70b8;
+      transition: color 0.3s;
     }
-    input {
+
+    input, select, textarea {
       width: 100%;
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 12px;
       padding: 14px 16px 14px 48px;
-      color: white;
-      font-size: 1rem;
-      transition: all 0.3s;
+      color: #f1f5f9;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      font-family: inherit;
+
+      &::placeholder {
+        color: rgba(92, 112, 184, 0.5);
+      }
+
       &:focus {
-        border-color: ${(props) => props.theme.colors.ctaBlue};
-        background: rgba(255,255,255,0.15);
+        border-color: #2b6cb0;
+        background: rgba(255, 255, 255, 0.07);
+        box-shadow: 0 0 0 4px rgba(43, 108, 176, 0.15);
         outline: none;
+
+        & + svg {
+          color: #8ab4f8;
+        }
       }
     }
+
+    select {
+      appearance: none;
+      cursor: pointer;
+      option {
+        background: #0d172e;
+        color: #f1f5f9;
+      }
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+  }
+`;
+
+const FormGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+    gap: 0;
   }
 `;
 
 const ActionButton = styled.button`
   width: 100%;
-  padding: 16px;
-  background: ${(props) => props.theme.colors.ctaBlue};
-  color: white;
+  padding: 15px;
+  background: linear-gradient(135deg, #2b6cb0 0%, #1a365d 100%);
+  color: #fff;
   border: none;
   border-radius: 12px;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  margin-top: 32px;
+  gap: 10px;
+  box-shadow: 0 8px 24px rgba(26, 54, 93, 0.35);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  margin-top: 12px;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(46, 117, 182, 0.4);
-    background: #1e3a8a;
+    box-shadow: 0 12px 30px rgba(26, 54, 93, 0.5);
+    background: linear-gradient(135deg, #3182ce 0%, #2a4365 100%);
   }
-  
-  @media (max-width: 480px) {
-    padding: 14px;
-    font-size: 1rem;
-    margin-top: 24px;
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.75;
+    cursor: wait;
   }
 `;
 
-const SuccessMsg = styled(motion.div)`
-  background: rgba(46, 204, 113, 0.2);
-  border: 1px solid rgba(46, 204, 113, 0.3);
+const SuccessCard = styled(motion.div)`
+  background: rgba(46, 204, 113, 0.1);
+  border: 1px solid rgba(46, 204, 113, 0.25);
   color: #99ffbb;
-  padding: 16px;
-  border-radius: 12px;
-  margin-bottom: 24px;
+  padding: 24px;
+  border-radius: 16px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
-  font-size: 0.95rem;
+  gap: 16px;
+  font-size: 1rem;
+  text-align: center;
 `;
 
 const ErrorMsg = styled(motion.div)`
-  background: rgba(231, 76, 60, 0.2);
-  border: 1px solid rgba(231, 76, 60, 0.4);
-  color: #ff9999;
+  background: rgba(231, 76, 60, 0.1);
+  border: 1px solid rgba(231, 76, 60, 0.2);
+  color: #ff8888;
   padding: 12px 16px;
-  border-radius: 12px;
+  border-radius: 10px;
   margin-bottom: 24px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   text-align: left;
 `;
 
 const SignUpPage = () => {
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState(false);
-    const { signup } = useAuth();
-    const navigate = useNavigate();
+  const [role, setRole] = useState<'USER' | 'OWNER'>('USER');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  
+  // Owner exclusive state
+  const [businessType, setBusinessType] = useState<'attraction' | 'enterprise'>('enterprise');
+  const [businessName, setBusinessName] = useState('');
+  const [businessCategory, setBusinessCategory] = useState('');
+  const [businessDescription, setBusinessDescription] = useState('');
+  const [businessLocation, setBusinessLocation] = useState('');
+  const [businessContact, setBusinessContact] = useState('');
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  
+  const { signup } = useAuth();
+  const navigate = useNavigate();
 
-        try {
-            const ok = await signup(name, email, password);
-            if (ok) {
-                setSuccess(true);
-                setTimeout(() => navigate('/login'), 2000);
-            } else {
-                setError('Registration failed. Please try again.');
-            }
-        } catch (err: any) {
-            setError(err.message || 'Something went wrong. Please try again.');
-        } finally {
-            setLoading(false);
-        }
-    };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
 
-    return (
-        <AuthContainer>
-            <BackgroundImage />
-    <GlassCard
-      initial={{ opacity: 0, scale: 0.98 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.98 }}
-      transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-    >
-                <Title>Join the Discovery</Title>
-                <Subtitle>Create your portal to start mapping your Bulusan journeys.</Subtitle>
+    const additionalDetails: any = { role };
+    if (role === 'OWNER') {
+      additionalDetails.businessType = businessType;
+      additionalDetails.businessName = businessName;
+      additionalDetails.businessCategory = businessCategory;
+      additionalDetails.businessDescription = businessDescription;
+      additionalDetails.businessLocation = businessLocation;
+      additionalDetails.businessContact = businessContact;
+    }
 
-                {success ? (
-                    <SuccessMsg initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                        <CheckCircle2 size={24} />
-                        <div>
-                            <strong>Explorer account created!</strong><br />
-                            Redirecting you to login...
-                        </div>
-                    </SuccessMsg>
-                ) : (
-                    <form onSubmit={handleSubmit}>
-                        {error && <ErrorMsg initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>{error}</ErrorMsg>}
+    try {
+      const ok = await signup(name, email, password, additionalDetails);
+      if (ok) {
+        setSuccess(true);
+        setTimeout(() => navigate('/discover'), 2500);
+      } else {
+        setError('Registration failed. Please try again.');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                        <InputGroup>
-                            <label>Full Name</label>
-                            <div className="input-wrapper">
-                                <User size={18} />
-                                <input
-                                    type="text"
-                                    placeholder="Maria Clara"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    required
-                                />
-                            </div>
-                        </InputGroup>
+  return (
+    <SplitContainer>
+      <VideoPane>
+        <IframeWrapper>
+          <iframe
+            src="https://www.youtube-nocookie.com/embed/sBFeTzfXeu8?autoplay=1&mute=1&loop=1&playlist=sBFeTzfXeu8&controls=0&rel=0&modestbranding=1&iv_load_policy=3&showinfo=0&enablejsapi=1"
+            title="Bulusan Tourism Cinematic Preview"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          />
+        </IframeWrapper>
+      </VideoPane>
 
-                        <InputGroup>
-                            <label>Email Address</label>
-                            <div className="input-wrapper">
-                                <Mail size={18} />
-                                <input
-                                    type="email"
-                                    placeholder="maria@bulusan.com"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                />
-                            </div>
-                        </InputGroup>
+      <FormPane>
+        <BackButton
+          onClick={() => navigate('/discover')}
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <ArrowLeft size={16} /> Back to Discover
+        </BackButton>
 
-                        <InputGroup>
-                            <label>Password</label>
-                            <div className="input-wrapper">
-                                <Lock size={18} />
-                                <input
-                                    type="password"
-                                    placeholder="Create a strong password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                />
-                            </div>
-                        </InputGroup>
+        <GlassCard
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          {success ? (
+            <SuccessCard
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+            >
+              <CheckCircle2 size={48} color="#2ecc71" />
+              <div>
+                <h3 style={{ fontSize: '1.4rem', color: '#fff', marginBottom: '8px' }}>
+                  Account Created Successfully!
+                </h3>
+                <p style={{ color: '#a3b899' }}>
+                  {role === 'OWNER'
+                    ? `Welcome, ${name}! Your business portal has been set up. Redirecting to discovery dashboard...`
+                    : `Welcome, explorer ${name}! Preparing your discovery guide...`}
+                </p>
+              </div>
+            </SuccessCard>
+          ) : (
+            <>
+              <Title>Create an account</Title>
+              <Subtitle>Join the digital adventure companion of Bulusan.</Subtitle>
 
-                        <ActionButton type="submit" disabled={loading}>
-                            {loading ? <Loader2 className="animate-spin" /> : <>Start Exploring <UserPlus size={20} /></>}
-                        </ActionButton>
-                    </form>
+              <ToggleContainer>
+                <ToggleBtn
+                  type="button"
+                  $active={role === 'USER'}
+                  onClick={() => setRole('USER')}
+                >
+                  Explorer User
+                </ToggleBtn>
+                <ToggleBtn
+                  type="button"
+                  $active={role === 'OWNER'}
+                  onClick={() => setRole('OWNER')}
+                >
+                  Enterprise Owner
+                </ToggleBtn>
+              </ToggleContainer>
+
+              <form onSubmit={handleSubmit}>
+                {error && (
+                  <ErrorMsg
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    {error}
+                  </ErrorMsg>
                 )}
 
-                <p style={{ marginTop: '32px', color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem' }}>
-                    Already have an account? <Link to="/login" style={{ color: 'white', fontWeight: 700, textDecoration: 'none' }}>Sign In</Link>
-                </p>
-            </GlassCard>
-        </AuthContainer>
-    );
+                <InputGroup>
+                  <label>Full Name</label>
+                  <div className="input-wrapper">
+                    <User size={18} />
+                    <input
+                      type="text"
+                      placeholder="e.g. Maria Clara"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                    />
+                  </div>
+                </InputGroup>
+
+                <FormGrid>
+                  <InputGroup>
+                    <label>E-mail</label>
+                    <div className="input-wrapper">
+                      <Mail size={18} />
+                      <input
+                        type="email"
+                        placeholder="explorer@bulusan.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </InputGroup>
+
+                  <InputGroup>
+                    <label>Password</label>
+                    <div className="input-wrapper">
+                      <Lock size={18} />
+                      <input
+                        type="password"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </InputGroup>
+                </FormGrid>
+
+                <AnimatePresence>
+                  {role === 'OWNER' && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.35, ease: 'easeInOut' }}
+                      style={{ overflow: 'hidden' }}
+                    >
+                      <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', margin: '24px 0', paddingTop: '20px' }} />
+                      <h4 style={{ color: '#e2ecf7', textAlign: 'left', marginBottom: '16px', fontSize: '1.05rem', fontWeight: 700 }}>
+                        Business Details
+                      </h4>
+
+                      <FormGrid>
+                        <InputGroup>
+                          <label>Business Type</label>
+                          <div className="input-wrapper">
+                            <Compass size={18} />
+                            <select
+                              value={businessType}
+                              onChange={(e: any) => setBusinessType(e.target.value)}
+                            >
+                              <option value="enterprise">Enterprise (Hotel, Resto, Cafe)</option>
+                              <option value="attraction">Attraction (Falls, Lake, Park)</option>
+                            </select>
+                          </div>
+                        </InputGroup>
+
+                        <InputGroup>
+                          <label>Business Name</label>
+                          <div className="input-wrapper">
+                            <Building2 size={18} />
+                            <input
+                              type="text"
+                              placeholder="e.g. Bulusan Lake Resort"
+                              value={businessName}
+                              onChange={(e) => setBusinessName(e.target.value)}
+                              required={role === 'OWNER'}
+                            />
+                          </div>
+                        </InputGroup>
+                      </FormGrid>
+
+                      <FormGrid>
+                        <InputGroup>
+                          <label>Category</label>
+                          <div className="input-wrapper">
+                            <Landmark size={18} />
+                            <input
+                              type="text"
+                              placeholder="e.g. Cafe, Resort, Hot Springs"
+                              value={businessCategory}
+                              onChange={(e) => setBusinessCategory(e.target.value)}
+                              required={role === 'OWNER'}
+                            />
+                          </div>
+                        </InputGroup>
+
+                        <InputGroup>
+                          <label>Contact Number</label>
+                          <div className="input-wrapper">
+                            <Phone size={18} />
+                            <input
+                              type="text"
+                              placeholder="e.g. +63 912 345 6789"
+                              value={businessContact}
+                              onChange={(e) => setBusinessContact(e.target.value)}
+                              required={role === 'OWNER'}
+                            />
+                          </div>
+                        </InputGroup>
+                      </FormGrid>
+
+                      <InputGroup>
+                        <label>Location Address</label>
+                        <div className="input-wrapper">
+                          <MapPin size={18} />
+                          <input
+                            type="text"
+                            placeholder="e.g. San Roque, Bulusan, Sorsogon"
+                            value={businessLocation}
+                            onChange={(e) => setBusinessLocation(e.target.value)}
+                            required={role === 'OWNER'}
+                          />
+                        </div>
+                      </InputGroup>
+
+                      <InputGroup>
+                        <label>Short Description</label>
+                        <div className="input-wrapper">
+                          <AlignLeft size={18} style={{ top: '24px' }} />
+                          <textarea
+                            placeholder="Tell visitors about your place, specialties, and rates..."
+                            value={businessDescription}
+                            onChange={(e) => setBusinessDescription(e.target.value)}
+                            required={role === 'OWNER'}
+                          />
+                        </div>
+                      </InputGroup>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <ActionButton type="submit" disabled={loading}>
+                  {loading ? (
+                    <Loader2 className="animate-spin" size={18} />
+                  ) : (
+                    <>
+                      {role === 'OWNER' ? 'Register & Setup Portal' : 'Start Exploring'} <UserPlus size={18} />
+                    </>
+                  )}
+                </ActionButton>
+              </form>
+
+              <p style={{ marginTop: '28px', color: '#7b8cbe', fontSize: '0.9rem' }}>
+                Already have an account?{' '}
+                <Link
+                  to="/login"
+                  style={{
+                    color: '#8ab4f8',
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                  }}
+                >
+                  Sign In
+                </Link>
+              </p>
+            </>
+          )}
+        </GlassCard>
+      </FormPane>
+    </SplitContainer>
+  );
 };
 
 export default SignUpPage;

@@ -124,11 +124,13 @@ export interface User {
     id: string;
     name: string;
     email: string;
-    role: 'USER' | 'ADMIN';
+    role: 'USER' | 'ADMIN' | 'OWNER';
     avatar?: string;
     itinerary: number[];
     history: string[];
     joinedDate: string;
+    ownedAttraction?: Attraction;
+    ownedEnterprise?: Enterprise;
     firebaseId?: string;
 }
 

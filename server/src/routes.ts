@@ -123,7 +123,31 @@ const createCrudRoutes = (model: any, include?: any) => {
 
   r.post('/', authenticateToken, async (req, res) => {
     try {
+      const requesterRole = (req as any).user?.role;
+      const requesterId = (req as any).user?.userId;
+
+      if (requesterRole === 'USER') {
+        return res.status(403).json({ error: 'Forbidden: Standard users cannot create data' });
+      }
+
+      const modelName = (model as any).name || '';
+      if (!['Attraction', 'Enterprise'].includes(modelName) && requesterRole !== 'ADMIN') {
+        return res.status(403).json({ error: 'Forbidden: Access denied' });
+      }
+
       const payload = formatPrismaPayload(req.body);
+      if (['Attraction', 'Enterprise'].includes(modelName)) {
+        if (requesterRole === 'OWNER') {
+          const existing = await model.findFirst({ where: { ownerId: requesterId } });
+          if (existing) {
+            return res.status(400).json({ error: 'You already own an attraction or enterprise.' });
+          }
+          payload.ownerId = requesterId;
+        } else if (requesterRole === 'ADMIN' && req.body.ownerId) {
+          payload.ownerId = req.body.ownerId;
+        }
+      }
+
       const data = await model.create({ data: payload });
       res.json(data);
     } catch (e: any) {
@@ -134,9 +158,34 @@ const createCrudRoutes = (model: any, include?: any) => {
 
   r.put('/:id', authenticateToken, async (req, res) => {
     try {
+      const requesterRole = (req as any).user?.role;
+      const requesterId = (req as any).user?.userId;
+
+      if (requesterRole === 'USER') {
+        return res.status(403).json({ error: 'Forbidden: Standard users cannot edit data' });
+      }
+
+      const modelName = (model as any).name || '';
+      if (!['Attraction', 'Enterprise'].includes(modelName) && requesterRole !== 'ADMIN') {
+        return res.status(403).json({ error: 'Forbidden: Access denied' });
+      }
+
+      const recordId = isNaN(Number(req.params.id)) ? req.params.id : Number(req.params.id);
+
+      if (['Attraction', 'Enterprise'].includes(modelName) && requesterRole === 'OWNER') {
+        const record = await model.findUnique({ where: { id: recordId } });
+        if (!record || record.ownerId !== requesterId) {
+          return res.status(403).json({ error: 'Forbidden: You can only edit your own attraction/enterprise' });
+        }
+      }
+
       const payload = formatPrismaPayload(req.body, true);
+      if (requesterRole === 'OWNER') {
+        delete payload.ownerId;
+      }
+
       const data = await model.update({ 
-        where: { id: isNaN(Number(req.params.id)) ? req.params.id : Number(req.params.id) },
+        where: { id: recordId },
         data: payload
       });
       res.json(data);
@@ -148,16 +197,35 @@ const createCrudRoutes = (model: any, include?: any) => {
 
   r.delete('/:id', authenticateToken, async (req, res) => {
     try {
-      await model.delete({ 
-        where: { id: isNaN(Number(req.params.id)) ? req.params.id : Number(req.params.id) }
-      });
+      const requesterRole = (req as any).user?.role;
+      const requesterId = (req as any).user?.userId;
+
+      if (requesterRole === 'USER') {
+        return res.status(403).json({ error: 'Forbidden: Standard users cannot delete data' });
+      }
+
+      const modelName = (model as any).name || '';
+      if (!['Attraction', 'Enterprise'].includes(modelName) && requesterRole !== 'ADMIN') {
+        return res.status(403).json({ error: 'Forbidden: Access denied' });
+      }
+
+      const recordId = isNaN(Number(req.params.id)) ? req.params.id : Number(req.params.id);
+
+      if (['Attraction', 'Enterprise'].includes(modelName) && requesterRole === 'OWNER') {
+        const record = await model.findUnique({ where: { id: recordId } });
+        if (!record || record.ownerId !== requesterId) {
+          return res.status(403).json({ error: 'Forbidden: You can only delete your own attraction/enterprise' });
+        }
+      }
+
+      await model.delete({ where: { id: recordId } });
       res.json({ success: true });
     } catch (e) {
       res.status(500).json({ error: 'Error deleting data', details: e });
     }
   });
   return r;
-};
+}
 
 // Apply generic routes
 router.use('/attractions', createCrudRoutes(prisma.attraction, { reviews: true, offers: true }));
