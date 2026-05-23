@@ -7,8 +7,8 @@ const PanelContainer = styled.div`
   background: var(--surface-bg);
   border-radius: 20px;
   padding: 32px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-  border: 1px solid rgba(0,0,0,0.05);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   display: flex;
   flex-direction: column;
   gap: 32px;
@@ -40,7 +40,9 @@ const SearchBox = styled.div`
   input {
     width: 100%;
     padding: 16px 16px 16px 48px;
-    border: 1px solid #cbd5e1;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-dark);
     border-radius: 12px;
     font-size: 1rem;
     outline: none;
@@ -67,8 +69,8 @@ const UserItem = styled.div`
   align-items: center;
   padding: 16px;
   border-radius: 12px;
-  border: 1px solid #f1f5f9;
-  background: white;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
 
   .info {
     display: flex;
@@ -92,14 +94,14 @@ const UserItem = styled.div`
     transition: all 0.2s;
 
     &.promote {
-      background: #eff6ff;
-      color: #2563eb;
+      background: rgba(37, 99, 235, 0.1);
+      color: #3b82f6;
       &:hover { background: #2563eb; color: white; }
     }
 
     &.demote {
-      background: #fef2f2;
-      color: #dc2626;
+      background: rgba(220, 38, 38, 0.1);
+      color: #f87171;
       &:hover { background: #dc2626; color: white; }
     }
     
@@ -113,9 +115,9 @@ const UserItem = styled.div`
 const Message = styled.div<{ $type: 'error' | 'success' }>`
   padding: 12px;
   border-radius: 8px;
-  background: ${props => props.$type === 'error' ? '#fef2f2' : '#f0fdf4'};
-  color: ${props => props.$type === 'error' ? '#ef4444' : '#16a34a'};
-  border: 1px solid ${props => props.$type === 'error' ? '#fecaca' : '#bbf7d0'};
+  background: ${props => props.$type === 'error' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(22, 163, 74, 0.1)'};
+  color: ${props => props.$type === 'error' ? '#f87171' : '#4ade80'};
+  border: 1px solid ${props => props.$type === 'error' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(22, 163, 74, 0.2)'};
   font-size: 0.9rem;
   display: flex;
   align-items: center;
@@ -126,13 +128,15 @@ const Message = styled.div<{ $type: 'error' | 'success' }>`
 const Overlay = styled.div`
   position: fixed;
   top: 0; left: 0; width: 100vw; height: 100vh;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
   display: flex; align-items: center; justify-content: center;
   z-index: 2000;
 `;
 
 const Popup = styled.div`
-  background: white;
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 32px;
   border-radius: 20px;
   max-width: 400px;
@@ -146,8 +150,8 @@ const Popup = styled.div`
     display: flex; gap: 12px;
     button {
       flex: 1; padding: 12px; border-radius: 12px; font-weight: bold; border: none; cursor: pointer;
-      &.cancel { background: #f1f5f9; color: #475569; }
-      &.confirm { background: #ef4444; color: white; }
+      &.cancel { background: rgba(255, 255, 255, 0.05); color: var(--text-light); &:hover { background: rgba(255, 255, 255, 0.1); } }
+      &.confirm { background: #ef4444; color: white; &:hover { background: #dc2626; } }
     }
   }
 `;
@@ -239,7 +243,7 @@ const AdminManagementPanel = () => {
         )}
 
         <div>
-          <h3 style={{ marginBottom: '16px', color: 'var(--text-dark)' }}>Add New Admin</h3>
+          <h3 style={{ marginBottom: '16px', color: 'var(--text-dark)', fontWeight: 700 }}>Add New Admin</h3>
           <SearchBox>
             <Search size={20} />
             <input 
@@ -271,8 +275,8 @@ const AdminManagementPanel = () => {
           )}
         </div>
 
-        <div style={{ borderTop: '1px solid rgba(0,0,0,0.05)', paddingTop: '32px' }}>
-          <h3 style={{ marginBottom: '16px', color: 'var(--text-dark)' }}>Current Administrators</h3>
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '32px' }}>
+          <h3 style={{ marginBottom: '16px', color: 'var(--text-dark)', fontWeight: 700 }}>Current Administrators</h3>
           <UserList>
             {adminUsers.map(u => (
               <UserItem key={u.id}>
