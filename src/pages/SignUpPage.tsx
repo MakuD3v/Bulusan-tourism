@@ -523,22 +523,7 @@ const SignUpPage = () => {
                         </InputGroup>
                       </FormGrid>
 
-                      <FormGrid>
-                        <InputGroup>
-                          <label>Category</label>
-                          <div className="input-wrapper">
-                            <Landmark size={18} />
-                            <input
-                              type="text"
-                              placeholder="e.g. Cafe, Resort, Hot Springs"
-                              value={businessCategory}
-                              onChange={(e) => setBusinessCategory(e.target.value)}
-                              required={role === 'OWNER'}
-                            />
-                          </div>
-                        </InputGroup>
-
-                        <InputGroup>
+                      <InputGroup>
                           <label>Contact Number</label>
                           <div className="input-wrapper">
                             <Phone size={18} />
@@ -551,7 +536,6 @@ const SignUpPage = () => {
                             />
                           </div>
                         </InputGroup>
-                      </FormGrid>
 
                       <InputGroup>
                         <label>Location Address</label>
@@ -567,18 +551,7 @@ const SignUpPage = () => {
                         </div>
                       </InputGroup>
 
-                      <InputGroup>
-                        <label>Short Description</label>
-                        <div className="input-wrapper">
-                          <AlignLeft size={18} style={{ top: '24px' }} />
-                          <textarea
-                            placeholder="Tell visitors about your place, specialties, and rates..."
-                            value={businessDescription}
-                            onChange={(e) => setBusinessDescription(e.target.value)}
-                            required={role === 'OWNER'}
-                          />
-                        </div>
-                      </InputGroup>
+
                     </motion.div>
                   )}
                 </AnimatePresence>
