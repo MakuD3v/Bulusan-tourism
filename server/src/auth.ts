@@ -86,22 +86,20 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// ─── Email Validation ─────────────────────────────────────────────────────────
-async function verifyEmailExistence(email: string): Promise<boolean> {
-  const isGmail = email.toLowerCase().endsWith('@gmail.com');
-  if (!isGmail) return true;
-
-  try {
-    const res = await fetch(`https://disify.com/api/email/${encodeURIComponent(email)}`, { signal: AbortSignal.timeout(3000) });
-    const data = await res.json();
-    if (data && (data.format === false || data.dns === false)) return false;
-    return true;
-  } catch (e) {
-    console.warn('Disify email validation failed, falling back...', e);
-  }
-
+// ─── Email Validation (simple, no external calls to prevent hangs) ────────────
+function verifyEmailExistence(email: string): boolean {
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return regex.test(email);
+}
+
+// Helper: send email with a hard timeout so it never blocks responses
+function sendEmailWithTimeout(fn: () => Promise<void>, timeoutMs = 10000): Promise<void> {
+  return Promise.race([
+    fn(),
+    new Promise<void>((_, reject) =>
+      setTimeout(() => reject(new Error('Email send timeout')), timeoutMs)
+    ),
+  ]);
 }
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
@@ -130,9 +128,9 @@ router.post('/register', registerLimiter, async (req, res) => {
     const isAdmin = ['admin@bulusan.com'].includes(email.toLowerCase());
 
     if (!isAdmin) {
-      const isEmailValid = await verifyEmailExistence(email);
+      const isEmailValid = verifyEmailExistence(email);
       if (!isEmailValid) {
-        return res.status(400).json({ error: 'This email address appears to be invalid or does not exist.' });
+        return res.status(400).json({ error: 'This email address appears to be invalid.' });
       }
     }
 
@@ -184,12 +182,9 @@ router.post('/register', registerLimiter, async (req, res) => {
         },
       });
 
-      // Send verification email
-      try {
-        await sendVerificationEmail(email, name, verificationToken);
-      } catch (emailErr) {
-        console.error('Failed to send verification email:', emailErr);
-      }
+      // Send verification email (non-blocking with timeout — never stalls the response)
+      sendEmailWithTimeout(() => sendVerificationEmail(email, name, verificationToken))
+        .catch((emailErr: any) => console.error('Failed to send verification email:', emailErr));
 
       return res.json({
         success: true,
