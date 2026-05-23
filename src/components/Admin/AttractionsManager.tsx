@@ -88,7 +88,7 @@ const SubmitBtn = styled.button`
   &:active { transform: translateY(-1px); }
 `;
 
-export default function AttractionsManager({ attractions }: { attractions?: any[] }) {
+export default function AttractionsManager({ attractions, ownerMode, onDataChange }: { attractions?: any[]; ownerMode?: boolean; onDataChange?: () => void }) {
   const { role, user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -115,11 +115,14 @@ export default function AttractionsManager({ attractions }: { attractions?: any[
   const videoInputRef = useRef<HTMLInputElement>(null);
   const offerImageInputRef = useRef<HTMLInputElement>(null);
 
-  const myAttractions = role === 'OWNER'
+  // In ownerMode, data is already filtered by server; otherwise filter by owner locally for admin view
+  const displayAttractions = ownerMode
+    ? (attractions || [])
+    : role === 'OWNER'
     ? (attractions || []).filter(item => item.ownerId === user?.id)
     : (attractions || []);
 
-  const filtered = myAttractions.filter(item => 
+  const filtered = displayAttractions.filter(item => 
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -181,6 +184,7 @@ export default function AttractionsManager({ attractions }: { attractions?: any[
       }
       setIsModalOpen(false);
       showAlert("Success", "Attraction saved successfully!", "success");
+      onDataChange?.();
     } catch (err: any) { console.error(err); showAlert("Error", `Failed to save attraction: ${err.message}`, "error"); }
   };
 
@@ -189,6 +193,7 @@ export default function AttractionsManager({ attractions }: { attractions?: any[
       try { 
         await dbService.delete('attractions', id); 
         showAlert("Success", "Attraction deleted.", "success");
+        onDataChange?.();
       } catch (err) { 
         showAlert("Error", "Failed to delete attraction.", "error"); 
       }
@@ -284,7 +289,7 @@ export default function AttractionsManager({ attractions }: { attractions?: any[
         <h2>Manage Attractions</h2>
         <div className="actions">
           <AdminSearchBar value={searchTerm} onChange={setSearchTerm} placeholder="Search attractions..." style={{ minWidth: '250px' }} />
-          {role !== 'OWNER' && (
+          {(role !== 'OWNER' || ownerMode) && (
             <button className="add-btn" onClick={() => handleOpenModal()}><Plus size={18} /> Add New</button>
           )}
         </div>
@@ -309,7 +314,7 @@ export default function AttractionsManager({ attractions }: { attractions?: any[
               <td>
                 <div className="row-actions">
                   <button onClick={() => handleOpenModal(item)}><Edit2 size={16} /></button>
-                  {role !== 'OWNER' && (
+                  {(role !== 'OWNER' || ownerMode) && (
                     <button className="delete" onClick={() => handleDelete(item.firebaseId)}><Trash2 size={16} /></button>
                   )}
                 </div>

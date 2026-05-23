@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-route
 import { AnimatePresence } from 'framer-motion';
 import PersistentLayout from './components/Layout/PersistentLayout';
 import AdminRoute from './components/Layout/AdminRoute';
+import OwnerRoute from './components/Layout/OwnerRoute';
 import DiscoverPage from './pages/DiscoverPage';
 import AdminDashboard from './pages/AdminDashboard';
 import AttractionsPage from './pages/AttractionsPage';
@@ -14,6 +15,8 @@ import AdminPortalPage from './pages/AdminPortalPage';
 import LoginPage from './pages/LoginPage';
 import SignUpPage from './pages/SignUpPage';
 import AccountPage from './pages/AccountPage';
+import OwnerDashboard from './pages/OwnerDashboard';
+import OwnerPendingPage from './pages/OwnerPendingPage';
 import { useAuth } from './hooks/useAuth';
 import UserRoute from './components/Layout/UserRoute';
 import { useEffect } from 'react';
@@ -33,6 +36,14 @@ function AnimatedRoutes() {
       <Routes location={location} key={location.pathname}>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
+
+        {/* Owner-only routes (outside PersistentLayout) */}
+        <Route element={<OwnerRoute />}>
+          <Route path="/owner-dashboard" element={<OwnerDashboard />} />
+        </Route>
+
+        {/* Owner pending page — accessible to unverified/pending owners */}
+        <Route path="/owner-pending" element={<OwnerPendingPage />} />
 
         <Route element={<PersistentLayout />}>
           <Route path="/" element={<DiscoverPage />} />

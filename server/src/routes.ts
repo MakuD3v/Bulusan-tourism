@@ -138,10 +138,6 @@ const createCrudRoutes = (model: any, include?: any) => {
       const payload = formatPrismaPayload(req.body);
       if (['Attraction', 'Enterprise'].includes(modelName)) {
         if (requesterRole === 'OWNER') {
-          const existing = await model.findFirst({ where: { ownerId: requesterId } });
-          if (existing) {
-            return res.status(400).json({ error: 'You already own an attraction or enterprise.' });
-          }
           payload.ownerId = requesterId;
         } else if (requesterRole === 'ADMIN' && req.body.ownerId) {
           payload.ownerId = req.body.ownerId;
@@ -226,6 +222,40 @@ const createCrudRoutes = (model: any, include?: any) => {
   });
   return r;
 }
+
+// Owner-scoped: returns only the calling owner's attractions
+router.get('/attractions/mine', authenticateToken, async (req: any, res: any) => {
+  try {
+    if (req.user?.role !== 'OWNER') {
+      return res.status(403).json({ error: 'Forbidden: Owner access only' });
+    }
+    const data = await prisma.attraction.findMany({
+      where: { ownerId: req.user.userId },
+      include: { reviews: true, offers: true },
+      orderBy: { dateAdded: 'desc' },
+    });
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: 'Error fetching owner attractions', details: e });
+  }
+});
+
+// Owner-scoped: returns only the calling owner's enterprises
+router.get('/enterprises/mine', authenticateToken, async (req: any, res: any) => {
+  try {
+    if (req.user?.role !== 'OWNER') {
+      return res.status(403).json({ error: 'Forbidden: Owner access only' });
+    }
+    const data = await prisma.enterprise.findMany({
+      where: { ownerId: req.user.userId },
+      include: { reviews: true, offers: true },
+      orderBy: { dateAdded: 'desc' },
+    });
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: 'Error fetching owner enterprises', details: e });
+  }
+});
 
 // Apply generic routes
 router.use('/attractions', createCrudRoutes(prisma.attraction, { reviews: true, offers: true }));

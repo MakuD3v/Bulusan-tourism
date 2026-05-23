@@ -288,9 +288,23 @@ const LoginPage = () => {
     setError('');
 
     try {
-      const success = await login(email, password);
-      if (success) {
-        navigate('/discover');
+      const result = await login(email, password);
+      if (result.success) {
+        // Read user from localStorage to decide where to redirect
+        const stored = localStorage.getItem('bulusan_user');
+        const loggedUser = stored ? JSON.parse(stored) : null;
+
+        if (loggedUser?.role === 'OWNER') {
+          if (loggedUser?.approvalStatus === 'APPROVED') {
+            navigate('/owner-dashboard');
+          } else {
+            navigate('/owner-pending');
+          }
+        } else if (loggedUser?.role === 'ADMIN') {
+          navigate('/admin-portal');
+        } else {
+          navigate('/discover');
+        }
       } else {
         setError('Login failed. Please check your credentials.');
       }

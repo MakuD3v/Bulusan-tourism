@@ -3,11 +3,89 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import nodemailer from 'nodemailer';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key';
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key_change_in_production';
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
+// ─── Email Transporter ───────────────────────────────────────────────────────
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+async function sendVerificationEmail(email: string, name: string, token: string) {
+  const verifyUrl = `${CLIENT_URL}/verify-email?token=${token}`;
+  await transporter.sendMail({
+    from: `"Bulusan Tourism" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: 'Verify your Owner Account — Bulusan Tourism',
+    html: `
+      <div style="font-family: 'Segoe UI', sans-serif; max-width: 520px; margin: 0 auto; background: #030a1c; color: #e2ecf7; border-radius: 20px; overflow: hidden;">
+        <div style="background: linear-gradient(135deg, #2b6cb0, #1a365d); padding: 40px; text-align: center;">
+          <h1 style="margin: 0; font-size: 2rem; font-weight: 900; letter-spacing: -1px;">BULUSAN<span style="color: #90cdf4;">.</span></h1>
+          <p style="margin: 8px 0 0; opacity: 0.8; font-size: 0.9rem;">Tourism Digital Gateway</p>
+        </div>
+        <div style="padding: 40px;">
+          <h2 style="margin-top: 0;">Hi ${name} 👋</h2>
+          <p style="color: #9faed4; line-height: 1.7;">You've registered as an <strong style="color: #90cdf4;">Owner</strong> on Bulusan Tourism. Before your account can be reviewed by our admin team, please verify your email address.</p>
+          <div style="text-align: center; margin: 32px 0;">
+            <a href="${verifyUrl}" style="background: linear-gradient(135deg, #2b6cb0, #1a365d); color: white; padding: 16px 40px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 1rem; display: inline-block;">Verify My Email</a>
+          </div>
+          <p style="color: #7b8cbe; font-size: 0.85rem;">This link expires in 24 hours. If you did not register, you can safely ignore this email.</p>
+        </div>
+      </div>
+    `,
+  });
+}
+
+async function sendApprovalEmail(email: string, name: string) {
+  const dashboardUrl = `${CLIENT_URL}/owner-dashboard`;
+  await transporter.sendMail({
+    from: `"Bulusan Tourism" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: '🎉 Your Owner Account is Approved — Bulusan Tourism',
+    html: `
+      <div style="font-family: 'Segoe UI', sans-serif; max-width: 520px; margin: 0 auto; background: #030a1c; color: #e2ecf7; border-radius: 20px; overflow: hidden;">
+        <div style="background: linear-gradient(135deg, #2b6cb0, #1a365d); padding: 40px; text-align: center;">
+          <h1 style="margin: 0; font-size: 2rem; font-weight: 900;">BULUSAN<span style="color: #90cdf4;">.</span></h1>
+        </div>
+        <div style="padding: 40px;">
+          <h2 style="margin-top: 0;">Great news, ${name}! 🎉</h2>
+          <p style="color: #9faed4; line-height: 1.7;">Your owner account has been <strong style="color: #68d391;">approved</strong> by our admin team. You can now log in and start managing your attractions and enterprises on Bulusan Tourism.</p>
+          <div style="text-align: center; margin: 32px 0;">
+            <a href="${dashboardUrl}" style="background: linear-gradient(135deg, #2b6cb0, #1a365d); color: white; padding: 16px 40px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 1rem; display: inline-block;">Go to My Dashboard</a>
+          </div>
+        </div>
+      </div>
+    `,
+  });
+}
+
+// ─── Rate Limiters ────────────────────────────────────────────────────────────
+const registerLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  message: { error: 'Too many registration attempts. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { error: 'Too many login attempts. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// ─── Email Validation ─────────────────────────────────────────────────────────
 async function verifyEmailExistence(email: string): Promise<boolean> {
   const isGmail = email.toLowerCase().endsWith('@gmail.com');
   if (!isGmail) return true;
@@ -15,31 +93,17 @@ async function verifyEmailExistence(email: string): Promise<boolean> {
   try {
     const res = await fetch(`https://disify.com/api/email/${encodeURIComponent(email)}`, { signal: AbortSignal.timeout(3000) });
     const data = await res.json();
-    if (data && (data.format === false || data.dns === false)) {
-      return false;
-    }
+    if (data && (data.format === false || data.dns === false)) return false;
     return true;
   } catch (e) {
     console.warn('Disify email validation failed, falling back...', e);
-  }
-
-  if (process.env.HUNTER_API_KEY) {
-    try {
-      const res = await fetch(`https://api.hunter.io/v2/email-verifier?email=${encodeURIComponent(email)}&api_key=${process.env.HUNTER_API_KEY}`, { signal: AbortSignal.timeout(3000) });
-      const data = await res.json();
-      if (data?.data?.result === 'undeliverable') {
-        return false;
-      }
-      return true;
-    } catch (e) {
-      console.warn('Hunter email validation failed, falling back...', e);
-    }
   }
 
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return regex.test(email);
 }
 
+// ─── Middleware ───────────────────────────────────────────────────────────────
 export const authenticateToken = (req: any, res: any, next: any) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -52,27 +116,18 @@ export const authenticateToken = (req: any, res: any, next: any) => {
   });
 };
 
-router.post('/register', async (req, res) => {
-  const { 
-    name, 
-    email, 
-    password, 
-    role, 
-    businessType, 
-    businessName, 
-    businessCategory, 
-    businessDescription, 
-    businessLocation, 
-    businessContact 
-  } = req.body;
+// ─── Register ─────────────────────────────────────────────────────────────────
+router.post('/register', registerLimiter, async (req, res) => {
+  const { name, email, password, role } = req.body;
 
   try {
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
       return res.status(400).json({ error: 'An account with this email already exists.' });
     }
+
     const isAdmin = ['admin@bulusan.com'].includes(email.toLowerCase());
-    
+
     if (!isAdmin) {
       const isEmailValid = await verifyEmailExistence(email);
       if (!isEmailValid) {
@@ -82,99 +137,144 @@ router.post('/register', async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const assignedRole = isAdmin ? 'ADMIN' : (role === 'OWNER' ? 'OWNER' : 'USER');
-    
-    const user = await prisma.user.create({
-      data: { 
-        name, 
-        email, 
-        password: hashedPassword, 
-        role: assignedRole, 
-        avatar: null 
-      }
-    });
 
-    let ownedAttraction = null;
-    let ownedEnterprise = null;
+    if (assignedRole === 'OWNER') {
+      // Owner: create account with email verification required
+      const verificationToken = crypto.randomBytes(32).toString('hex');
+      const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
 
-    if (assignedRole === 'OWNER' && businessType && businessName) {
-      if (businessType === 'attraction') {
-        ownedAttraction = await prisma.attraction.create({
-          data: {
-            name: businessName,
-            categories: businessCategory ? [businessCategory] : [],
-            location: businessLocation || '',
-            lat: 12.7667,
-            lng: 124.1,
-            img: '',
-            description: businessDescription || '',
-            contactInfo: businessContact || '',
-            ownerId: user.id
-          }
-        });
-      } else if (businessType === 'enterprise') {
-        ownedEnterprise = await prisma.enterprise.create({
-          data: {
-            name: businessName,
-            categories: businessCategory ? [businessCategory] : [],
-            location: businessLocation || '',
-            lat: 12.7667,
-            lng: 124.1,
-            img: '',
-            description: businessDescription || '',
-            contactInfo: businessContact || '',
-            ownerId: user.id
-          }
-        });
+      await prisma.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+          role: assignedRole,
+          avatar: null,
+          emailVerified: false,
+          approvalStatus: 'PENDING',
+          verificationToken,
+          verificationTokenExpiry,
+        },
+      });
+
+      // Send verification email (non-blocking — don't fail if email fails)
+      try {
+        await sendVerificationEmail(email, name, verificationToken);
+      } catch (emailErr) {
+        console.error('Failed to send verification email:', emailErr);
       }
+
+      return res.json({
+        success: true,
+        requiresVerification: true,
+        message: 'Account created. Please check your email to verify your account.',
+      });
+    } else {
+      // Regular USER or ADMIN: immediate activation
+      const user = await prisma.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+          role: assignedRole,
+          avatar: null,
+          emailVerified: true,
+          approvalStatus: 'APPROVED',
+        },
+      });
+
+      const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+      return res.json({
+        token,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          avatar: user.avatar,
+          approvalStatus: user.approvalStatus,
+        },
+      });
     }
-
-    const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ 
-      token, 
-      user: { 
-        id: user.id, 
-        name: user.name, 
-        email: user.email, 
-        role: user.role, 
-        avatar: user.avatar,
-        ownedAttraction,
-        ownedEnterprise
-      } 
-    });
   } catch (error) {
     console.error('Register error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-router.post('/login', async (req, res) => {
+// ─── Verify Email ─────────────────────────────────────────────────────────────
+router.get('/verify-email', async (req, res) => {
+  const { token } = req.query;
+  if (!token || typeof token !== 'string') {
+    return res.status(400).json({ error: 'Invalid verification token.' });
+  }
+
+  try {
+    const user = await prisma.user.findFirst({
+      where: {
+        verificationToken: token,
+        verificationTokenExpiry: { gt: new Date() },
+      },
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: 'Verification link is invalid or has expired.' });
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerified: true,
+        verificationToken: null,
+        verificationTokenExpiry: null,
+      },
+    });
+
+    // Redirect to pending page
+    return res.redirect(`${CLIENT_URL}/owner-pending?verified=true`);
+  } catch (error) {
+    console.error('Verify email error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ─── Login ────────────────────────────────────────────────────────────────────
+router.post('/login', loginLimiter, async (req, res) => {
   const { email, password } = req.body;
   try {
-    const user = await prisma.user.findUnique({ 
-      where: { email },
-      include: { ownedAttraction: true, ownedEnterprise: true }
-    });
+    const user = await prisma.user.findUnique({ where: { email } });
+
     if (!user) {
       return res.status(401).json({ error: 'Account not found. Please check your email or sign up.' });
     }
+
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
       return res.status(401).json({ error: 'Incorrect password. Please try again.' });
     }
+
+    if (user.role === 'OWNER' && !user.emailVerified) {
+      return res.status(403).json({ error: 'Please verify your email first. Check your inbox for the verification link.' });
+    }
+
+    if (user.role === 'OWNER' && user.approvalStatus === 'REJECTED') {
+      return res.status(403).json({ error: 'Your owner account application has been rejected. Please contact the admin.' });
+    }
+
     const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ 
-      token, 
-      user: { 
-        id: user.id, 
-        name: user.name, 
-        email: user.email, 
-        role: user.role, 
-        avatar: user.avatar, 
-        itinerary: user.itinerary, 
+    return res.json({
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+        itinerary: user.itinerary,
         history: user.history,
-        ownedAttraction: user.ownedAttraction,
-        ownedEnterprise: user.ownedEnterprise
-      } 
+        approvalStatus: user.approvalStatus,
+        emailVerified: user.emailVerified,
+      },
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -182,31 +282,30 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// ─── Me ──────────────────────────────────────────────────────────────────────
 router.get('/me', authenticateToken, async (req: any, res: any) => {
   try {
-    const user = await prisma.user.findUnique({ 
-      where: { id: req.user.userId },
-      include: { ownedAttraction: true, ownedEnterprise: true }
-    });
+    const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
     if (!user) return res.status(404).json({ error: 'User not found' });
-    res.json({ 
-      user: { 
-        id: user.id, 
-        name: user.name, 
-        email: user.email, 
-        role: user.role, 
-        avatar: user.avatar, 
-        itinerary: user.itinerary, 
+    res.json({
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+        itinerary: user.itinerary,
         history: user.history,
-        ownedAttraction: user.ownedAttraction,
-        ownedEnterprise: user.ownedEnterprise
-      } 
+        approvalStatus: user.approvalStatus,
+        emailVerified: user.emailVerified,
+      },
     });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
   }
 });
 
+// ─── Get All Users (admin) ───────────────────────────────────────────────────
 router.get('/users', authenticateToken, async (req: any, res: any) => {
   try {
     const requester = await prisma.user.findUnique({ where: { id: req.user.userId } });
@@ -214,7 +313,7 @@ router.get('/users', authenticateToken, async (req: any, res: any) => {
       return res.status(403).json({ error: 'Forbidden: Admin access required' });
     }
     const users = await prisma.user.findMany({
-      select: { id: true, name: true, email: true, role: true, joinedDate: true }
+      select: { id: true, name: true, email: true, role: true, joinedDate: true, approvalStatus: true, emailVerified: true },
     });
     res.json(users);
   } catch (error) {
@@ -222,6 +321,84 @@ router.get('/users', authenticateToken, async (req: any, res: any) => {
   }
 });
 
+// ─── Pending Owners (admin) ──────────────────────────────────────────────────
+router.get('/pending-owners', authenticateToken, async (req: any, res: any) => {
+  try {
+    const requester = await prisma.user.findUnique({ where: { id: req.user.userId } });
+    if (requester?.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Forbidden: Admin access required' });
+    }
+
+    const pendingOwners = await prisma.user.findMany({
+      where: { role: 'OWNER', approvalStatus: 'PENDING', emailVerified: true },
+      select: { id: true, name: true, email: true, joinedDate: true, approvalStatus: true, emailVerified: true },
+      orderBy: { joinedDate: 'asc' },
+    });
+
+    res.json(pendingOwners);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error fetching pending owners' });
+  }
+});
+
+// ─── Approve Owner (admin) ───────────────────────────────────────────────────
+router.post('/approve-owner', authenticateToken, async (req: any, res: any) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: 'User ID is required' });
+
+  try {
+    const requester = await prisma.user.findUnique({ where: { id: req.user.userId } });
+    if (requester?.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Forbidden: Admin access required' });
+    }
+
+    const target = await prisma.user.findUnique({ where: { id: userId } });
+    if (!target) return res.status(404).json({ error: 'User not found' });
+    if (target.role !== 'OWNER') return res.status(400).json({ error: 'User is not an owner' });
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { approvalStatus: 'APPROVED' },
+    });
+
+    try {
+      await sendApprovalEmail(target.email, target.name);
+    } catch (emailErr) {
+      console.error('Failed to send approval email:', emailErr);
+    }
+
+    res.json({ success: true, message: `${target.name}'s owner account has been approved.` });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error during approval' });
+  }
+});
+
+// ─── Reject Owner (admin) ────────────────────────────────────────────────────
+router.post('/reject-owner', authenticateToken, async (req: any, res: any) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: 'User ID is required' });
+
+  try {
+    const requester = await prisma.user.findUnique({ where: { id: req.user.userId } });
+    if (requester?.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Forbidden: Admin access required' });
+    }
+
+    const target = await prisma.user.findUnique({ where: { id: userId } });
+    if (!target) return res.status(404).json({ error: 'User not found' });
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { approvalStatus: 'REJECTED' },
+    });
+
+    res.json({ success: true, message: `${target.name}'s owner account has been rejected.` });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error during rejection' });
+  }
+});
+
+// ─── Promote to Admin ─────────────────────────────────────────────────────────
 router.put('/promote', authenticateToken, async (req: any, res: any) => {
   const { userId } = req.body;
   if (!userId) return res.status(400).json({ error: 'Target user ID is required' });
@@ -237,7 +414,7 @@ router.put('/promote', authenticateToken, async (req: any, res: any) => {
 
     await prisma.user.update({
       where: { id: userId },
-      data: { role: 'ADMIN' }
+      data: { role: 'ADMIN', approvalStatus: 'APPROVED', emailVerified: true },
     });
 
     res.json({ success: true, message: `Successfully promoted ${targetUser.name} to ADMIN.` });
@@ -246,6 +423,7 @@ router.put('/promote', authenticateToken, async (req: any, res: any) => {
   }
 });
 
+// ─── Demote from Admin ────────────────────────────────────────────────────────
 router.put('/demote', authenticateToken, async (req: any, res: any) => {
   const { userId } = req.body;
   if (!userId) return res.status(400).json({ error: 'Target user ID is required' });
@@ -259,12 +437,12 @@ router.put('/demote', authenticateToken, async (req: any, res: any) => {
     const targetUser = await prisma.user.findUnique({ where: { id: userId } });
     if (!targetUser) return res.status(404).json({ error: 'User not found' });
     if (targetUser.email === 'admin@bulusan.com') {
-       return res.status(400).json({ error: 'Cannot demote the main administrator.' });
+      return res.status(400).json({ error: 'Cannot demote the main administrator.' });
     }
 
     await prisma.user.update({
       where: { id: userId },
-      data: { role: 'USER' }
+      data: { role: 'USER' },
     });
 
     res.json({ success: true, message: `Successfully removed admin privileges from ${targetUser.name}.` });

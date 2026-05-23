@@ -5,12 +5,12 @@ import { apiClient } from '../api/client';
 interface AuthContextType {
   user: AppUser | null;
   role: 'USER' | 'ADMIN' | 'OWNER' | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  signup: (name: string, email: string, password: string, additionalDetails?: any) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<{ success: boolean; requiresVerification?: boolean }>;
+  signup: (name: string, email: string, password: string, additionalDetails?: any) => Promise<{ success: boolean; requiresVerification?: boolean }>;
   logout: () => void;
   updateUser: (data: Partial<AppUser>) => Promise<void>;
   loading: boolean;
-  isDemoMode: boolean; // Retained for compatibility if needed elsewhere
+  isDemoMode: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,15 +30,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(res.user);
           localStorage.setItem('bulusan_user', JSON.stringify(res.user));
         } catch (err: any) {
-          console.error("Session verification failed:", err);
-          // Only wipe session if it's an explicit auth failure (401/403)
+          console.error('Session verification failed:', err);
           const isAuthError = err.message?.includes('401') || err.message?.includes('403');
           if (isAuthError) {
             setUser(null);
             localStorage.removeItem('bulusan_user');
             localStorage.removeItem('auth_token');
           } else if (stored) {
-            // Keep the cached user data for a seamless experience during network/server issues
             try {
               setUser(JSON.parse(stored));
             } catch {
@@ -52,32 +50,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loadUser();
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string) => {
     try {
       const res = await apiClient.post('/auth/login', { email, password });
       if (res.token) {
         localStorage.setItem('auth_token', res.token);
         localStorage.setItem('bulusan_user', JSON.stringify(res.user));
         setUser(res.user);
-        return true;
+        return { success: true };
       }
-      return false;
+      return { success: false };
     } catch (error: any) {
       console.error('Login error', error);
       throw new Error(error.message || 'Invalid credentials');
     }
   };
 
-  const signup = async (name: string, email: string, password: string, additionalDetails?: any): Promise<boolean> => {
+  const signup = async (name: string, email: string, password: string, additionalDetails?: any) => {
     try {
       const res = await apiClient.post('/auth/register', { name, email, password, ...additionalDetails });
+      
+      // Owner registration — email verification required, no token issued yet
+      if (res.requiresVerification) {
+        return { success: true, requiresVerification: true };
+      }
+      
+      // Regular user — immediate login
       if (res.token) {
         localStorage.setItem('auth_token', res.token);
         localStorage.setItem('bulusan_user', JSON.stringify(res.user));
         setUser(res.user);
-        return true;
+        return { success: true, requiresVerification: false };
       }
-      return false;
+      return { success: false };
     } catch (error: any) {
       console.error('Signup error', error);
       throw new Error(error.message || 'Error signing up');

@@ -3,7 +3,7 @@ import styled, { keyframes } from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { User, Mail, Lock, UserPlus, Loader2, CheckCircle2, ArrowLeft, Building2, Landmark, Phone, MapPin, AlignLeft, Compass } from 'lucide-react';
+import { User, Mail, Lock, UserPlus, Loader2, CheckCircle2, ArrowLeft, Clock } from 'lucide-react';
 
 const SplitContainer = styled.div`
   min-height: 100vh;
@@ -313,18 +313,11 @@ const SignUpPage = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
-  // Owner exclusive state
-  const [businessType, setBusinessType] = useState<'attraction' | 'enterprise'>('enterprise');
-  const [businessName, setBusinessName] = useState('');
-  const [businessCategory, setBusinessCategory] = useState('');
-  const [businessDescription, setBusinessDescription] = useState('');
-  const [businessLocation, setBusinessLocation] = useState('');
-  const [businessContact, setBusinessContact] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [ownerPending, setOwnerPending] = useState(false);
   
   const { signup } = useAuth();
   const navigate = useNavigate();
@@ -334,21 +327,18 @@ const SignUpPage = () => {
     setLoading(true);
     setError('');
 
-    const additionalDetails: any = { role };
-    if (role === 'OWNER') {
-      additionalDetails.businessType = businessType;
-      additionalDetails.businessName = businessName;
-      additionalDetails.businessCategory = businessCategory;
-      additionalDetails.businessDescription = businessDescription;
-      additionalDetails.businessLocation = businessLocation;
-      additionalDetails.businessContact = businessContact;
-    }
-
     try {
-      const ok = await signup(name, email, password, additionalDetails);
-      if (ok) {
-        setSuccess(true);
-        setTimeout(() => navigate('/discover'), 2500);
+      const result = await signup(name, email, password, { role });
+      if (result.success) {
+        if (result.requiresVerification) {
+          // Owner registration: show pending state then redirect to /owner-pending
+          setOwnerPending(true);
+          setTimeout(() => navigate('/owner-pending'), 2800);
+        } else {
+          // Regular user: success then redirect to /discover
+          setSuccess(true);
+          setTimeout(() => navigate('/discover'), 2000);
+        }
       } else {
         setError('Registration failed. Please try again.');
       }
@@ -386,20 +376,20 @@ const SignUpPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          {success ? (
+          {success || ownerPending ? (
             <SuccessCard
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
             >
-              <CheckCircle2 size={48} color="#2ecc71" />
+              {ownerPending ? <Clock size={48} color="#fbbf24" /> : <CheckCircle2 size={48} color="#2ecc71" />}
               <div>
                 <h3 style={{ fontSize: '1.4rem', color: '#fff', marginBottom: '8px' }}>
-                  Account Created Successfully!
+                  {ownerPending ? 'Check Your Email!' : 'Account Created!'}
                 </h3>
                 <p style={{ color: '#a3b899' }}>
-                  {role === 'OWNER'
-                    ? `Welcome, ${name}! Your business portal has been set up. Redirecting to discovery dashboard...`
-                    : `Welcome, explorer ${name}! Preparing your discovery guide...`}
+                  {ownerPending
+                    ? `Hi ${name}! We sent a verification link to ${email}. Click it to start the approval process. Redirecting…`
+                    : `Welcome, ${name}! Preparing your discovery guide…`}
                 </p>
               </div>
             </SuccessCard>
@@ -488,70 +478,10 @@ const SignUpPage = () => {
                       transition={{ duration: 0.35, ease: 'easeInOut' }}
                       style={{ overflow: 'hidden' }}
                     >
-                      <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', margin: '24px 0', paddingTop: '20px' }} />
-                      <h4 style={{ color: '#e2ecf7', textAlign: 'left', marginBottom: '16px', fontSize: '1.05rem', fontWeight: 700 }}>
-                        Business Details
-                      </h4>
-
-                      <FormGrid>
-                        <InputGroup>
-                          <label>Business Type</label>
-                          <div className="input-wrapper">
-                            <Compass size={18} />
-                            <select
-                              value={businessType}
-                              onChange={(e: any) => setBusinessType(e.target.value)}
-                            >
-                              <option value="enterprise">Enterprise (Hotel, Resto, Cafe)</option>
-                              <option value="attraction">Attraction (Falls, Lake, Park)</option>
-                            </select>
-                          </div>
-                        </InputGroup>
-
-                        <InputGroup>
-                          <label>Business Name</label>
-                          <div className="input-wrapper">
-                            <Building2 size={18} />
-                            <input
-                              type="text"
-                              placeholder="e.g. Bulusan Lake Resort"
-                              value={businessName}
-                              onChange={(e) => setBusinessName(e.target.value)}
-                              required={role === 'OWNER'}
-                            />
-                          </div>
-                        </InputGroup>
-                      </FormGrid>
-
-                      <InputGroup>
-                          <label>Contact Number</label>
-                          <div className="input-wrapper">
-                            <Phone size={18} />
-                            <input
-                              type="text"
-                              placeholder="e.g. +63 912 345 6789"
-                              value={businessContact}
-                              onChange={(e) => setBusinessContact(e.target.value)}
-                              required={role === 'OWNER'}
-                            />
-                          </div>
-                        </InputGroup>
-
-                      <InputGroup>
-                        <label>Location Address</label>
-                        <div className="input-wrapper">
-                          <MapPin size={18} />
-                          <input
-                            type="text"
-                            placeholder="e.g. San Roque, Bulusan, Sorsogon"
-                            value={businessLocation}
-                            onChange={(e) => setBusinessLocation(e.target.value)}
-                            required={role === 'OWNER'}
-                          />
-                        </div>
-                      </InputGroup>
-
-
+                      <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', margin: '20px 0 16px', paddingTop: '20px' }} />
+                      <div style={{ background: 'rgba(43, 108, 176, 0.08)', border: '1px solid rgba(144, 205, 244, 0.12)', borderRadius: '12px', padding: '14px 18px', fontSize: '0.88rem', color: '#7b9dce', lineHeight: 1.6 }}>
+                        <strong style={{ color: '#90cdf4' }}>Owner Account</strong> — After registering, you'll verify your email then await admin approval. You can add your attractions &amp; enterprises from your owner dashboard once approved.
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -561,7 +491,7 @@ const SignUpPage = () => {
                     <Loader2 className="animate-spin" size={18} />
                   ) : (
                     <>
-                      {role === 'OWNER' ? 'Register & Setup Portal' : 'Start Exploring'} <UserPlus size={18} />
+                      {role === 'OWNER' ? 'Create Owner Account' : 'Start Exploring'} <UserPlus size={18} />
                     </>
                   )}
                 </ActionButton>

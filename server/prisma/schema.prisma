@@ -8,19 +8,23 @@ datasource db {
 }
 
 model User {
-  id              String           @id @default(uuid())
-  name            String
-  email           String           @unique
-  password        String
-  role            String           @default("USER")
-  avatar          String?
-  itinerary       Int[]
-  history         String[]
-  joinedDate      DateTime         @default(now())
-  checkIns        CheckIn[]
-  customTours     CustomUserTour[]
-  ownedAttraction Attraction?
-  ownedEnterprise Enterprise?
+  id                       String           @id @default(uuid())
+  name                     String
+  email                    String           @unique
+  password                 String
+  role                     String           @default("USER")
+  avatar                   String?
+  itinerary                Int[]
+  history                  String[]
+  joinedDate               DateTime         @default(now())
+  emailVerified            Boolean          @default(false)
+  approvalStatus           String           @default("PENDING")
+  verificationToken        String?
+  verificationTokenExpiry  DateTime?
+  checkIns                 CheckIn[]
+  customTours              CustomUserTour[]
+  ownedAttractions         Attraction[]    @relation("AttractionOwner")
+  ownedEnterprises         Enterprise[]    @relation("EnterpriseOwner")
 
   @@index([joinedDate])
 }
@@ -49,11 +53,12 @@ model Attraction {
   offers          Offer[]
   reviews         Review[]
 
-  ownerId         String?  @unique
-  owner           User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  ownerId         String?
+  owner           User?    @relation("AttractionOwner", fields: [ownerId], references: [id], onDelete: SetNull)
 
   @@index([dateAdded])
   @@index([visits])
+  @@index([ownerId])
 }
 
 model Enterprise {
@@ -80,11 +85,12 @@ model Enterprise {
   offers      Offer[]
   reviews     Review[]
 
-  ownerId     String?  @unique
-  owner       User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  ownerId     String?
+  owner       User?    @relation("EnterpriseOwner", fields: [ownerId], references: [id], onDelete: SetNull)
 
   @@index([dateAdded])
   @@index([visits])
+  @@index([ownerId])
 }
 
 model Heritage {

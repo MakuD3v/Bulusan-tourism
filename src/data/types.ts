@@ -129,8 +129,8 @@ export interface User {
     itinerary: number[];
     history: string[];
     joinedDate: string;
-    ownedAttraction?: Attraction;
-    ownedEnterprise?: Enterprise;
+    approvalStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
+    emailVerified?: boolean;
     firebaseId?: string;
 }
 

@@ -88,7 +88,7 @@ const SubmitBtn = styled.button`
   &:active { transform: translateY(-1px); }
 `;
 
-export default function EnterprisesManager({ enterprises }: { enterprises?: any[] }) {
+export default function EnterprisesManager({ enterprises, ownerMode, onDataChange }: { enterprises?: any[]; ownerMode?: boolean; onDataChange?: () => void }) {
   const { role, user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -115,11 +115,14 @@ export default function EnterprisesManager({ enterprises }: { enterprises?: any[
   const videoInputRef = useRef<HTMLInputElement>(null);
   const offerImageInputRef = useRef<HTMLInputElement>(null);
 
-  const myEnterprises = role === 'OWNER'
+  // In ownerMode, data is already filtered by server; otherwise filter by owner locally
+  const displayEnterprises = ownerMode
+    ? (enterprises || [])
+    : role === 'OWNER'
     ? (enterprises || []).filter(item => item.ownerId === user?.id)
     : (enterprises || []);
 
-  const filtered = myEnterprises.filter(item => 
+  const filtered = displayEnterprises.filter(item => 
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -177,6 +180,7 @@ export default function EnterprisesManager({ enterprises }: { enterprises?: any[
       }
       setIsModalOpen(false);
       showAlert("Success", "Enterprise saved successfully!", "success");
+      onDataChange?.();
     } catch (err: any) { console.error(err); showAlert("Error", `Failed to save enterprise: ${err.message}`, "error"); }
   };
 
@@ -185,6 +189,7 @@ export default function EnterprisesManager({ enterprises }: { enterprises?: any[
       try { 
         await dbService.delete('enterprises', id); 
         showAlert("Success", "Enterprise deleted.", "success");
+        onDataChange?.();
       } catch (err) { 
         showAlert("Error", "Failed to delete enterprise.", "error"); 
       }
@@ -280,7 +285,7 @@ export default function EnterprisesManager({ enterprises }: { enterprises?: any[
         <h2>Manage Enterprises</h2>
         <div className="actions">
           <AdminSearchBar value={searchTerm} onChange={setSearchTerm} placeholder="Search enterprises..." style={{ minWidth: '250px' }} />
-          {role !== 'OWNER' && (
+          {(role !== 'OWNER' || ownerMode) && (
             <button className="add-btn" onClick={() => handleOpenModal()}><Plus size={18} /> Add New</button>
           )}
         </div>
@@ -305,7 +310,7 @@ export default function EnterprisesManager({ enterprises }: { enterprises?: any[
               <td>
                 <div className="row-actions">
                   <button onClick={() => handleOpenModal(item)}><Edit2 size={16} /></button>
-                  {role !== 'OWNER' && (
+                  {(role !== 'OWNER' || ownerMode) && (
                     <button className="delete" onClick={() => handleDelete(item.firebaseId)}><Trash2 size={16} /></button>
                   )}
                 </div>

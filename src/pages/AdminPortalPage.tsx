@@ -9,18 +9,19 @@ import {
   LogOut,
   Settings,
   History,
-  ShieldAlert
+  ShieldAlert,
+  UserCheck
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useAttractions, useEnterprises, useBlogs, useInquiries, useHeritage } from '../hooks/useFirestore';
 
-// New Atomic Components
 import OverviewPanel from '../components/Admin/OverviewPanel';
 import ModerationDashboard from '../components/Admin/ModerationDashboard';
 import InboxReader from '../components/Admin/InboxReader';
 import AttractionsManager from '../components/Admin/AttractionsManager';
 import EnterprisesManager from '../components/Admin/EnterprisesManager';
 import AdminManagementPanel from '../components/Admin/AdminManagementPanel';
+import PendingApprovalsPanel from '../components/Admin/PendingApprovalsPanel';
 const PortalContainer = styled(motion.div).attrs({
   initial: { opacity: 0 },
   animate: { opacity: 1 },
@@ -144,16 +145,11 @@ const Header = styled.header`
 const AdminPortalPage = () => {
     const { role, logout, isDemoMode, user } = useAuth();
 
-    const getInitialTab = () => {
-        if (role === 'OWNER') {
-            if (user?.ownedAttraction) return 'attractions';
-            if (user?.ownedEnterprise) return 'enterprises';
-            return 'attractions';
-        }
+    const getInitialTab = (): 'overview' => {
         return 'overview';
     };
 
-    const [activeTab, setActiveTab] = useState<'overview' | 'attractions' | 'enterprises' | 'heritage' | 'moderation' | 'inbox' | 'admin_management'>(getInitialTab);
+    const [activeTab, setActiveTab] = useState<'overview' | 'attractions' | 'enterprises' | 'heritage' | 'moderation' | 'inbox' | 'admin_management' | 'pending_approvals'>(getInitialTab);
     
     // Type any has been kept for hooks where strict entity models might missing properties on the fly, 
     // but the sub-components correctly typed.
@@ -164,16 +160,6 @@ const AdminPortalPage = () => {
     const { data: inboxInquiries } = useInquiries();
 
     const handleLogout = () => { logout(); window.location.href = '/discover'; };
-
-    React.useEffect(() => {
-        if (role === 'OWNER') {
-            if (user?.ownedAttraction) {
-                setActiveTab('attractions');
-            } else if (user?.ownedEnterprise) {
-                setActiveTab('enterprises');
-            }
-        }
-    }, [role, user]);
 
     return (
         <PortalContainer>
@@ -187,18 +173,9 @@ const AdminPortalPage = () => {
                             <NavItem $active={activeTab === 'enterprises'} onClick={() => setActiveTab('enterprises')}><MapPin size={20} /> Manage Enterprises</NavItem>
                             <NavItem $active={activeTab === 'moderation'} onClick={() => setActiveTab('moderation')}><FileText size={20} /> Content Moderation</NavItem>
                             <NavItem $active={activeTab === 'inbox'} onClick={() => setActiveTab('inbox')}><Mail size={20} /> Inquiry Inbox</NavItem>
+                            <NavItem $active={activeTab === 'pending_approvals'} onClick={() => setActiveTab('pending_approvals')}><UserCheck size={20} /> Pending Approvals</NavItem>
                             {user?.email === 'admin@bulusan.com' && (
                                 <NavItem $active={activeTab === 'admin_management'} onClick={() => setActiveTab('admin_management')}><ShieldAlert size={20} /> Admin Management</NavItem>
-                            )}
-                        </>
-                    )}
-                    {role === 'OWNER' && (
-                        <>
-                            {user?.ownedAttraction && (
-                                <NavItem $active={activeTab === 'attractions'} onClick={() => setActiveTab('attractions')}><MapPin size={20} /> My Attraction</NavItem>
-                            )}
-                            {user?.ownedEnterprise && (
-                                <NavItem $active={activeTab === 'enterprises'} onClick={() => setActiveTab('enterprises')}><MapPin size={20} /> My Enterprise</NavItem>
                             )}
                         </>
                     )}
@@ -252,6 +229,7 @@ const AdminPortalPage = () => {
                             />
                         )}
                         {activeTab === 'inbox' && <InboxReader inquiries={inboxInquiries} />}
+                        {activeTab === 'pending_approvals' && <PendingApprovalsPanel />}
                         {activeTab === 'admin_management' && user?.email === 'admin@bulusan.com' && <AdminManagementPanel />}
                     </motion.div>
                 </AnimatePresence>
