@@ -72,6 +72,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await apiClient.post('/auth/register', { name, email, password, ...additionalDetails });
       
       if (res.requiresVerification) {
+        if (res.registrationToken) {
+          localStorage.setItem('registration_token', res.registrationToken);
+        }
         return { success: true, requiresVerification: true };
       }
       
@@ -91,8 +94,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const verifyCode = async (email: string, code: string) => {
     try {
-      const res = await apiClient.post('/auth/verify-code', { email, code });
+      const registrationToken = localStorage.getItem('registration_token');
+      const payload: any = { email, code };
+      if (registrationToken) {
+        payload.registrationToken = registrationToken;
+      }
+      const res = await apiClient.post('/auth/verify-code', payload);
       if (res.token && res.user) {
+        localStorage.removeItem('registration_token');
         localStorage.setItem('auth_token', res.token);
         localStorage.setItem('bulusan_user', JSON.stringify(res.user));
         setUser(res.user);

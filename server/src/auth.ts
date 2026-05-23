@@ -141,7 +141,7 @@ function verifyEmailExistence(email: string): boolean {
 }
 
 // Helper: send email with a hard timeout so it never blocks responses
-function sendEmailWithTimeout(fn: () => Promise<void>, timeoutMs = 10000): Promise<void> {
+function sendEmailWithTimeout(fn: () => Promise<void>, timeoutMs = 30000): Promise<void> {
   return Promise.race([
     fn(),
     new Promise<void>((_, reject) =>
@@ -214,21 +214,18 @@ router.post('/register', registerLimiter, async (req, res) => {
     } else {
       // USER and OWNER: 6-digit code verification required
       const verificationToken = generateVerificationCode();
-      const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
-
-      await prisma.user.create({
-        data: {
-          name,
-          email,
-          password: hashedPassword,
-          role: assignedRole,
-          avatar: null,
-          emailVerified: false,
-          approvalStatus: assignedRole === 'OWNER' ? 'PENDING' : 'APPROVED',
-          verificationToken,
-          verificationTokenExpiry,
-        },
-      });
+      
+      const registrationToken = jwt.sign(
+        { 
+          name, 
+          email, 
+          password: hashedPassword, 
+          role: assignedRole, 
+          code: verificationToken 
+        }, 
+        JWT_SECRET, 
+        { expiresIn: '24h' }
+      );
 
       // Send verification email (non-blocking with timeout — never stalls the response)
       sendEmailWithTimeout(() => sendVerificationEmail(email, name, verificationToken))
@@ -239,6 +236,7 @@ router.post('/register', registerLimiter, async (req, res) => {
         requiresVerification: true,
         email: email,
         role: assignedRole,
+        registrationToken,
         message: 'Account created. Please check your email for the verification code.',
       });
     }
@@ -250,9 +248,55 @@ router.post('/register', registerLimiter, async (req, res) => {
 
 // ─── Verify Email Code ────────────────────────────────────────────────────────
 router.post('/verify-code', async (req, res) => {
-  const { email, code } = req.body;
+  const { email, code, registrationToken } = req.body;
   if (!email || !code || typeof code !== 'string') {
     return res.status(400).json({ error: 'Email and verification code are required.' });
+  }
+
+  if (registrationToken) {
+    try {
+      const decoded: any = jwt.verify(registrationToken, JWT_SECRET);
+      if (decoded.email !== email || decoded.code !== code) {
+        return res.status(400).json({ error: 'Verification code is invalid.' });
+      }
+
+      const existing = await prisma.user.findUnique({ where: { email } });
+      if (existing) {
+        return res.status(400).json({ error: 'Account already exists.' });
+      }
+
+      const updatedUser = await prisma.user.create({
+        data: {
+          name: decoded.name,
+          email: decoded.email,
+          password: decoded.password,
+          role: decoded.role,
+          avatar: null,
+          emailVerified: true,
+          approvalStatus: decoded.role === 'OWNER' ? 'PENDING' : 'APPROVED',
+        },
+      });
+
+      const token = jwt.sign({ userId: updatedUser.id, role: updatedUser.role }, JWT_SECRET, { expiresIn: '7d' });
+      
+      return res.json({
+        success: true,
+        token,
+        user: {
+          id: updatedUser.id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          role: updatedUser.role,
+          avatar: updatedUser.avatar,
+          itinerary: updatedUser.itinerary,
+          history: updatedUser.history,
+          approvalStatus: updatedUser.approvalStatus,
+          emailVerified: updatedUser.emailVerified,
+        },
+      });
+    } catch (err) {
+      return res.status(400).json({ error: 'Registration session expired or invalid. Please sign up again.' });
+    }
   }
 
   try {
