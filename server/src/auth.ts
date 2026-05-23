@@ -15,7 +15,7 @@ router.post('/register', async (req, res) => {
     if (existing) {
       return res.status(400).json({ error: 'An account with this email already exists.' });
     }
-    const isAdmin = ['admin@bulusan.com', 'mark.janssen.hombre@gmail.com'].includes(email.toLowerCase());
+    const isAdmin = ['admin@bulusan.com'].includes(email.toLowerCase());
     
     if (!isAdmin) {
       if (email.toLowerCase().endsWith('@gmail.com') || process.env.HUNTER_API_KEY) {
@@ -111,8 +111,8 @@ router.put('/promote', authenticateToken, async (req: any, res: any) => {
 
   try {
     const requester = await prisma.user.findUnique({ where: { id: req.user.userId } });
-    if (requester?.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Forbidden: Admin access required to promote users' });
+    if (requester?.email !== 'admin@bulusan.com') {
+      return res.status(403).json({ error: 'Forbidden: Only the main administrator can promote users' });
     }
 
     const targetUser = await prisma.user.findUnique({ where: { id: userId } });
@@ -135,14 +135,14 @@ router.put('/demote', authenticateToken, async (req: any, res: any) => {
 
   try {
     const requester = await prisma.user.findUnique({ where: { id: req.user.userId } });
-    if (requester?.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Forbidden: Admin access required to demote users' });
+    if (requester?.email !== 'admin@bulusan.com') {
+      return res.status(403).json({ error: 'Forbidden: Only the main administrator can demote users' });
     }
 
     const targetUser = await prisma.user.findUnique({ where: { id: userId } });
     if (!targetUser) return res.status(404).json({ error: 'User not found' });
-    if (targetUser.email === 'admin@bulusan.com' || targetUser.email === 'mark.janssen.hombre@gmail.com') {
-       return res.status(400).json({ error: 'Cannot demote the main administrators.' });
+    if (targetUser.email === 'admin@bulusan.com') {
+       return res.status(400).json({ error: 'Cannot demote the main administrator.' });
     }
 
     await prisma.user.update({

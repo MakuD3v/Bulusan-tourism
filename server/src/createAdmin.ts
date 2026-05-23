@@ -6,27 +6,37 @@ const prisma = new PrismaClient();
 async function main() {
   const password = await bcrypt.hash('password123', 10);
   
-  const admins = [
-    { email: 'admin@bulusan.com', name: 'System Admin' },
-    { email: 'mark.janssen.hombre@gmail.com', name: 'Mark Janssen' }
-  ];
+  // 1. Seed main admin
+  await prisma.user.upsert({
+    where: { email: 'admin@bulusan.com' },
+    update: {
+      password,
+      role: 'ADMIN',
+    },
+    create: {
+      name: 'System Admin',
+      email: 'admin@bulusan.com',
+      password,
+      role: 'ADMIN',
+    },
+  });
+  console.log("Main admin 'admin@bulusan.com' updated/created successfully as ADMIN.");
 
-  for (const admin of admins) {
-    await prisma.user.upsert({
-      where: { email: admin.email },
-      update: {
-        password,
-        role: 'ADMIN',
-      },
-      create: {
-        name: admin.name,
-        email: admin.email,
-        password,
-        role: 'ADMIN',
-      },
-    });
-    console.log(`Admin user '${admin.email}' updated/created successfully with password 'password123'.`);
-  }
+  // 2. Seed standard user
+  await prisma.user.upsert({
+    where: { email: 'mark.janssen.hombre@gmail.com' },
+    update: {
+      password,
+      role: 'USER',
+    },
+    create: {
+      name: 'Mark Janssen',
+      email: 'mark.janssen.hombre@gmail.com',
+      password,
+      role: 'USER',
+    },
+  });
+  console.log("User 'mark.janssen.hombre@gmail.com' updated/created successfully as USER.");
 }
 
 main()
