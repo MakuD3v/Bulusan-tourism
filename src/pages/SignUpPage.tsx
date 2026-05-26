@@ -192,6 +192,7 @@ const InputGroup = styled.div`
 
         & + svg {
           color: #8ab4f8;
+        }
       }
     }
 
