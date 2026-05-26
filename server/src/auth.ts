@@ -15,11 +15,11 @@ const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
-const FROM_EMAIL = process.env.SMTP_USER || 'bulusan.tourism.noreply@gmail.com';
+const FROM_EMAIL = process.env.EMAIL_USER || 'bulusan.tourism.noreply@gmail.com';
 
 // ─── Generate Secure 8-char Alphanumeric Code (XXXX-XXXX format) ─────────────
 function generateVerificationCode(): string {
