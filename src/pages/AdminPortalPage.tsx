@@ -80,7 +80,7 @@ const AdminPortalPage = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div style={{ textAlign: 'right' }}>
                         <div style={{ fontWeight: 700, color: '#e2ecf7' }}>{user?.name || 'Administrator'}</div>
-                        <div style={{ fontSize: '0.75rem', color: '#90cdf4', fontWeight: 700, textTransform: 'uppercase' }}>Super Admin</div>
+                        <div style={{ fontSize: '0.75rem', color: '#90cdf4', fontWeight: 700, textTransform: 'uppercase' }}>{user?.email === 'admin@bulusan.com' ? 'Super Admin' : 'Admin'}</div>
                     </div>
                     <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#1e3a8a', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
                         AD
