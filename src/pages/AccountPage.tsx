@@ -8,7 +8,7 @@ import {
   LogOut, Award, Heart, MessageSquare, Compass, 
   LayoutDashboard, Star, ChevronRight, Share2,
   Trash2, ExternalLink, ShieldAlert, CheckCircle2,
-  Image as ImageIcon, Loader2, X
+  Image as ImageIcon, Loader2, X, Clock
 } from 'lucide-react';
 import { useAttractions, useEnterprises, useHeritage } from '../hooks/useData';
 import { dbService } from '../api/db';
