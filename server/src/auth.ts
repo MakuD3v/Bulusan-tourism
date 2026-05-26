@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import sgMail from '@sendgrid/mail';
+import nodemailer from 'nodemailer';
 import rateLimit from 'express-rate-limit';
 
 const router = Router();
@@ -11,10 +11,15 @@ const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key_change_in_production';
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
-// ─── SendGrid Setup ───────────────────────────────────────────────────────────
-const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY!;
-const FROM_EMAIL = process.env.FROM_EMAIL || 'bulusan.tourism.noreply@gmail.com';
-sgMail.setApiKey(SENDGRID_API_KEY);
+// ─── Nodemailer Setup ───────────────────────────────────────────────────────────
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
+const FROM_EMAIL = process.env.SMTP_USER || 'bulusan.tourism.noreply@gmail.com';
 
 // ─── Generate Secure 8-char Alphanumeric Code (XXXX-XXXX format) ─────────────
 function generateVerificationCode(): string {
@@ -30,8 +35,8 @@ function generateVerificationCode(): string {
 
 async function sendVerificationEmail(email: string, name: string, code: string) {
   const year = new Date().getFullYear();
-  await sgMail.send({
-    from: { name: 'Bulusan Tourism', email: FROM_EMAIL },
+  await transporter.sendMail({
+    from: `"Bulusan Tourism" <${FROM_EMAIL}>`,
     to: email,
     subject: `${code} is your Bulusan Tourism verification code`,
     html: `
@@ -85,8 +90,8 @@ async function sendVerificationEmail(email: string, name: string, code: string) 
 
 async function sendApprovalEmail(email: string, name: string) {
   const dashboardUrl = `${CLIENT_URL}/owner-dashboard`;
-  await sgMail.send({
-    from: { name: 'Bulusan Tourism', email: FROM_EMAIL },
+  await transporter.sendMail({
+    from: `"Bulusan Tourism" <${FROM_EMAIL}>`,
     to: email,
     subject: '🎉 Your Owner Account is Approved — Bulusan Tourism',
     html: `
@@ -158,15 +163,15 @@ router.get('/test-email', async (req, res) => {
   if (!targetEmail) return res.status(400).json({ error: 'Please provide an ?email= parameter' });
 
   try {
-    await sgMail.send({
-      from: { name: 'Bulusan Tourism', email: FROM_EMAIL },
+    await transporter.sendMail({
+      from: `"Bulusan Tourism" <${FROM_EMAIL}>`,
       to: targetEmail,
-      subject: 'Live Server Email Test — SendGrid',
-      text: 'If you are receiving this, SendGrid is working perfectly on your live server!',
+      subject: 'Live Server Email Test — Nodemailer',
+      text: 'If you are receiving this, Nodemailer is working perfectly on your live server!',
     });
-    res.json({ success: true, message: `Test email sent via SendGrid to ${targetEmail}` });
+    res.json({ success: true, message: `Test email sent via Nodemailer to ${targetEmail}` });
   } catch (error: any) {
-    console.error('SendGrid test failed:', error?.response?.body || error);
+    console.error('Nodemailer test failed:', error);
     res.status(500).json({ 
       success: false, 
       error: error.message,
