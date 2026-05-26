@@ -160,7 +160,7 @@ const InputGroup = styled.div`
   .input-wrapper {
     position: relative;
     
-    svg {
+    & > svg {
       position: absolute;
       left: 16px;
       top: 50%;
@@ -192,8 +192,31 @@ const InputGroup = styled.div`
 
         & + svg {
           color: #8ab4f8;
-        }
       }
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #5c70b8;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      transition: color 0.2s;
+    }
+
+    .password-toggle:hover {
+      color: #8ab4f8;
+    }
+
+    .password-toggle svg {
+      position: static;
+      transform: none;
     }
   }
 `;
@@ -401,7 +424,7 @@ const SignUpPage = () => {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#5c70b8', padding: '4px', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }}
+                        className="password-toggle"
                         tabIndex={-1}
                       >
                         {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
