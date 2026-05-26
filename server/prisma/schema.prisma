@@ -19,8 +19,7 @@ model User {
   joinedDate               DateTime         @default(now())
   emailVerified            Boolean          @default(false)
   approvalStatus           String           @default("PENDING")
-  verificationToken        String?
-  verificationTokenExpiry  DateTime?
+  appeals                  OwnerAppeal[]
   checkIns                 CheckIn[]
   customTours              CustomUserTour[]
   ownedAttractions         Attraction[]    @relation("AttractionOwner")
@@ -231,4 +230,17 @@ model UserTourDestination {
 model GlobalStat {
   id            Int @id @default(1)
   totalVisitors Int @default(0)
+}
+
+model OwnerAppeal {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message     String
+  image       String
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  adminReply  String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
 }

@@ -527,7 +527,7 @@ const EnterpriseDetailsPage = ({ item: selectedItem, onClose }: { item: any, onC
                             const totalRating = updatedReviews.reduce((acc, rev) => acc + rev.rating, 0);
                             const newAverage = Number((totalRating / updatedReviews.length).toFixed(1));
 
-                            await dbService.update('enterprises', item.firebaseId || item.id, { 
+                            await dbService.update('enterprises', item.id || item.id, { 
                               reviews: updatedReviews,
                               rating: newAverage
                             });

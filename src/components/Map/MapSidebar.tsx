@@ -403,7 +403,7 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
         ) : (
           <AnimatePresence>
             {displayItems.map((item, index) => {
-              const itemId = `${item.entityType}-${item.firebaseId || item.id}`;
+              const itemId = `${item.entityType}-${item.id || item.id}`;
               const isActive = activeId === itemId;
               const categoryLabel = (Array.isArray(item.categories) ? item.categories : [((item as any).category || item.type || 'Others')])[0];
               

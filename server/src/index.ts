@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './auth';
 import apiRoutes from './routes';
+import appealsRoutes from './routes/appeals';
 import path from 'path';
 import fs from 'fs';
 
@@ -30,6 +31,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/appeals', appealsRoutes);
 app.use('/api', apiRoutes);
 
 app.get('/health', (req, res) => {

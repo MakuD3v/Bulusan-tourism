@@ -1,16 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
-import { motion } from 'framer-motion';
-import { CheckCircle, XCircle, User, Mail, Calendar, Clock, RefreshCw, Loader2, ShieldCheck } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CheckCircle, XCircle, User, Mail, Calendar, Clock, RefreshCw, Loader2, ShieldCheck, MessageSquare, ImageIcon } from 'lucide-react';
 import { apiClient } from '../../api/client';
 
-interface PendingOwner {
+interface PendingAppeal {
   id: string;
-  name: string;
-  email: string;
-  joinedDate: string;
-  approvalStatus: string;
-  emailVerified: boolean;
+  userId: string;
+  message: string;
+  image: string;
+  status: string;
+  createdAt: string;
+  user: {
+    name: string;
+    email: string;
+    joinedDate: string;
+  };
 }
 
 const Section = styled.div``;
@@ -59,29 +64,27 @@ const Card = styled(motion.div)`
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
 `;
 
-const TableHead = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 180px 120px 160px;
-  padding: 14px 28px;
-  background: #f8fafc;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+const EmptyState = styled.div`
+  padding: 80px 24px;
+  text-align: center;
   color: #94a3b8;
+
+  h3 { font-size: 1rem; font-weight: 700; color: #64748b; margin: 16px 0 8px; }
+  p { font-size: 0.88rem; }
 `;
 
-const TableRow = styled(motion.div)`
-  display: grid;
-  grid-template-columns: 1fr 180px 120px 160px;
-  padding: 20px 28px;
-  align-items: center;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-  transition: background 0.2s;
-
+const AppealItem = styled(motion.div)`
+  padding: 24px 32px;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  
   &:last-child { border-bottom: none; }
-  &:hover { background: #fafcff; }
+`;
+
+const UserRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
 `;
 
 const OwnerInfo = styled.div`
@@ -103,101 +106,114 @@ const OwnerInfo = styled.div`
     flex-shrink: 0;
   }
 
-  .name { font-weight: 700; color: #1e293b; font-size: 0.95rem; }
+  .name { font-weight: 700; color: #1e293b; font-size: 1.05rem; }
   .email {
-    color: #94a3b8;
-    font-size: 0.82rem;
+    color: #64748b;
+    font-size: 0.85rem;
     display: flex;
     align-items: center;
-    gap: 4px;
-    margin-top: 2px;
+    gap: 6px;
+    margin-top: 4px;
   }
 `;
 
-const DateCell = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #64748b;
-  font-size: 0.85rem;
+const MetaData = styled.div`
+  text-align: right;
+  .date { color: #64748b; font-size: 0.85rem; display: flex; alignItems: center; gap: 6px; justify-content: flex-end; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; background: rgba(251, 191, 36, 0.12); color: #b45309; margin-top: 8px; }
 `;
 
-const StatusBadge = styled.div`
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 30px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  background: rgba(251, 191, 36, 0.12);
-  color: #b45309;
-  border: 1px solid rgba(251, 191, 36, 0.25);
+const ContentBox = styled.div`
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 1fr 200px;
+  gap: 24px;
+  margin-bottom: 20px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const MessageArea = styled.div`
+  .label { font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;}
+  p { color: #334155; line-height: 1.6; font-size: 0.95rem; }
+`;
+
+const ImageArea = styled.div`
+  .label { font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;}
+  img { width: 100%; height: 140px; object-fit: cover; border-radius: 12px; border: 1px solid #e2e8f0; cursor: pointer; transition: 0.2s; &:hover { opacity: 0.9; } }
 `;
 
 const Actions = styled.div`
   display: flex;
-  gap: 8px;
+  gap: 12px;
+  align-items: center;
+`;
+
+const ActionInput = styled.input`
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  font-size: 0.9rem;
+  outline: none;
+  &:focus { border-color: var(--cta-blue); }
 `;
 
 const ApproveBtn = styled(motion.button)`
-  background: rgba(52, 211, 153, 0.1);
-  border: 1px solid rgba(52, 211, 153, 0.3);
-  color: #065f46;
-  padding: 8px 14px;
-  border-radius: 10px;
-  font-size: 0.82rem;
+  background: #10b981;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
-  transition: all 0.2s;
-
-  &:hover { background: rgba(52, 211, 153, 0.2); }
+  gap: 8px;
+  border: none;
+  &:hover { background: #059669; }
   &:disabled { opacity: 0.5; cursor: wait; }
 `;
 
 const RejectBtn = styled(motion.button)`
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  color: #991b1b;
-  padding: 8px 14px;
-  border-radius: 10px;
-  font-size: 0.82rem;
+  background: #fff1f2;
+  color: #e11d48;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
-  transition: all 0.2s;
-
-  &:hover { background: rgba(239, 68, 68, 0.15); }
+  gap: 8px;
+  border: none;
+  &:hover { background: #ffe4e6; }
   &:disabled { opacity: 0.5; cursor: wait; }
 `;
 
-const EmptyState = styled.div`
-  padding: 80px 24px;
-  text-align: center;
-  color: #94a3b8;
-
-  h3 { font-size: 1rem; font-weight: 700; color: #64748b; margin: 16px 0 8px; }
-  p { font-size: 0.88rem; }
+const ImageModal = styled(motion.div)`
+  position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 40px;
+  img { max-width: 100%; max-height: 100%; border-radius: 12px; }
 `;
 
 const PendingApprovalsPanel: React.FC = () => {
-  const [owners, setOwners] = useState<PendingOwner[]>([]);
+  const [appeals, setAppeals] = useState<PendingAppeal[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
-  const [processed, setProcessed] = useState<Set<string>>(new Set());
+  const [replies, setReplies] = useState<Record<string, string>>({});
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const fetch = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await apiClient.get('/auth/pending-owners');
-      setOwners(Array.isArray(res) ? res : []);
+      const res = await apiClient.get('/appeals');
+      setAppeals(Array.isArray(res) ? res : []);
     } catch (e) {
-      console.error('Failed to fetch pending owners', e);
+      console.error('Failed to fetch pending appeals', e);
     } finally {
       setLoading(false);
     }
@@ -205,47 +221,44 @@ const PendingApprovalsPanel: React.FC = () => {
 
   useEffect(() => { fetch(); }, [fetch]);
 
-  const handleApprove = async (ownerId: string, name: string) => {
-    setActionLoading(prev => ({ ...prev, [`approve-${ownerId}`]: true }));
+  const handleAction = async (appealId: string, status: 'APPROVED' | 'REJECTED') => {
+    if (status === 'REJECTED' && !confirm('Are you sure you want to reject this appeal?')) return;
+    
+    setActionLoading(prev => ({ ...prev, [appealId]: true }));
     try {
-      await apiClient.post('/auth/approve-owner', { userId: ownerId });
-      setProcessed(prev => new Set(prev).add(ownerId));
-      setOwners(prev => prev.filter(o => o.id !== ownerId));
+      await apiClient.put(`/appeals/${appealId}`, { 
+        status, 
+        adminReply: replies[appealId] || '' 
+      });
+      setAppeals(prev => prev.filter(a => a.id !== appealId));
     } catch (e) {
-      console.error('Approve failed', e);
+      console.error(`${status} failed`, e);
+      alert(`Failed to ${status.toLowerCase()} appeal.`);
     } finally {
-      setActionLoading(prev => ({ ...prev, [`approve-${ownerId}`]: false }));
-    }
-  };
-
-  const handleReject = async (ownerId: string) => {
-    if (!confirm('Are you sure you want to reject this owner account?')) return;
-    setActionLoading(prev => ({ ...prev, [`reject-${ownerId}`]: true }));
-    try {
-      await apiClient.post('/auth/reject-owner', { userId: ownerId });
-      setOwners(prev => prev.filter(o => o.id !== ownerId));
-    } catch (e) {
-      console.error('Reject failed', e);
-    } finally {
-      setActionLoading(prev => ({ ...prev, [`reject-${ownerId}`]: false }));
+      setActionLoading(prev => ({ ...prev, [appealId]: false }));
     }
   };
 
   const formatDate = (d: string) => {
-    try {
-      return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    } catch {
-      return d;
-    }
+    try { return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); } 
+    catch { return d; }
   };
 
   return (
     <Section>
+      <AnimatePresence>
+        {selectedImage && (
+          <ImageModal initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedImage(null)}>
+            <img src={selectedImage} alt="Fullscreen Appeal" />
+          </ImageModal>
+        )}
+      </AnimatePresence>
+
       <SectionHeader>
         <div>
-          <h2>Pending Owner Approvals</h2>
+          <h2>Pending Owner Appeals</h2>
           <p>
-            {loading ? 'Loading…' : `${owners.length} owner${owners.length !== 1 ? 's' : ''} waiting for approval`}
+            {loading ? 'Loading…' : `${appeals.length} appeal${appeals.length !== 1 ? 's' : ''} waiting for review`}
           </p>
         </div>
         <RefreshBtn onClick={fetch} disabled={loading}>
@@ -257,80 +270,73 @@ const PendingApprovalsPanel: React.FC = () => {
       <Card>
         {loading ? (
           <EmptyState>
-            <Loader2 size={32} className="animate-spin" />
-            <h3>Loading pending owners…</h3>
+            <Loader2 size={32} className="animate-spin" style={{ margin: '0 auto' }} />
+            <h3>Loading appeals…</h3>
           </EmptyState>
-        ) : owners.length === 0 ? (
+        ) : appeals.length === 0 ? (
           <EmptyState>
-            <ShieldCheck size={40} opacity={0.3} />
-            <h3>No Pending Approvals</h3>
-            <p>All owner accounts have been reviewed. Check back later.</p>
+            <ShieldCheck size={40} opacity={0.3} style={{ margin: '0 auto' }} />
+            <h3>No Pending Appeals</h3>
+            <p>All owner appeals have been reviewed. Check back later.</p>
           </EmptyState>
         ) : (
-          <>
-            <TableHead>
-              <span>Owner</span>
-              <span>Registered</span>
-              <span>Status</span>
-              <span>Actions</span>
-            </TableHead>
-            {owners.map((owner, i) => {
-              const initials = owner.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
-              const isApproving = actionLoading[`approve-${owner.id}`];
-              const isRejecting = actionLoading[`reject-${owner.id}`];
+          <div>
+            {appeals.map((appeal, i) => {
+              const initials = appeal.user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+              const isLoading = actionLoading[appeal.id];
 
               return (
-                <TableRow
-                  key={owner.id}
-                  initial={{ opacity: 0, y: 8 }}
+                <AppealItem
+                  key={appeal.id}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
                 >
-                  <OwnerInfo>
-                    <div className="avatar">{initials}</div>
-                    <div>
-                      <div className="name">{owner.name}</div>
-                      <div className="email">
-                        <Mail size={12} />
-                        {owner.email}
+                  <UserRow>
+                    <OwnerInfo>
+                      <div className="avatar">{initials}</div>
+                      <div>
+                        <div className="name">{appeal.user.name}</div>
+                        <div className="email"><Mail size={12} />{appeal.user.email}</div>
                       </div>
-                    </div>
-                  </OwnerInfo>
+                    </OwnerInfo>
+                    <MetaData>
+                      <div className="date"><Calendar size={14} /> Submitted {formatDate(appeal.createdAt)}</div>
+                      <div className="badge"><Clock size={12} /> Pending Review</div>
+                    </MetaData>
+                  </UserRow>
 
-                  <DateCell>
-                    <Calendar size={14} />
-                    {formatDate(owner.joinedDate)}
-                  </DateCell>
-
-                  <div>
-                    <StatusBadge>
-                      <Clock size={12} />
-                      Pending
-                    </StatusBadge>
-                  </div>
+                  <ContentBox>
+                    <MessageArea>
+                      <div className="label"><MessageSquare size={14}/> Appeal Message</div>
+                      <p>"{appeal.message}"</p>
+                    </MessageArea>
+                    <ImageArea>
+                      <div className="label"><ImageIcon size={14}/> Proof Attached</div>
+                      <img src={appeal.image} alt="Proof" onClick={() => setSelectedImage(appeal.image)} />
+                    </ImageArea>
+                  </ContentBox>
 
                   <Actions>
-                    <ApproveBtn
-                      onClick={() => handleApprove(owner.id, owner.name)}
-                      disabled={isApproving || isRejecting}
-                      whileTap={{ scale: 0.96 }}
-                    >
-                      {isApproving ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle size={13} />}
-                      Approve
-                    </ApproveBtn>
-                    <RejectBtn
-                      onClick={() => handleReject(owner.id)}
-                      disabled={isApproving || isRejecting}
-                      whileTap={{ scale: 0.96 }}
-                    >
-                      {isRejecting ? <Loader2 size={13} className="animate-spin" /> : <XCircle size={13} />}
+                    <ActionInput 
+                      placeholder="Optional note or reason (visible to user)..." 
+                      value={replies[appeal.id] || ''}
+                      onChange={(e) => setReplies(prev => ({ ...prev, [appeal.id]: e.target.value }))}
+                      disabled={isLoading}
+                    />
+                    <RejectBtn onClick={() => handleAction(appeal.id, 'REJECTED')} disabled={isLoading} whileTap={{ scale: 0.96 }}>
+                      {isLoading ? <Loader2 size={16} className="animate-spin" /> : <XCircle size={16} />}
                       Reject
                     </RejectBtn>
+                    <ApproveBtn onClick={() => handleAction(appeal.id, 'APPROVED')} disabled={isLoading} whileTap={{ scale: 0.96 }}>
+                      {isLoading ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
+                      Approve
+                    </ApproveBtn>
                   </Actions>
-                </TableRow>
+                </AppealItem>
               );
             })}
-          </>
+          </div>
         )}
       </Card>
     </Section>

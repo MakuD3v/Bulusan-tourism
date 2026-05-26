@@ -130,7 +130,7 @@ export default function AttractionsManager({ attractions, ownerMode, onDataChang
   const handleOpenModal = (item?: any) => {
     if (item) {
       setFormData({
-        firebaseId: item.firebaseId,
+        recordId: item.id,
         name: item.name || '',
         location: item.location || '',
         description: item.description || '',
@@ -177,8 +177,8 @@ export default function AttractionsManager({ attractions, ownerMode, onDataChang
     const cleanData = JSON.parse(JSON.stringify(dataToSave));
 
     try {
-      if (formData.firebaseId) {
-        await dbService.update('attractions', formData.firebaseId, cleanData);
+      if (formData.recordId) {
+        await dbService.update('attractions', formData.recordId, cleanData);
       } else {
         await dbService.add('attractions', cleanData);
       }
@@ -315,7 +315,7 @@ export default function AttractionsManager({ attractions, ownerMode, onDataChang
                 <div className="row-actions">
                   <button onClick={() => handleOpenModal(item)}><Edit2 size={16} /></button>
                   {(role !== 'OWNER' || ownerMode) && (
-                    <button className="delete" onClick={() => handleDelete(item.firebaseId)}><Trash2 size={16} /></button>
+                    <button className="delete" onClick={() => handleDelete(item.id)}><Trash2 size={16} /></button>
                   )}
                 </div>
               </td>
@@ -332,7 +332,7 @@ export default function AttractionsManager({ attractions, ownerMode, onDataChang
           <FormModalOverlay initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <FormModalContent initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}>
               <ModalHeader>
-                <h3>{formData.firebaseId ? 'Edit' : 'Add New'} Attraction</h3>
+                <h3>{formData.recordId ? 'Edit' : 'Add New'} Attraction</h3>
                 <button onClick={() => setIsModalOpen(false)}><X size={20} /></button>
               </ModalHeader>
               

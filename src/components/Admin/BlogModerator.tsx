@@ -70,11 +70,11 @@ const ModalContent = styled(motion.div)`
 `;
 
 interface BlogModeratorProps {
-  blogPosts: (BlogPost & { firebaseId?: string })[];
+  blogPosts: (BlogPost & { id?: string })[];
 }
 
 const BlogModerator: React.FC<BlogModeratorProps> = ({ blogPosts }) => {
-  const [blogPopup, setBlogPopup] = useState<(BlogPost & { firebaseId?: string }) | null>(null);
+  const [blogPopup, setBlogPopup] = useState<(BlogPost & { id?: string }) | null>(null);
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
@@ -84,7 +84,7 @@ const BlogModerator: React.FC<BlogModeratorProps> = ({ blogPosts }) => {
           <thead><tr><th>Title</th><th>Author</th><th>Status</th><th style={{ textAlign: 'right' }}>Actions</th></tr></thead>
           <tbody>
             {blogPosts.map(post => (
-              <tr key={post.id || post.firebaseId}>
+              <tr key={post.id || post.id}>
                 <td style={{ fontWeight: 700 }}>{post.title}</td>
                 <td>{post.authorName}</td>
                 <td>
@@ -102,7 +102,7 @@ const BlogModerator: React.FC<BlogModeratorProps> = ({ blogPosts }) => {
                       onClick={async () => {
                         if (window.confirm(`Delete blog post: ${post.title}?`)) {
                           try {
-                            await dbService.delete('blogs', post.firebaseId || post.id);
+                            await dbService.delete('blogs', post.id || post.id);
                             window.location.reload();
                           } catch (e) {
                             console.error("Failed to delete blog", e);

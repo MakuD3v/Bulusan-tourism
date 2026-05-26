@@ -26,7 +26,7 @@ export const idbService = {
         
         stores.forEach(store => {
           if (!db.objectStoreNames.contains(store)) {
-            db.createObjectStore(store, { keyPath: 'firebaseId' });
+            db.createObjectStore(store, { keyPath: 'id' });
           }
         });
       };
@@ -140,12 +140,12 @@ export const idbService = {
     });
   },
 
-  async delete(storeName: string, firebaseId: string): Promise<void> {
+  async delete(storeName: string, id: string): Promise<void> {
     const db = await this.init();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(storeName, 'readwrite');
       const store = transaction.objectStore(storeName);
-      const request = store.delete(firebaseId);
+      const request = store.delete(id);
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
     });
@@ -157,7 +157,7 @@ export const idbService = {
       return new Promise((resolve, reject) => {
         const transaction = db.transaction('media', 'readwrite');
         const store = transaction.objectStore('media');
-        const request = store.put({ firebaseId: path, blob });
+        const request = store.put({ id: path, blob });
         request.onsuccess = () => {
           // In Demo mode, we use Object URLs. 
           // Note: These are temporary and will break on refresh unless we resolve them again.

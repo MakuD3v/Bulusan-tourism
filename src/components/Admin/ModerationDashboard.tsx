@@ -165,7 +165,7 @@ const ModerationDashboard: React.FC<ModerationDashboardProps> = ({ attractions, 
                                         if (window.confirm(`Delete review by ${rev.author} from ${attr.name}?`)) {
                                             try {
                                                 const newReviews = attr.reviews.filter(r => r.id !== rev.id);
-                                                await dbService.update('attractions', attr.firebaseId!, { reviews: newReviews });
+                                                await dbService.update('attractions', attr.id!, { reviews: newReviews });
                                             } catch (e) {
                                                 console.error("Failed to delete review", e);
                                             }
@@ -206,7 +206,7 @@ const ModerationDashboard: React.FC<ModerationDashboardProps> = ({ attractions, 
                                         if (window.confirm(`Delete review by ${rev.author} from ${acc.name}?`)) {
                                             try {
                                                 const newReviews = acc.reviews.filter(r => r.id !== rev.id);
-                                                await dbService.update('enterprises', acc.firebaseId!, { reviews: newReviews });
+                                                await dbService.update('enterprises', acc.id!, { reviews: newReviews });
                                             } catch (e) {
                                                 console.error("Failed to delete review", e);
                                             }
@@ -231,7 +231,7 @@ const ModerationDashboard: React.FC<ModerationDashboardProps> = ({ attractions, 
                     </ColumnHeader>
                     <ScrollArea>
                         {blogPosts.map(blog => (
-                            <ContentCard key={blog.firebaseId} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                            <ContentCard key={blog.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                                 <div className="entity-ref">{blog.category}</div>
                                 <h4>{blog.title}</h4>
                                 <div className="meta">
@@ -245,7 +245,7 @@ const ModerationDashboard: React.FC<ModerationDashboardProps> = ({ attractions, 
                                       onClick={async () => {
                                           if (window.confirm(`Delete blog post: ${blog.title}?`)) {
                                               try {
-                                                  await dbService.delete('blogs', blog.firebaseId || blog.id);
+                                                  await dbService.delete('blogs', blog.id || blog.id);
                                                   window.location.reload();
                                               } catch (e) {
                                                   console.error("Failed to delete blog", e);

@@ -5,7 +5,7 @@ import BulusanMap from '../components/Map/BulusanMap';
 import MapSidebar from '../components/Map/MapSidebar';
 import TourDashboard from '../components/Map/TourDashboard';
 import ActiveTourSidebar from '../components/Map/ActiveTourSidebar';
-import { useAttractions, useEnterprises, useHeritage } from '../hooks/useFirestore';
+import { useAttractions, useEnterprises, useHeritage } from '../hooks/useData';
 import { useAuth } from '../hooks/useAuth';
 import { CustomUserTour } from '../data/types';
 import { useLocation } from 'react-router-dom';
@@ -299,8 +299,8 @@ const ToursAndMapPage: React.FC = () => {
                onUpdateTour={setActiveTour}
                allItems={allItems}
                onFocusItem={(item) => {
-                 const clickedId = (item.firebaseId || item.id).toString();
-                 const currentId = (focusedLocation?.firebaseId || focusedLocation?.id)?.toString();
+                 const clickedId = (item.id || item.id).toString();
+                 const currentId = (focusedLocation?.id || focusedLocation?.id)?.toString();
                  if (clickedId === currentId && item.entityType === focusedLocation?.entityType) {
                    setFocusedLocation(null);
                  } else {
@@ -316,15 +316,15 @@ const ToursAndMapPage: React.FC = () => {
               selectedCategories={selectedCategories}
               setSelectedCategories={setSelectedCategories}
               onItemClick={(item) => {
-                const clickedId = (item.firebaseId || item.id).toString();
-                const currentId = (focusedLocation?.firebaseId || focusedLocation?.id)?.toString();
+                const clickedId = (item.id || item.id).toString();
+                const currentId = (focusedLocation?.id || focusedLocation?.id)?.toString();
                 if (clickedId === currentId && item.entityType === focusedLocation?.entityType) {
                   setFocusedLocation(null);
                 } else {
                   setFocusedLocation(item);
                 }
               }}
-              activeId={focusedLocation ? `${focusedLocation.entityType}-${focusedLocation.firebaseId || focusedLocation.id}` : null}
+              activeId={focusedLocation ? `${focusedLocation.entityType}-${focusedLocation.id || focusedLocation.id}` : null}
               loading={loading}
               onOpenDashboard={() => {
                  if (!user) {

@@ -2,7 +2,7 @@ import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, MapPin, Heart, Star, X, Clock, DollarSign, Info, Sparkles, Award, TrendingUp, Users, Zap } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useEnterprises } from '../hooks/useFirestore';
+import { useEnterprises } from '../hooks/useData';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Enterprise, Review } from '../data/types';
 import MediaCarousel from '../components/Common/MediaCarousel';
@@ -432,7 +432,7 @@ const EnterprisesPage = () => {
     const openId = params.get('openId');
     if (openId && enterprises.length > 0) {
       const target = enterprises.find((a: any) => 
-        a.firebaseId === openId || a.id?.toString() === openId
+        a.id?.toString() === openId
       );
       if (target) setSelectedItem(target);
     } else if (selectedItem) {
@@ -479,7 +479,7 @@ const EnterprisesPage = () => {
 
   const handleOpenModal = (item: any) => {
     setSelectedItem(item);
-    navigate(`/enterprises?openId=${item.firebaseId || item.id}`);
+    navigate(`/enterprises?openId=${item.id || item.id}`);
     
     if (item.tags) {
       const newTags = Array.from(new Set([...visitedTags, ...item.tags])) as string[];
@@ -487,8 +487,8 @@ const EnterprisesPage = () => {
       localStorage.setItem('user_visited_tags', JSON.stringify(newTags));
     }
     // Track interaction
-    if (item.firebaseId) {
-      dbService.trackInteraction('enterprises', item.firebaseId);
+    if (item.id) {
+      dbService.trackInteraction('enterprises', item.id);
     }
   };
 

@@ -21,7 +21,7 @@ import { useAuth } from './hooks/useAuth';
 import UserRoute from './components/Layout/UserRoute';
 import { useEffect } from 'react';
 import VisitorTracker from './components/Common/VisitorTracker';
-import { preloadCollection } from './hooks/useFirestore';
+import { preloadCollection } from './hooks/useData';
 import { AlertProvider } from './components/Common/AlertProvider';
 
 function AnimatedRoutes() {

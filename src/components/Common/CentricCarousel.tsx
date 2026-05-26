@@ -219,7 +219,7 @@ const CentricCarousel: React.FC<CentricCarouselProps> = ({
 
             return (
               <ItemWrapper
-                key={item.id || item.firebaseId || index}
+                key={item.id || item.id || index}
                 $isActive={position === 'center'}
                 initial="hidden"
                 animate={position}

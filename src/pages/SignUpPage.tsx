@@ -3,7 +3,7 @@ import styled, { keyframes } from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { User, Mail, Lock, UserPlus, Loader2, CheckCircle2, ArrowLeft, Clock, KeyRound } from 'lucide-react';
+import { User, Mail, Lock, UserPlus, Loader2, CheckCircle2, ArrowLeft } from 'lucide-react';
 
 const SplitContainer = styled.div`
   min-height: 100vh;
@@ -144,32 +144,6 @@ const Subtitle = styled.p`
   text-align: left;
 `;
 
-const ToggleContainer = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  padding: 4px;
-  margin-bottom: 32px;
-`;
-
-const ToggleBtn = styled.button<{ $active: boolean }>`
-  background: ${(props) => (props.$active ? 'linear-gradient(135deg, #2b6cb0 0%, #1a365d 100%)' : 'transparent')};
-  color: ${(props) => (props.$active ? '#fff' : '#9faed4')};
-  border: none;
-  padding: 10px;
-  border-radius: 10px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-
-  &:hover {
-    color: #fff;
-  }
-`;
-
 const InputGroup = styled.div`
   margin-bottom: 20px;
   text-align: left;
@@ -195,7 +169,7 @@ const InputGroup = styled.div`
       transition: color 0.3s;
     }
 
-    input, select, textarea {
+    input {
       width: 100%;
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -220,20 +194,6 @@ const InputGroup = styled.div`
           color: #8ab4f8;
         }
       }
-    }
-
-    select {
-      appearance: none;
-      cursor: pointer;
-      option {
-        background: #0d172e;
-        color: #f1f5f9;
-      }
-    }
-
-    textarea {
-      min-height: 100px;
-      resize: vertical;
     }
   }
 `;
@@ -309,7 +269,6 @@ const ErrorMsg = styled(motion.div)`
 `;
 
 const SignUpPage = () => {
-  const [role, setRole] = useState<'USER' | 'OWNER'>('USER');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -317,11 +276,8 @@ const SignUpPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [showVerification, setShowVerification] = useState(false);
-  const [verificationCode, setVerificationCode] = useState('');
-  const [verifying, setVerifying] = useState(false);
   
-  const { signup, verifyCode } = useAuth();
+  const { signup } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -330,14 +286,10 @@ const SignUpPage = () => {
     setError('');
 
     try {
-      const result = await signup(name, email, password, { role });
+      const result = await signup(name, email, password);
       if (result.success) {
-        if (result.requiresVerification) {
-          setShowVerification(true);
-        } else {
-          setSuccess(true);
-          setTimeout(() => navigate('/discover'), 2000);
-        }
+        setSuccess(true);
+        setTimeout(() => navigate('/discover'), 2000);
       } else {
         setError('Registration failed. Please try again.');
       }
@@ -345,32 +297,6 @@ const SignUpPage = () => {
       setError(err.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setVerifying(true);
-    setError('');
-
-    try {
-      const result = await verifyCode(email, verificationCode);
-      if (result.success) {
-        setSuccess(true);
-        setTimeout(() => {
-          if (role === 'OWNER') {
-            navigate('/owner-pending');
-          } else {
-            navigate('/discover');
-          }
-        }, 2000);
-      } else {
-        setError('Verification failed.');
-      }
-    } catch (err: any) {
-      setError(err.message || 'Invalid verification code.');
-    } finally {
-      setVerifying(false);
     }
   };
 
@@ -409,84 +335,17 @@ const SignUpPage = () => {
               <CheckCircle2 size={48} color="#2ecc71" />
               <div>
                 <h3 style={{ fontSize: '1.4rem', color: '#fff', margin: '8px 0' }}>
-                  Verification Successful!
+                  Registration Successful!
                 </h3>
                 <p style={{ color: '#a3b899' }}>
-                  {role === 'OWNER'
-                    ? `Welcome, ${name}! Redirecting to owner status page...`
-                    : `Welcome, ${name}! Preparing your discovery guide…`}
+                  Welcome, {name}! Preparing your discovery guide…
                 </p>
               </div>
             </SuccessCard>
-          ) : showVerification ? (
-            <>
-              <Title>Verify Email</Title>
-              <Subtitle>We sent a 6-digit code to <strong>{email}</strong>.</Subtitle>
-              
-              <form onSubmit={handleVerify}>
-                {error && (
-                  <ErrorMsg
-                    initial={{ opacity: 0, y: -8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  >
-                    {error}
-                  </ErrorMsg>
-                )}
-
-                <InputGroup>
-                  <label>Verification Code</label>
-                  <div className="input-wrapper">
-                    <KeyRound size={18} />
-                    <input
-                      type="text"
-                      placeholder="XXXX-XXXX"
-                      value={verificationCode}
-                      onChange={(e) => {
-                        // auto-format: uppercase, insert dash after 4 chars
-                        let val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-                        if (val.length > 4) val = val.slice(0, 4) + '-' + val.slice(4, 8);
-                        setVerificationCode(val);
-                      }}
-                      maxLength={9}
-                      required
-                      style={{ letterSpacing: '4px', fontFamily: 'monospace', fontSize: '1.1rem' }}
-                    />
-                  </div>
-                  <p style={{ fontSize: '0.78rem', color: '#5c70b8', marginTop: '6px', marginLeft: '4px' }}>
-                    Enter the 8-character code from your email (e.g. K4X9-2BQR)
-                  </p>
-                </InputGroup>
-
-                <ActionButton type="submit" disabled={verifying}>
-                  {verifying ? (
-                    <Loader2 className="animate-spin" size={18} />
-                  ) : (
-                    <>Verify & Continue <CheckCircle2 size={18} /></>
-                  )}
-                </ActionButton>
-              </form>
-            </>
           ) : (
             <>
               <Title>Create an account</Title>
               <Subtitle>Join the digital adventure companion of Bulusan.</Subtitle>
-
-              <ToggleContainer>
-                <ToggleBtn
-                  type="button"
-                  $active={role === 'USER'}
-                  onClick={() => setRole('USER')}
-                >
-                  Explorer User
-                </ToggleBtn>
-                <ToggleBtn
-                  type="button"
-                  $active={role === 'OWNER'}
-                  onClick={() => setRole('OWNER')}
-                >
-                  Enterprise Owner
-                </ToggleBtn>
-              </ToggleContainer>
 
               <form onSubmit={handleSubmit}>
                 {error && (
@@ -542,30 +401,11 @@ const SignUpPage = () => {
                   </InputGroup>
                 </FormGrid>
 
-                <AnimatePresence>
-                  {role === 'OWNER' && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.35, ease: 'easeInOut' }}
-                      style={{ overflow: 'hidden' }}
-                    >
-                      <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', margin: '20px 0 16px', paddingTop: '20px' }} />
-                      <div style={{ background: 'rgba(43, 108, 176, 0.08)', border: '1px solid rgba(144, 205, 244, 0.12)', borderRadius: '12px', padding: '14px 18px', fontSize: '0.88rem', color: '#7b9dce', lineHeight: 1.6 }}>
-                        <strong style={{ color: '#90cdf4' }}>Owner Account</strong> — After registering and verifying your email, you will await admin approval.
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
                 <ActionButton type="submit" disabled={loading}>
                   {loading ? (
                     <Loader2 className="animate-spin" size={18} />
                   ) : (
-                    <>
-                      {role === 'OWNER' ? 'Create Owner Account' : 'Start Exploring'} <UserPlus size={18} />
-                    </>
+                    <>Start Exploring <UserPlus size={18} /></>
                   )}
                 </ActionButton>
               </form>

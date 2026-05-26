@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Sparkles, Filter, Plus } from 'lucide-react';
-import { useBlogs } from '../hooks/useFirestore';
+import { useBlogs } from '../hooks/useData';
 import { useAuth } from '../hooks/useAuth';
 import { dbService } from '../api/db';
 import { uploadFile } from '../api/storage';

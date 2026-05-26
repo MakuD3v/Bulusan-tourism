@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
@@ -7,11 +7,14 @@ import {
   User as UserIcon, MapPin, Calendar, Settings, 
   LogOut, Award, Heart, MessageSquare, Compass, 
   LayoutDashboard, Star, ChevronRight, Share2,
-  Trash2, ExternalLink
+  Trash2, ExternalLink, ShieldAlert, CheckCircle2,
+  Image as ImageIcon, Loader2, X
 } from 'lucide-react';
-import { useAttractions, useEnterprises, useHeritage } from '../hooks/useFirestore';
+import { useAttractions, useEnterprises, useHeritage } from '../hooks/useData';
 import { dbService } from '../api/db';
+import { apiClient } from '../api/client';
 import SmartMedia from '../components/Common/SmartMedia';
+
 const PortalContainer = styled(motion.div).attrs({
   initial: { opacity: 0 },
   animate: { opacity: 1 },
@@ -30,6 +33,7 @@ const PortalContainer = styled(motion.div).attrs({
     padding-bottom: 80px; /* Space for bottom nav */
   }
 `;
+
 const Sidebar = styled.div`
   width: 280px;
   background: ${(props) => props.theme.colors.darkBlue === '#F8FAFC' ? props.theme.colors.softBlue : props.theme.colors.darkBlue};
@@ -322,15 +326,77 @@ const ReviewItem = styled.div`
   .text { color: #475569; line-height: 1.6; font-size: 0.95rem; }
 `;
 
+const NotificationOverlay = styled(motion.div)`
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+`;
+
+const NotificationCard = styled(motion.div)`
+  background: white;
+  border-radius: 24px;
+  padding: 40px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+  text-align: center;
+  position: relative;
+
+  h3 { margin: 16px 0 8px; font-size: 1.5rem; color: #1e293b; font-family: 'Outfit', sans-serif; }
+  p { color: #64748b; font-size: 1rem; line-height: 1.6; margin-bottom: 24px; }
+  .close-btn { position: absolute; top: 20px; right: 20px; background: transparent; border: none; color: #94a3b8; cursor: pointer; transition: 0.2s; &:hover { color: #1e293b; } }
+  .action-btn { background: var(--cta-blue); color: white; padding: 14px 28px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; width: 100%; font-size: 1.05rem; }
+`;
+
 export default function AccountPage() {
   const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'overview' | 'itineraries' | 'reviews' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'itineraries' | 'reviews' | 'settings' | 'appeal'>('overview');
   const { data: attractions } = useAttractions([]);
   const { data: enterprises } = useEnterprises([]);
   const { data: heritage } = useHeritage([]);
   
   const [userName, setUserName] = useState(user?.name || '');
+
+  // Appeal states
+  const [appealData, setAppealData] = useState<any>(null);
+  const [fetchingAppeal, setFetchingAppeal] = useState(true);
+  const [appealMsg, setAppealMsg] = useState('');
+  const [appealImage, setAppealImage] = useState<File | null>(null);
+  const [appealPreview, setAppealPreview] = useState<string | null>(null);
+  const [submittingAppeal, setSubmittingAppeal] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Notification states
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationDismissed, setNotificationDismissed] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchAppeal = async () => {
+      try {
+        const res = await apiClient.get('/appeals/me');
+        if (res && res.id) {
+          setAppealData(res);
+          // Show popup logic
+          if (!notificationDismissed && (res.status === 'APPROVED' || res.status === 'REJECTED')) {
+            setShowNotification(true);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch appeal:', err);
+      } finally {
+        setFetchingAppeal(false);
+      }
+    };
+    fetchAppeal();
+  }, [user, notificationDismissed]);
 
   const unifiedList = useMemo(() => {
     return [
@@ -357,7 +423,7 @@ export default function AccountPage() {
       if (item.reviews) {
         item.reviews.forEach((r: any) => {
           if (r.author === user.name) {
-            reviews.push({ ...r, targetName: item.name, targetId: item.id, targetType: item.entityType, firebaseId: (item as any).firebaseId });
+            reviews.push({ ...r, targetName: item.name, targetId: item.id, targetType: item.entityType, id: (item as any).id });
           }
         });
       }
@@ -375,7 +441,7 @@ export default function AccountPage() {
 
   const handleUpdateName = async () => {
     try {
-        await dbService.update('users', (user as any).firebaseId, { name: userName });
+        await dbService.update('users', (user as any).id, { name: userName });
         alert('Profile updated!');
     } catch (err) { alert('Update failed.'); }
   };
@@ -391,14 +457,115 @@ export default function AccountPage() {
     } catch (err) { console.error(err); }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setAppealImage(file);
+      setAppealPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const submitAppeal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!appealMsg || !appealImage) return alert('Message and image are required.');
+    setSubmittingAppeal(true);
+    
+    try {
+      // 1. Upload Image
+      const formData = new FormData();
+      formData.append('file', appealImage);
+      
+      const token = localStorage.getItem('auth_token');
+      const uploadRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/upload`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+      
+      if (!uploadRes.ok) throw new Error('Upload failed');
+      const uploadData = await uploadRes.json();
+      
+      // 2. Submit Appeal
+      const res = await apiClient.post('/appeals', {
+        message: appealMsg,
+        image: uploadData.url
+      });
+      
+      setAppealData(res);
+      alert('Appeal submitted successfully! Admin will review it soon.');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to submit appeal. Please try again.');
+    } finally {
+      setSubmittingAppeal(false);
+    }
+  };
+
+  const claimBadge = async () => {
+    try {
+      const res = await apiClient.post('/appeals/claim', {});
+      if (res.success) {
+        await updateUser({ role: 'OWNER' });
+        setShowNotification(false);
+        setNotificationDismissed(true);
+        navigate('/owner-dashboard');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Failed to claim badge.');
+    }
+  };
+
+  const dismissNotification = () => {
+    setShowNotification(false);
+    setNotificationDismissed(true);
+  };
+
   return (
     <PortalContainer>
+      {/* NOTIFICATION OVERLAY */}
+      <AnimatePresence>
+        {showNotification && appealData && (
+          <NotificationOverlay initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <NotificationCard initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}>
+              <button className="close-btn" onClick={dismissNotification}><X size={24} /></button>
+              
+              {appealData.status === 'APPROVED' ? (
+                <>
+                  <CheckCircle2 size={64} color="#10b981" style={{ margin: '0 auto' }} />
+                  <h3>Appeal Approved!</h3>
+                  <p>Congratulations, your owner appeal was approved by the administration. You can now claim your Owner Badge and access the dashboard.</p>
+                  <button className="action-btn" onClick={claimBadge}>Claim Owner Badge</button>
+                </>
+              ) : (
+                <>
+                  <ShieldAlert size={64} color="#ef4444" style={{ margin: '0 auto' }} />
+                  <h3>Appeal Rejected</h3>
+                  <p>Unfortunately, your owner appeal was not approved at this time.</p>
+                  {appealData.adminReply && (
+                    <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', textAlign: 'left', marginBottom: '24px' }}>
+                      <strong>Admin Note:</strong> {appealData.adminReply}
+                    </div>
+                  )}
+                  <button className="action-btn" style={{ background: '#f1f5f9', color: '#475569' }} onClick={dismissNotification}>Close</button>
+                </>
+              )}
+            </NotificationCard>
+          </NotificationOverlay>
+        )}
+      </AnimatePresence>
+
       <Sidebar>
         <div className="logo" onClick={() => navigate('/discover')} style={{ cursor: 'pointer' }}>BULU<span>SAN</span></div>
         <nav>
           <NavItem $active={activeTab === 'overview'} onClick={() => setActiveTab('overview')}><LayoutDashboard size={20} /> My Dashboard</NavItem>
           <NavItem $active={activeTab === 'itineraries'} onClick={() => setActiveTab('itineraries')}><Compass size={20} /> Saved Wonders</NavItem>
           <NavItem $active={activeTab === 'reviews'} onClick={() => setActiveTab('reviews')}><MessageSquare size={20} /> My Contributions</NavItem>
+          
+          {user.role === 'USER' && (
+            <NavItem $active={activeTab === 'appeal'} onClick={() => setActiveTab('appeal')}><ShieldAlert size={20} /> Owner Appeal</NavItem>
+          )}
+
           <NavItem $active={activeTab === 'settings'} onClick={() => setActiveTab('settings')}><Settings size={20} /> Settings</NavItem>
           
           {/* On mobile, Log Out joins the scrollable nav for better density */}
@@ -485,6 +652,100 @@ export default function AccountPage() {
             </motion.div>
           )}
 
+          {activeTab === 'appeal' && (
+            <motion.div 
+              key="appeal" 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <h3 style={{ fontSize: '1.6rem', color: 'var(--text-dark)', marginBottom: '32px' }}>Enterprise Owner Appeal</h3>
+              
+              <div style={{ background: 'var(--surface-bg)', padding: '40px', borderRadius: '24px', maxWidth: '600px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+                {fetchingAppeal ? (
+                   <div style={{ textAlign: 'center', padding: '40px' }}><Loader2 className="animate-spin" size={32} color="var(--cta-blue)" /></div>
+                ) : appealData ? (
+                   <div>
+                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '30px', fontWeight: 800, fontSize: '0.9rem', marginBottom: '24px',
+                       background: appealData.status === 'APPROVED' ? '#ecfdf5' : appealData.status === 'REJECTED' ? '#fef2f2' : '#fffbeb',
+                       color: appealData.status === 'APPROVED' ? '#10b981' : appealData.status === 'REJECTED' ? '#ef4444' : '#f59e0b'
+                     }}>
+                       {appealData.status === 'APPROVED' && <CheckCircle2 size={18}/>}
+                       {appealData.status === 'REJECTED' && <X size={18}/>}
+                       {appealData.status === 'PENDING' && <Clock size={18}/>}
+                       STATUS: {appealData.status}
+                     </div>
+
+                     {appealData.status === 'APPROVED' && (
+                       <div style={{ marginBottom: '24px' }}>
+                         <p style={{ color: '#475569', marginBottom: '16px' }}>Your appeal was approved! You can now claim your Owner Badge.</p>
+                         <button onClick={claimBadge} style={{ padding: '14px 28px', background: 'var(--cta-blue)', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '1rem' }}>Claim Owner Badge</button>
+                       </div>
+                     )}
+
+                     {appealData.status === 'REJECTED' && appealData.adminReply && (
+                       <div style={{ background: '#f1f5f9', padding: '20px', borderRadius: '16px', marginBottom: '24px' }}>
+                         <strong style={{ display: 'block', color: '#1e293b', marginBottom: '8px' }}>Admin Response:</strong>
+                         <p style={{ color: '#475569', margin: 0, lineHeight: 1.6 }}>{appealData.adminReply}</p>
+                       </div>
+                     )}
+
+                     <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '24px' }}>
+                        <p style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', marginBottom: '12px' }}>Your Submission</p>
+                        <p style={{ color: '#475569', background: '#f8fafc', padding: '16px', borderRadius: '12px' }}>"{appealData.message}"</p>
+                        <img src={appealData.image} alt="Appeal" style={{ width: '100%', maxWidth: '300px', borderRadius: '12px', marginTop: '16px' }} />
+                     </div>
+                   </div>
+                ) : (
+                  <form onSubmit={submitAppeal}>
+                    <p style={{ color: '#64748b', marginBottom: '24px', lineHeight: 1.6 }}>
+                      Want to list your enterprise on Bulusan Tourism? Submit an appeal with proof of ownership (e.g., a photo of your business permit or the storefront).
+                    </p>
+
+                    <div style={{ marginBottom: '24px' }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569' }}>Why do you want to become an owner?</label>
+                      <textarea 
+                        required
+                        value={appealMsg}
+                        onChange={e => setAppealMsg(e.target.value)}
+                        placeholder="Tell us about your enterprise..."
+                        style={{ width: '100%', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', minHeight: '120px', fontSize: '1rem', outline: 'none', fontFamily: 'inherit' }}
+                      />
+                    </div>
+
+                    <div style={{ marginBottom: '32px' }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569' }}>Proof of Ownership (Image)</label>
+                      <div 
+                        onClick={() => fileInputRef.current?.click()}
+                        style={{ width: '100%', height: '160px', border: '2px dashed #cbd5e1', borderRadius: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: appealPreview ? 'transparent' : '#f8fafc', overflow: 'hidden', position: 'relative' }}
+                      >
+                        {appealPreview ? (
+                          <img src={appealPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <>
+                            <ImageIcon size={32} color="#94a3b8" style={{ marginBottom: '12px' }} />
+                            <span style={{ color: '#64748b', fontWeight: 600 }}>Click to upload image</span>
+                          </>
+                        )}
+                        <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
+                      </div>
+                    </div>
+
+                    <button 
+                      type="submit"
+                      disabled={submittingAppeal}
+                      style={{ width: '100%', padding: '16px', background: 'var(--cta-blue)', color: 'white', borderRadius: '12px', border: 'none', fontWeight: 800, cursor: 'pointer', fontSize: '1.05rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+                    >
+                      {submittingAppeal ? <Loader2 className="animate-spin" size={20} /> : 'Submit Appeal'}
+                    </button>
+                  </form>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* OTHER TABS OMITTED FOR BREVITY BUT KEPT IN CODE */}
           {activeTab === 'itineraries' && (
             <motion.div 
               key="itinerary" 

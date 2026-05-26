@@ -5,9 +5,8 @@ import { apiClient } from '../api/client';
 interface AuthContextType {
   user: AppUser | null;
   role: 'USER' | 'ADMIN' | 'OWNER' | null;
-  login: (email: string, password: string) => Promise<{ success: boolean; requiresVerification?: boolean }>;
-  signup: (name: string, email: string, password: string, additionalDetails?: any) => Promise<{ success: boolean; requiresVerification?: boolean }>;
-  verifyCode: (email: string, code: string) => Promise<{ success: boolean }>;
+  login: (email: string, password: string) => Promise<{ success: boolean }>;
+  signup: (name: string, email: string, password: string, additionalDetails?: any) => Promise<{ success: boolean }>;
   logout: () => void;
   updateUser: (data: Partial<AppUser>) => Promise<void>;
   loading: boolean;
@@ -71,37 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const res = await apiClient.post('/auth/register', { name, email, password, ...additionalDetails });
       
-      if (res.requiresVerification) {
-        if (res.registrationToken) {
-          localStorage.setItem('registration_token', res.registrationToken);
-        }
-        return { success: true, requiresVerification: true };
-      }
-      
-      // Admin creation
       if (res.token) {
-        localStorage.setItem('auth_token', res.token);
-        localStorage.setItem('bulusan_user', JSON.stringify(res.user));
-        setUser(res.user);
-        return { success: true, requiresVerification: false };
-      }
-      return { success: false };
-    } catch (error: any) {
-      console.error('Signup error', error);
-      throw new Error(error.message || 'Error signing up');
-    }
-  };
-
-  const verifyCode = async (email: string, code: string) => {
-    try {
-      const registrationToken = localStorage.getItem('registration_token');
-      const payload: any = { email, code };
-      if (registrationToken) {
-        payload.registrationToken = registrationToken;
-      }
-      const res = await apiClient.post('/auth/verify-code', payload);
-      if (res.token && res.user) {
-        localStorage.removeItem('registration_token');
         localStorage.setItem('auth_token', res.token);
         localStorage.setItem('bulusan_user', JSON.stringify(res.user));
         setUser(res.user);
@@ -109,8 +78,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return { success: false };
     } catch (error: any) {
-      console.error('Verify code error', error);
-      throw new Error(error.message || 'Invalid or expired code');
+      console.error('Signup error', error);
+      throw new Error(error.message || 'Error signing up');
     }
   };
 
@@ -132,7 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, role: user?.role || null, login, signup, verifyCode, logout, updateUser, loading, isDemoMode }}>
+    <AuthContext.Provider value={{ user, role: user?.role || null, login, signup, logout, updateUser, loading, isDemoMode }}>
       {!loading && children}
     </AuthContext.Provider>
   );

@@ -1,5 +1,5 @@
 import { apiClient } from '../api/client';
-import { invalidateCache } from '../hooks/useFirestore';
+import { invalidateCache } from '../hooks/useData';
 
 export const dbService = {
     add: async (colName: string, data: any) => {

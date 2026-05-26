@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
-import { useTours } from '../../hooks/useFirestore';
+import { useTours } from '../../hooks/useData';
 import { tours as staticTours } from '../../data/tours';
 import { useNavigate } from 'react-router-dom';
 

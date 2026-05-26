@@ -155,7 +155,7 @@ export default function ActiveTourSidebar({ tour, onExit, onUpdateTour, allItems
     if (isNowCompleted) {
       const nextIndex = updatedDestinations.findIndex(d => !d.completed);
       if (nextIndex !== -1) {
-        const nextItem = allItems.find(x => (x.firebaseId || x.id).toString() === updatedDestinations[nextIndex].itemId);
+        const nextItem = allItems.find(x => (x.id || x.id).toString() === updatedDestinations[nextIndex].itemId);
         if (nextItem) onFocusItem(nextItem);
       }
     }
@@ -183,13 +183,13 @@ export default function ActiveTourSidebar({ tour, onExit, onUpdateTour, allItems
       <RouteList>
         <AnimatePresence>
           {tour.destinations.map((dest, i) => {
-            const item = allItems.find(x => (x.firebaseId || x.id).toString() === dest.itemId);
+            const item = allItems.find(x => (x.id || x.id).toString() === dest.itemId);
             if (!item) return null;
             
             const nextDest = tour.destinations[i + 1];
             let distText = "";
             if (nextDest) {
-                const nextItem = allItems.find(x => (x.firebaseId || x.id).toString() === nextDest.itemId);
+                const nextItem = allItems.find(x => (x.id || x.id).toString() === nextDest.itemId);
                 if (item.coordinates && nextItem?.coordinates) {
                     distText = formatDistance(calculateDistance(
                         item.coordinates.lat, item.coordinates.lng,

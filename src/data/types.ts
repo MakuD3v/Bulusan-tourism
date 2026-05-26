@@ -8,7 +8,6 @@ export interface Attraction {
     img: string;
     description: string;
     gallery?: string[];
-    droneVideoId?: string;
     videoUrl?: string;
     reviews?: Review[];
     metadata?: {
@@ -24,7 +23,6 @@ export interface Attraction {
     photos?: string[];
     isFreeAdmission?: boolean;
     offers?: Offer[];
-    firebaseId?: string;
 }
 
 export interface Offer {
@@ -55,7 +53,6 @@ export interface Enterprise {
     featured?: boolean;
     photos?: string[];
     offers?: Offer[];
-    firebaseId?: string;
 }
 
 export interface Review {
@@ -81,7 +78,6 @@ export interface Tour {
     rating?: number;
     dateAdded?: string;
     tags?: string[];
-    firebaseId?: string;
 }
 
 export interface BlogPost {
@@ -96,7 +92,6 @@ export interface BlogPost {
     image: string;
     readTime: string;
     status?: 'Published' | 'Under Review'; 
-    firebaseId?: string;
 }
 
 export interface Inquiry {
@@ -107,7 +102,6 @@ export interface Inquiry {
     message: string;
     date: string;
     status: 'New' | 'Read' | 'Replied';
-    firebaseId?: string;
 }
 
 export interface CheckIn {
@@ -117,7 +111,6 @@ export interface CheckIn {
     locationId: string;
     locationName: string;
     timestamp: string;
-    firebaseId?: string;
 }
 
 export interface User {
@@ -131,7 +124,6 @@ export interface User {
     joinedDate: string;
     approvalStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
     emailVerified?: boolean;
-    firebaseId?: string;
 }
 
 export interface Heritage {
@@ -151,7 +143,6 @@ export interface Heritage {
     reviews?: Review[];
     tags?: string[];
     photos?: string[];
-    firebaseId?: string;
 }
 
 export interface UserTourDestination {
@@ -166,5 +157,4 @@ export interface CustomUserTour {
     name: string;
     destinations: UserTourDestination[];
     createdAt: number;
-    firebaseId?: string;
 }

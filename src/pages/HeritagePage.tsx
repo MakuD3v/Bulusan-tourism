@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useHeritage as useHeritageHook } from '../hooks/useFirestore';
+import { useHeritage as useHeritageHook } from '../hooks/useData';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { History, MapPin, Landmark, Search, X, Clock, Info, ArrowRight, Star, TrendingUp, Zap, Award } from 'lucide-react';
 import { Heritage } from '../data/types';
@@ -438,7 +438,7 @@ export default function HeritagePage() {
                   location="Bulusan, Sorsogon"
                   onClick={() => {
                     setSelectedItem(item);
-                    if (item.firebaseId) dbService.trackInteraction('heritage', item.firebaseId);
+                    if (item.id) dbService.trackInteraction('heritage', item.id);
                   }}
                 />
               )}
@@ -459,7 +459,7 @@ export default function HeritagePage() {
             <DesktopCards>
               {filteredItems.map((item, idx) => (
                 <HistoryCard
-                  key={`desktop-${item.firebaseId || idx}`}
+                  key={`desktop-${item.id || idx}`}
                   initial={{ opacity: 0, x: idx % 2 === 0 ? -50 : 50 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
@@ -478,7 +478,7 @@ export default function HeritagePage() {
                         <p>{item.significance}</p>
                         <button onClick={() => {
                           setSelectedItem(item);
-                          if (item.firebaseId) dbService.trackInteraction('heritage', item.firebaseId);
+                          if (item.id) dbService.trackInteraction('heritage', item.id);
                         }}>
                           Read Full Story <ArrowRight size={16} />
                         </button>
@@ -499,7 +499,7 @@ export default function HeritagePage() {
 
                   return (
                     <DiscoveryCard
-                      key={`mobile-${item.firebaseId || idx}`}
+                      key={`mobile-${item.id || idx}`}
                       image={item.img || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&q=80'}
                       category={item.period}
                       title={item.name}
@@ -510,7 +510,7 @@ export default function HeritagePage() {
                       badge={badge}
                       onClick={() => {
                         setSelectedItem(item);
-                        if (item.firebaseId) dbService.trackInteraction('heritage', item.firebaseId);
+                        if (item.id) dbService.trackInteraction('heritage', item.id);
                       }}
                     />
                   );

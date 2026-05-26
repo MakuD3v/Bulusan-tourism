@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, ArrowRight } from 'lucide-react';
-import { useBlogs } from '../../hooks/useFirestore';
+import { useBlogs } from '../../hooks/useData';
 import { getMediaUrl } from '../../utils/mediaUtils';
 
 const SectionWrapper = styled.section`

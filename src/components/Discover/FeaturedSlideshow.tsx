@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAttractions, useEnterprises } from '../../hooks/useFirestore';
+import { useAttractions, useEnterprises } from '../../hooks/useData';
 import { useNavigate } from 'react-router-dom';
 import CentricCarousel from '../Common/CentricCarousel';
 import FeaturedCarouselCard from '../Common/FeaturedCarouselCard';
@@ -69,7 +69,7 @@ const Carousel = ({ items, type, basePath }: { items: any[], type: string, baseP
                badge={badge}
                badges={getDynamicTags(item, items)}
                categoryName={displayCat}
-               onClick={() => navigate(`/${basePath}?openId=${item.firebaseId || item.id}`)}
+               onClick={() => navigate(`/${basePath}?openId=${item.id || item.id}`)}
              />
            );
         }}

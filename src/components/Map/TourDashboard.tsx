@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Search, Check, Trash2, Play, Navigation } from 'lucide-react';
 import { useUserTours } from '../../hooks/useUserTours';
 import { CustomUserTour, UserTourDestination } from '../../data/types';
-import { useAttractions, useEnterprises, useHeritage } from '../../hooks/useFirestore';
+import { useAttractions, useEnterprises, useHeritage } from '../../hooks/useData';
 import { ATTRACTION_CATEGORIES, ENTERPRISE_CATEGORIES } from '../Admin/CategoryTagConfig';
 import SharedCategoryScroller from '../Common/SharedCategoryScroller';
 import { calculateDistance, formatDistance } from '../../utils/geoUtils';
@@ -363,16 +363,16 @@ export default function TourDashboard({ userId, onClose, onPlayTour }: Props) {
 
   const toggleDestination = (item: any) => {
     if (!activeTour) return;
-    const exists = activeTour.destinations.some(d => d.itemId === (item.firebaseId || item.id).toString());
+    const exists = activeTour.destinations.some(d => d.itemId === (item.id || item.id).toString());
     if (exists) {
       setActiveTour({
         ...activeTour,
-        destinations: activeTour.destinations.filter(d => d.itemId !== (item.firebaseId || item.id).toString())
+        destinations: activeTour.destinations.filter(d => d.itemId !== (item.id || item.id).toString())
       });
     } else {
       setActiveTour({
         ...activeTour,
-        destinations: [...activeTour.destinations, { itemId: (item.firebaseId || item.id).toString(), entityType: item.entityType, completed: false }]
+        destinations: [...activeTour.destinations, { itemId: (item.id || item.id).toString(), entityType: item.entityType, completed: false }]
       });
     }
   };
@@ -385,7 +385,7 @@ export default function TourDashboard({ userId, onClose, onPlayTour }: Props) {
   };
 
   const activeTourDestItems = activeTour?.destinations.map(d => {
-    return allItems.find(i => (i.firebaseId || i.id).toString() === d.itemId);
+    return allItems.find(i => (i.id || i.id).toString() === d.itemId);
   }).filter(Boolean);
 
   return (
@@ -445,7 +445,7 @@ export default function TourDashboard({ userId, onClose, onPlayTour }: Props) {
                       }
 
                       return (
-                        <React.Fragment key={`${item.firebaseId || item.id}-${i}`}>
+                        <React.Fragment key={`${item.id || item.id}-${i}`}>
                           <div className="dest-card">
                             <div className="num">{i + 1}</div>
                             <div className="info">
@@ -483,7 +483,7 @@ export default function TourDashboard({ userId, onClose, onPlayTour }: Props) {
 
                   <div className="grid">
                     {filteredItems.map((item: any) => {
-                      const isSelected = activeTour?.destinations.some(d => d.itemId === (item.firebaseId || item.id).toString());
+                      const isSelected = activeTour?.destinations.some(d => d.itemId === (item.id || item.id).toString());
                       return (
                         <CatalogCard key={`${item.entityType}-${item.id}`} $selected={!!isSelected} onClick={() => toggleDestination(item)}>
                           <div className="img" style={{ backgroundImage: `url(${getMediaUrl(item.photos?.[0] || item.img || '')})` }} />

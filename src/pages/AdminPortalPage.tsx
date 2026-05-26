@@ -13,7 +13,7 @@ import {
   UserCheck
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import { useAttractions, useEnterprises, useBlogs, useInquiries, useHeritage } from '../hooks/useFirestore';
+import { useAttractions, useEnterprises, useBlogs, useInquiries, useHeritage } from '../hooks/useData';
 
 import OverviewPanel from '../components/Admin/OverviewPanel';
 import ModerationDashboard from '../components/Admin/ModerationDashboard';

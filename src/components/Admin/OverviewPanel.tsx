@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BarChart3, Users, MapPin, FileText, Heart, Star, X, TrendingUp, Calendar, ArrowUpRight, Search } from 'lucide-react';
 import { Attraction, Enterprise, BlogPost, Inquiry, Heritage } from '../../data/types';
-import { useGlobalStats } from '../../hooks/useFirestore';
+import { useGlobalStats } from '../../hooks/useData';
 
 const StatsGrid = styled.div`
   display: grid;
@@ -220,7 +220,7 @@ const OverviewPanel: React.FC<OverviewPanelProps> = ({
           </thead>
           <tbody>
             {allEntities.slice(0, 10).map((entity) => (
-              <tr key={entity.firebaseId} onClick={() => setSelectedEntity(entity)}>
+              <tr key={entity.id} onClick={() => setSelectedEntity(entity)}>
                 <td style={{ fontWeight: 700 }}>{entity.name}</td>
                 <td>
                   <span style={{ padding: '4px 10px', borderRadius: '20px', background: 'rgba(148, 163, 184, 0.1)', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-light)' }}>

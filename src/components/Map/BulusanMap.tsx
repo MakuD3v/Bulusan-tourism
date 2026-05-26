@@ -534,7 +534,7 @@ const BulusanMarker = ({ item, priorityCategory, onHandleSelect, isMobile, setMo
             <p>{(item.description || '').substring(0, 80)}...</p>
             <div className="btn-group">
               <button onClick={() => onHandleSelect(item)}>Route</button>
-              <Link to={`${linkPath}?openId=${item.firebaseId || item.id}`} className="secondary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Details</Link>
+              <Link to={`${linkPath}?openId=${item.id || item.id}`} className="secondary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Details</Link>
             </div>
           </div>
         </PopupContent>
@@ -652,7 +652,7 @@ const BulusanMap = ({ items, searchQuery = '', selectedCategories = [], focusLat
     if (activeTour) {
       const nextUncompleted = activeTour.destinations.find((d: any) => !d.completed);
       if (nextUncompleted) {
-        const item = items.find(i => (i.firebaseId || i.id).toString() === nextUncompleted.itemId);
+        const item = items.find(i => (i.id || i.id).toString() === nextUncompleted.itemId);
         if (item && item.coordinates) {
           const start = isTracking && userLocation ? userLocation : BULUSAN_TOWN_CENTER;
           setSelection([start, L.latLng(item.coordinates.lat, item.coordinates.lng)]);
@@ -777,7 +777,7 @@ const BulusanMap = ({ items, searchQuery = '', selectedCategories = [], focusLat
           const isFiltering = !!focusName || queryLower !== '' || selectedCategories.length > 0;
           const effectiveMatch = isFiltering ? (focusName ? isFocused : isMatch) : true;
           
-          const tourDest = activeTour?.destinations.find((d: any) => d.itemId === (item.firebaseId || item.id).toString());
+          const tourDest = activeTour?.destinations.find((d: any) => d.itemId === (item.id || item.id).toString());
           const isGhosted = tourDest && tourDest.completed;
 
           return (
