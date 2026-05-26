@@ -3,7 +3,7 @@ import styled, { keyframes } from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { User, Mail, Lock, UserPlus, Loader2, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { User, Mail, Lock, UserPlus, Loader2, CheckCircle2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
 const SplitContainer = styled.div`
   min-height: 100vh;
@@ -272,7 +272,7 @@ const SignUpPage = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -391,12 +391,21 @@ const SignUpPage = () => {
                     <div className="input-wrapper">
                       <Lock size={18} />
                       <input
-                        type="password"
+                        type={showPassword ? 'text' : 'password'}
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
+                        style={{ paddingRight: '48px' }}
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#5c70b8', padding: '4px', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }}
+                        tabIndex={-1}
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
                     </div>
                   </InputGroup>
                 </FormGrid>
