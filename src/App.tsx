@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
-import PersistentLayout from './components/Layout/PersistentLayout';
+import DashboardLayout from './components/Layout/DashboardLayout';
 import AdminRoute from './components/Layout/AdminRoute';
 import OwnerRoute from './components/Layout/OwnerRoute';
 import DiscoverPage from './pages/DiscoverPage';
@@ -45,7 +45,7 @@ function AnimatedRoutes() {
         {/* Owner pending page — accessible to unverified/pending owners */}
         <Route path="/owner-pending" element={<OwnerPendingPage />} />
 
-        <Route element={<PersistentLayout />}>
+        <Route element={<DashboardLayout />}>
           <Route path="/" element={<DiscoverPage />} />
           <Route path="/discover" element={<DiscoverPage />} />
 

@@ -3,76 +3,62 @@ import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { Settings, MapPin, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { MainHeader, ContentArea } from '../components/Layout/DashboardLayout';
 
-const AdminContainer = styled(motion.div)`
-  max-width: 1100px;
-  margin: 64px auto;
-  background: ${(props) => props.theme.glass.background};
-  backdrop-filter: ${(props) => props.theme.glass.filter};
-  border: ${(props) => props.theme.glass.border};
-  border-radius: 24px;
-  box-shadow: ${(props) => props.theme.glass.shadow};
+const TabNav = styled.div`
   display: flex;
-  min-height: 600px;
-  overflow: hidden;
+  gap: 12px;
+  margin-bottom: 32px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 16px;
+  overflow-x: auto;
+  
+  &::-webkit-scrollbar { display: none; }
 `;
 
-const Sidebar = styled.div`
-  width: 250px;
-  background: rgba(255,255,255,0.4);
-  border-right: 1px solid rgba(0,0,0,0.05);
-  padding: 48px 0;
+const TabBtn = styled.button<{ $active: boolean }>`
+  background: ${p => p.$active ? 'rgba(144, 205, 244, 0.15)' : 'transparent'};
+  color: ${p => p.$active ? '#90cdf4' : '#94a3b8'};
+  border: 1px solid ${p => p.$active ? 'rgba(144, 205, 244, 0.3)' : 'transparent'};
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  white-space: nowrap;
 
-  .nav-item {
-    padding: 16px 32px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    font-weight: 600;
-    color: ${(props) => props.theme.colors.textLight};
-    cursor: pointer;
-    transition: all 0.2s;
-
-    &:hover, &.active {
-      background: rgba(46, 117, 182, 0.1);
-      color: ${(props) => props.theme.colors.ctaBlue};
-    }
-    
-    &.active {
-      border-right: 4px solid ${(props) => props.theme.colors.ctaBlue};
-    }
+  &:hover {
+    background: rgba(144, 205, 244, 0.1);
+    color: #e2ecf7;
   }
-`;
-
-const DashboardContent = styled.div`
-  flex: 1;
-  padding: 40px;
-
-  h2 { margin-bottom: 24px; font-size: 1.8rem; }
 `;
 
 const FormGroup = styled.div`
   margin-bottom: 24px;
   
-  label { display: block; margin-bottom: 10px; font-weight: 600; font-size: 0.95rem; color: ${(props) => props.theme.colors.darkBlue}; }
+  label { display: block; margin-bottom: 10px; font-weight: 600; font-size: 0.95rem; color: #e2ecf7; }
   input, textarea {
     width: 100%;
     padding: 14px;
-    border: 1px solid rgba(0,0,0,0.1);
+    border: 1px solid rgba(255,255,255,0.1);
     border-radius: 12px;
-    background: rgba(255,255,255,0.8);
+    background: rgba(255,255,255,0.05);
+    color: #fff;
     font-size: 1rem;
     font-family: inherit;
     outline: none;
     transition: all 0.2s;
 
-    &:focus { border-color: ${(props) => props.theme.colors.ctaBlue}; box-shadow: 0 0 0 4px rgba(46, 117, 182, 0.1); }
+    &:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
   }
   textarea { resize: none; }
 `;
 
 const SubmitButton = styled.button`
-  background: ${(props) => props.theme.colors.ctaBlue};
+  background: #3b82f6;
   color: white;
   padding: 14px 44px;
   border-radius: 30px;
@@ -80,18 +66,18 @@ const SubmitButton = styled.button`
   border: none;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 8px 16px rgba(46, 117, 182, 0.2);
+  box-shadow: 0 8px 16px rgba(59, 130, 246, 0.2);
 
   &:hover {
-    background: ${(props) => props.theme.colors.primaryBlue};
+    background: #2563eb;
     transform: translateY(-2px);
-    box-shadow: 0 12px 24px rgba(46, 117, 182, 0.3);
+    box-shadow: 0 12px 24px rgba(59, 130, 246, 0.3);
   }
 `;
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('pins');
-  const { logout } = useAuth();
+  const { user } = useAuth();
   const [msg, setMsg] = useState('');
 
   const mockSubmit = (e: React.FormEvent) => {
@@ -101,80 +87,75 @@ const AdminDashboard = () => {
   };
 
   return (
-    <AdminContainer
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, y: 20 }}
-    >
-      <Sidebar>
-        <div className={`nav-item ${activeTab === 'pins' ? 'active' : ''}`} onClick={() => setActiveTab('pins')}>
-          <MapPin size={20} /> Map Pins
+    <>
+      <MainHeader>
+        <div>
+          <h1>{activeTab === 'pins' ? 'Map Pins' : activeTab === 'assets' ? 'Media Assets' : 'Settings'}</h1>
+          <div className="meta">Admin Tools Dashboard</div>
         </div>
-        <div className={`nav-item ${activeTab === 'assets' ? 'active' : ''}`} onClick={() => setActiveTab('assets')}>
-          <ImageIcon size={20} /> Media Assets
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontWeight: 700, color: '#e2ecf7' }}>{user?.name || 'Administrator'}</div>
+            <div style={{ fontSize: '0.75rem', color: '#90cdf4', fontWeight: 700, textTransform: 'uppercase' }}>Admin</div>
+          </div>
+          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#1e3a8a', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+            AD
+          </div>
         </div>
-        <div className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
-          <Settings size={20} /> Settings
-        </div>
+      </MainHeader>
 
-        <div style={{ padding: '32px' }}>
-          <button onClick={logout} style={{
-            color: '#e74c3c',
-            fontWeight: 'bold',
-            background: 'none',
-            border: '1px solid rgba(231, 76, 60, 0.2)',
-            padding: '8px 16px',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            transition: 'all 0.2s'
-          }}>Sign Out</button>
-        </div>
-      </Sidebar>
+      <ContentArea>
+        <TabNav>
+          <TabBtn $active={activeTab === 'pins'} onClick={() => setActiveTab('pins')}><MapPin size={18} /> Map Pins</TabBtn>
+          <TabBtn $active={activeTab === 'assets'} onClick={() => setActiveTab('assets')}><ImageIcon size={18} /> Media Assets</TabBtn>
+          <TabBtn $active={activeTab === 'settings'} onClick={() => setActiveTab('settings')}><Settings size={18} /> Settings</TabBtn>
+        </TabNav>
 
-      <DashboardContent>
-        {activeTab === 'pins' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <h2>Manage Map Locations</h2>
-            <form onSubmit={mockSubmit}>
-              <FormGroup>
-                <label>Location Name</label>
-                <input type="text" placeholder="e.g. Dancalan Beach" required />
-              </FormGroup>
-              <div style={{ display: 'flex', gap: '16px' }}>
-                <FormGroup style={{ flex: 1 }}>
-                  <label>Latitude</label>
-                  <input type="text" placeholder="12.75" required />
+        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: '40px', borderRadius: '24px', maxWidth: '800px' }}>
+          {activeTab === 'pins' && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <h2 style={{ color: '#e2ecf7', marginBottom: '24px' }}>Manage Map Locations</h2>
+              <form onSubmit={mockSubmit}>
+                <FormGroup>
+                  <label>Location Name</label>
+                  <input type="text" placeholder="e.g. Dancalan Beach" required />
                 </FormGroup>
-                <FormGroup style={{ flex: 1 }}>
-                  <label>Longitude</label>
-                  <input type="text" placeholder="124.13" required />
+                <div style={{ display: 'flex', gap: '16px' }}>
+                  <FormGroup style={{ flex: 1 }}>
+                    <label>Latitude</label>
+                    <input type="text" placeholder="12.75" required />
+                  </FormGroup>
+                  <FormGroup style={{ flex: 1 }}>
+                    <label>Longitude</label>
+                    <input type="text" placeholder="124.13" required />
+                  </FormGroup>
+                </div>
+                <FormGroup>
+                  <label>Description</label>
+                  <textarea rows={4} placeholder="Description details..." required />
                 </FormGroup>
-              </div>
-              <FormGroup>
-                <label>Description</label>
-                <textarea rows={4} placeholder="Description details..." required />
-              </FormGroup>
-              <SubmitButton type="submit">Drop Pin</SubmitButton>
-              {msg && <p style={{ color: 'green', marginTop: '16px', fontWeight: 'bold' }}>{msg}</p>}
-            </form>
-          </motion.div>
-        )}
+                <SubmitButton type="submit">Drop Pin</SubmitButton>
+                {msg && <p style={{ color: '#10b981', marginTop: '16px', fontWeight: 'bold' }}>{msg}</p>}
+              </form>
+            </motion.div>
+          )}
 
-        {activeTab === 'assets' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <h2>Asset Management</h2>
-            <p>Upload functionality simulating Supreme Control</p>
-          </motion.div>
-        )}
+          {activeTab === 'assets' && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <h2 style={{ color: '#e2ecf7', marginBottom: '24px' }}>Asset Management</h2>
+              <p style={{ color: '#94a3b8' }}>Upload functionality simulating Supreme Control</p>
+            </motion.div>
+          )}
 
-        {activeTab === 'settings' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <h2>CMS Settings</h2>
-            <p>Configuration panel for admin accounts.</p>
-          </motion.div>
-        )}
-      </DashboardContent>
-    </AdminContainer>
+          {activeTab === 'settings' && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <h2 style={{ color: '#e2ecf7', marginBottom: '24px' }}>CMS Settings</h2>
+              <p style={{ color: '#94a3b8' }}>Configuration panel for admin accounts.</p>
+            </motion.div>
+          )}
+        </div>
+      </ContentArea>
+    </>
   );
 };
 

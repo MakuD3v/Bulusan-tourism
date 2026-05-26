@@ -22,128 +22,41 @@ import AttractionsManager from '../components/Admin/AttractionsManager';
 import EnterprisesManager from '../components/Admin/EnterprisesManager';
 import AdminManagementPanel from '../components/Admin/AdminManagementPanel';
 import PendingApprovalsPanel from '../components/Admin/PendingApprovalsPanel';
-const PortalContainer = styled(motion.div).attrs({
-  initial: { opacity: 0 },
-  animate: { opacity: 1 },
-  exit: { opacity: 0 },
-  transition: { duration: 0.3, ease: [0.23, 1, 0.32, 1] }
-})`
+import { MainHeader, ContentArea } from '../components/Layout/DashboardLayout';
+
+const TabNav = styled.div`
   display: flex;
-  min-height: 100vh;
-  background: var(--light-bg);
-  padding: 16px;
-  gap: 20px;
-  overflow: hidden;
+  gap: 12px;
+  margin-bottom: 32px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 16px;
+  overflow-x: auto;
+  
+  &::-webkit-scrollbar { display: none; }
 `;
 
-const Sidebar = styled.aside`
-  width: 280px;
-  background: ${(props) => props.theme.glass.background};
-  backdrop-filter: ${(props) => props.theme.glass.filter};
-  border: ${(props) => props.theme.glass.border};
-  border-radius: 24px;
-  color: var(--text-dark);
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.05);
-  z-index: 100;
-
-  .logo {
-    padding: 40px 32px;
-    font-size: 1.8rem;
-    font-family: ${(props) => props.theme.fonts.heading};
-    font-weight: 900;
-    letter-spacing: -1px;
-    color: ${(props) => props.theme.colors.darkBlue};
-    span { color: ${(props) => props.theme.colors.ctaBlue}; }
-  }
-
-  nav {
-    flex: 1;
-    padding: 0 16px;
-  }
-`;
-
-const NavItem = styled.div<{ $active: boolean }>`
-  padding: 16px 20px;
-  border-radius: 16px;
-  margin-bottom: 8px;
+const TabBtn = styled.button<{ $active: boolean }>`
+  background: ${p => p.$active ? 'rgba(144, 205, 244, 0.15)' : 'transparent'};
+  color: ${p => p.$active ? '#90cdf4' : '#94a3b8'};
+  border: 1px solid ${p => p.$active ? 'rgba(144, 205, 244, 0.3)' : 'transparent'};
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 16px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: ${(props) => props.$active ? 'var(--cta-blue)' : 'transparent'};
-  color: ${(props) => props.$active ? 'white' : 'var(--text-light)'};
-  font-weight: ${(props) => props.$active ? '700' : '600'};
+  gap: 8px;
+  transition: all 0.2s;
+  white-space: nowrap;
 
   &:hover {
-    background: ${(props) => props.$active ? 'var(--cta-blue)' : 'rgba(46, 117, 182, 0.08)'};
-    color: ${(props) => props.$active ? 'white' : 'var(--cta-blue)'};
-    transform: ${(props) => props.$active ? 'none' : 'translateX(4px)'};
-  }
-
-  svg {
-    color: ${(props) => props.$active ? 'white' : 'currentColor'};
-  }
-`;
-
-const MainContent = styled.main`
-  flex: 1;
-  background: var(--surface-bg);
-  border-radius: 24px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.08);
-  padding: 48px;
-  overflow-y: auto;
-  max-height: calc(100vh - 32px);
-  border: 1px solid rgba(0,0,0,0.03);
-  
-  &::-webkit-scrollbar { width: 8px; }
-  &::-webkit-scrollbar-track { background: transparent; }
-  &::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.3); border-radius: 10px; }
-`;
-
-const Header = styled.header`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 40px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid rgba(0,0,0,0.05);
-
-  h1 { 
-    font-size: 2.2rem; 
-    color: ${(props) => props.theme.colors.darkBlue}; 
-    font-family: ${(props) => props.theme.fonts.heading};
-  }
-
-  .user-badge {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: var(--surface-bg);
-    border: 1px solid rgba(0,0,0,0.05);
-    padding: 8px 24px 8px 8px;
-    border-radius: 30px;
-    font-weight: 700;
-    color: var(--text-dark);
-    box-shadow: none;
-    
-    .avatar {
-      width: 36px; height: 36px; 
-      border-radius: 50%; 
-      background: var(--cta-blue); 
-      color: white; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      font-size: 0.85rem;
-    }
+    background: rgba(144, 205, 244, 0.1);
+    color: #e2ecf7;
   }
 `;
 
 const AdminPortalPage = () => {
-    const { role, logout, isDemoMode, user } = useAuth();
+    const { role, isDemoMode, user } = useAuth();
 
     const getInitialTab = (): 'overview' => {
         return 'overview';
@@ -151,64 +64,58 @@ const AdminPortalPage = () => {
 
     const [activeTab, setActiveTab] = useState<'overview' | 'attractions' | 'enterprises' | 'heritage' | 'moderation' | 'inbox' | 'admin_management' | 'pending_approvals'>(getInitialTab);
     
-    // Type any has been kept for hooks where strict entity models might missing properties on the fly, 
-    // but the sub-components correctly typed.
     const { data: attractions } = useAttractions([]);
     const { data: enterprises } = useEnterprises([]);
     const { data: heritageItems } = useHeritage([]);
     const { data: blogPosts } = useBlogs([]);
     const { data: inboxInquiries } = useInquiries();
 
-    const handleLogout = () => { logout(); window.location.href = '/discover'; };
-
     return (
-        <PortalContainer>
-            <Sidebar>
-                <div className="logo">BULU<span>SAN</span></div>
-                <nav>
-                    {role === 'ADMIN' && (
-                        <>
-                            <NavItem $active={activeTab === 'overview'} onClick={() => setActiveTab('overview')}><BarChart3 size={20} /> Overview</NavItem>
-                            <NavItem $active={activeTab === 'attractions'} onClick={() => setActiveTab('attractions')}><MapPin size={20} /> Manage Attractions</NavItem>
-                            <NavItem $active={activeTab === 'enterprises'} onClick={() => setActiveTab('enterprises')}><MapPin size={20} /> Manage Enterprises</NavItem>
-                            <NavItem $active={activeTab === 'moderation'} onClick={() => setActiveTab('moderation')}><FileText size={20} /> Content Moderation</NavItem>
-                            <NavItem $active={activeTab === 'inbox'} onClick={() => setActiveTab('inbox')}><Mail size={20} /> Inquiry Inbox</NavItem>
-                            <NavItem $active={activeTab === 'pending_approvals'} onClick={() => setActiveTab('pending_approvals')}><UserCheck size={20} /> Pending Approvals</NavItem>
-                            {user?.email === 'admin@bulusan.com' && (
-                                <NavItem $active={activeTab === 'admin_management'} onClick={() => setActiveTab('admin_management')}><ShieldAlert size={20} /> Admin Management</NavItem>
-                            )}
-                        </>
-                    )}
-                </nav>
-                <div style={{ padding: '32px' }}>
-                    <NavItem $active={false} onClick={handleLogout}><LogOut size={20} /> Sign Out</NavItem>
+        <>
+            <MainHeader>
+                <div>
+                    <h1>{activeTab === 'moderation' ? 'Content Moderation' : activeTab === 'admin_management' ? 'Admin Management' : activeTab.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</h1>
+                    <div className="meta">Admin Portal ({role})</div>
                 </div>
-            </Sidebar>
-
-            <MainContent>
-                <Header>
-                    <h1>{activeTab === 'moderation' ? 'Content Moderation' : activeTab === 'admin_management' ? 'Admin Management' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</h1>
-                    <div className="user-badge">
-                        <div className="avatar">AD</div>
-                        <span>{role} Dashboard</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontWeight: 700, color: '#e2ecf7' }}>{user?.name || 'Administrator'}</div>
+                        <div style={{ fontSize: '0.75rem', color: '#90cdf4', fontWeight: 700, textTransform: 'uppercase' }}>Super Admin</div>
                     </div>
-                </Header>
+                    <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#1e3a8a', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                        AD
+                    </div>
+                </div>
+            </MainHeader>
 
+            <ContentArea>
                 {isDemoMode && (
-                    <div style={{ background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e', padding: '12px 24px', borderRadius: '12px', marginBottom: '24px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', color: '#fcd34d', padding: '12px 24px', borderRadius: '12px', marginBottom: '24px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <Settings size={18} />
                         <strong>Demo Mode Active:</strong> Firebase is not configured. Accounts and data will be stored locally in your browser.
                     </div>
                 )}
 
+                <TabNav>
+                    <TabBtn $active={activeTab === 'overview'} onClick={() => setActiveTab('overview')}><BarChart3 size={18} /> Overview</TabBtn>
+                    <TabBtn $active={activeTab === 'attractions'} onClick={() => setActiveTab('attractions')}><MapPin size={18} /> Attractions</TabBtn>
+                    <TabBtn $active={activeTab === 'enterprises'} onClick={() => setActiveTab('enterprises')}><MapPin size={18} /> Enterprises</TabBtn>
+                    <TabBtn $active={activeTab === 'moderation'} onClick={() => setActiveTab('moderation')}><FileText size={18} /> Moderation</TabBtn>
+                    <TabBtn $active={activeTab === 'inbox'} onClick={() => setActiveTab('inbox')}><Mail size={18} /> Inbox</TabBtn>
+                    <TabBtn $active={activeTab === 'pending_approvals'} onClick={() => setActiveTab('pending_approvals')}><UserCheck size={18} /> Pending Appeals</TabBtn>
+                    {user?.email === 'admin@bulusan.com' && (
+                        <TabBtn $active={activeTab === 'admin_management'} onClick={() => setActiveTab('admin_management')}><ShieldAlert size={18} /> Admin Management</TabBtn>
+                    )}
+                </TabNav>
+
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={activeTab}
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
+                        exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.2 }}
-                        style={{ height: '100%' }}
+                        style={{ height: '100%', minHeight: '500px' }}
                     >
                         {activeTab === 'overview' && (
                             <OverviewPanel 
@@ -233,8 +140,8 @@ const AdminPortalPage = () => {
                         {activeTab === 'admin_management' && user?.email === 'admin@bulusan.com' && <AdminManagementPanel />}
                     </motion.div>
                 </AnimatePresence>
-            </MainContent>
-        </PortalContainer>
+            </ContentArea>
+        </>
     );
 };
 

@@ -11,11 +11,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeContextProvider = ({ children }: { children: ReactNode }) => {
   const [mode, setMode] = useState<ThemeMode>(() => {
-    const saved = localStorage.getItem('themeMode');
-    if (saved === 'dark' || saved === 'light') return saved;
-    // Default to light if no preference, or respect OS setting if desired
-    // return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    return 'light';
+    return 'dark'; // Forced to dark for the global dashboard layout
   });
 
   useEffect(() => {
