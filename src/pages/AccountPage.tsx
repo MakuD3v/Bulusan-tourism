@@ -505,10 +505,16 @@ export default function AccountPage() {
     try {
       const res = await apiClient.post('/appeals/claim', {});
       if (res.success) {
-        await updateUser({ role: 'OWNER' });
+        // Save fresh token with OWNER role so all future requests use the correct role
+        if (res.token) {
+          localStorage.setItem('auth_token', res.token);
+        }
+        if (res.user) {
+          localStorage.setItem('bulusan_user', JSON.stringify(res.user));
+        }
+        // Force a full page reload to re-initialize auth context with new role
         setShowNotification(false);
-        setNotificationDismissed(true);
-        navigate('/owner-dashboard');
+        window.location.href = '/owner-dashboard';
       }
     } catch (e) {
       console.error(e);
@@ -564,6 +570,12 @@ export default function AccountPage() {
           
           {user.role === 'USER' && (
             <NavItem $active={activeTab === 'appeal'} onClick={() => setActiveTab('appeal')}><ShieldAlert size={20} /> Owner Appeal</NavItem>
+          )}
+
+          {user.role === 'OWNER' && (
+            <NavItem onClick={() => navigate('/owner-dashboard')} style={{ background: 'linear-gradient(135deg, rgba(43,108,176,0.25), rgba(26,54,93,0.2))', border: '1px solid rgba(139,195,255,0.2)' }}>
+              <LayoutDashboard size={20} /> Owner Dashboard
+            </NavItem>
           )}
 
           <NavItem $active={activeTab === 'settings'} onClick={() => setActiveTab('settings')}><Settings size={20} /> Settings</NavItem>

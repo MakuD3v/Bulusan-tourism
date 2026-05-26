@@ -1,6 +1,9 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
+import jwt from 'jsonwebtoken';
 import { authenticateToken } from '../auth';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key_change_in_production';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -133,7 +136,24 @@ router.post('/claim', authenticateToken, async (req: any, res: any) => {
       data: { role: 'OWNER' }
     });
 
-    res.json({ success: true, user });
+    // Issue a FRESH token with OWNER role so the client session updates immediately
+    const newToken = jwt.sign({ userId: user.id, role: 'OWNER' }, JWT_SECRET, { expiresIn: '7d' });
+
+    res.json({
+      success: true,
+      token: newToken,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+        itinerary: user.itinerary,
+        history: user.history,
+        approvalStatus: user.approvalStatus,
+        emailVerified: user.emailVerified,
+      }
+    });
   } catch (error) {
     console.error('Error claiming badge:', error);
     res.status(500).json({ error: 'Server error claiming badge' });
