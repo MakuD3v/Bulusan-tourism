@@ -1,6 +1,6 @@
 import React from 'react';
-import styled, { keyframes } from 'styled-components';
-import { motion, AnimatePresence } from 'framer-motion';
+import styled from 'styled-components';
+import { motion } from 'framer-motion';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { 
   Compass, MapPin, Building2, Map, 

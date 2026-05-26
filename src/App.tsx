@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
+import PersistentLayout from './components/Layout/PersistentLayout';
 import DashboardLayout from './components/Layout/DashboardLayout';
 import AdminRoute from './components/Layout/AdminRoute';
 import OwnerRoute from './components/Layout/OwnerRoute';
@@ -37,31 +38,34 @@ function AnimatedRoutes() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
 
-        {/* Owner-only routes (outside PersistentLayout) */}
-        <Route element={<OwnerRoute />}>
-          <Route path="/owner-dashboard" element={<OwnerDashboard />} />
-        </Route>
-
-        {/* Owner pending page — accessible to unverified/pending owners */}
+        {/* Owner pending page */}
         <Route path="/owner-pending" element={<OwnerPendingPage />} />
 
-        <Route element={<DashboardLayout />}>
+        {/* ── PUBLIC PAGES — Original header + footer layout ── */}
+        <Route element={<PersistentLayout />}>
           <Route path="/" element={<DiscoverPage />} />
           <Route path="/discover" element={<DiscoverPage />} />
-
           <Route path="/attractions" element={<AttractionsPage />} />
           <Route path="/enterprises" element={<EnterprisesPage />} />
           <Route path="/heritage" element={<HeritagePage />} />
           <Route path="/explore" element={<ToursAndMapPage />} />
           <Route path="/blog" element={<BlogPage />} />
           <Route path="/contact" element={<ContactPage />} />
+        </Route>
 
-          {/* Authenticated User Routes */}
+        {/* ── DASHBOARD PAGES — Dark sidebar layout ── */}
+        <Route element={<DashboardLayout />}>
+          {/* My Account */}
           <Route element={<UserRoute />}>
             <Route path="/account" element={<AccountPage />} />
           </Route>
 
-          {/* Protected Admin Routing */}
+          {/* Owner Dashboard */}
+          <Route element={<OwnerRoute />}>
+            <Route path="/owner-dashboard" element={<OwnerDashboard />} />
+          </Route>
+
+          {/* Admin */}
           <Route element={<AdminRoute />}>
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin-portal" element={<AdminPortalPage />} />

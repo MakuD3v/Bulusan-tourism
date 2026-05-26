@@ -11,7 +11,9 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeContextProvider = ({ children }: { children: ReactNode }) => {
   const [mode, setMode] = useState<ThemeMode>(() => {
-    return 'dark'; // Forced to dark for the global dashboard layout
+    const saved = localStorage.getItem('themeMode');
+    if (saved === 'dark' || saved === 'light') return saved;
+    return 'light';
   });
 
   useEffect(() => {
