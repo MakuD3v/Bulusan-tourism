@@ -51,7 +51,7 @@ const LogoTextContent = styled.div<{ $transparent: boolean, $scrolled: boolean }
   gap: 8px;
 
   .main-text {
-    font-family: 'Pacifico', cursive;
+    font-family: 'Barabara', sans-serif;
     font-size: 1.8rem;
     font-weight: normal;
     background: linear-gradient(90deg, #1d4ed8, #0ea5e9, #22c55e, #eab308, #ec4899, #b91c1c);
@@ -61,13 +61,12 @@ const LogoTextContent = styled.div<{ $transparent: boolean, $scrolled: boolean }
   }
 
   .sub-text {
-    font-family: inherit;
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #F8FAFC;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    opacity: 0.9;
+    font-family: 'Barabara', sans-serif;
+    font-size: 1.8rem;
+    font-weight: normal;
+    color: ${(props) => (!props.$scrolled && props.$transparent ? 'white' : props.theme.colors.darkBlue)};
+    line-height: 1;
+    letter-spacing: 1px;
 
     @media (max-width: 768px) {
       display: none;

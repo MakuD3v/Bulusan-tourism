@@ -2,8 +2,8 @@ import 'styled-components';
 
 const shared = {
   fonts: {
-    heading: "'Playfair Display', serif",
-    body: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+    heading: "'Barabara', sans-serif",
+    body: "'Poppins', Arial, sans-serif"
   },
   fontSizes: {
     h1: 'clamp(2.2rem, 7vw, 4rem)',
