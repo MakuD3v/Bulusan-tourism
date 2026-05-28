@@ -61,6 +61,7 @@ const Content = styled(motion.div)`
     .main-title {
       display: block;
       font-style: normal;
+      font-family: 'Barabara', sans-serif !important;
       background: linear-gradient(to bottom, ${(props) => props.theme.colors.darkBlue}, ${(props) => props.theme.colors.ctaBlue});
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;

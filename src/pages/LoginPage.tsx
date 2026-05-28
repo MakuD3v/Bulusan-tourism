@@ -313,7 +313,7 @@ const LoginPage = () => {
     setError('');
 
     try {
-      const result = await login(email, password);
+      const result = await login(email, password, rememberMe);
       if (result.success) {
         // Read user from localStorage to decide where to redirect
         const stored = localStorage.getItem('bulusan_user');

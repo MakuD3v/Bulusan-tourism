@@ -103,6 +103,7 @@ const HeroContent = styled(motion.div)`
     .main-title {
       display: block;
       font-style: normal;
+      font-family: 'Barabara', sans-serif !important;
       color: #ffffff;
       background: none;
       -webkit-text-fill-color: #ffffff;

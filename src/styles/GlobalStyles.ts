@@ -1,6 +1,13 @@
 import { createGlobalStyle } from 'styled-components';
 
 const GlobalStyles = createGlobalStyle`
+  @font-face {
+    font-family: 'Barabara';
+    src: url('/fonts/BARABARA-final.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+  }
+
   :root {
     --primary-blue: ${(props) => props.theme.colors.primaryBlue};
     --dark-blue: ${(props) => props.theme.colors.darkBlue};

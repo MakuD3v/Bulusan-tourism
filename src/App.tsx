@@ -15,6 +15,7 @@ import HeritagePage from './pages/HeritagePage';
 import AdminPortalPage from './pages/AdminPortalPage';
 import LoginPage from './pages/LoginPage';
 import SignUpPage from './pages/SignUpPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import AccountPage from './pages/AccountPage';
 import OwnerDashboard from './pages/OwnerDashboard';
 import OwnerPendingPage from './pages/OwnerPendingPage';
@@ -37,6 +38,7 @@ function AnimatedRoutes() {
       <Routes location={location} key={location.pathname}>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
         {/* Owner pending page */}
         <Route path="/owner-pending" element={<OwnerPendingPage />} />

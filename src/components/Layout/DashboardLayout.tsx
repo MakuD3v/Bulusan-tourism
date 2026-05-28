@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
@@ -7,6 +7,7 @@ import {
   BookOpen, Mail, User, LogOut, LogIn, LayoutDashboard
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { apiClient } from '../../api/client';
 
 // ─── Layout ──────────────────────────────────────────────────────────────────
 export const Layout = styled(motion.div).attrs({
@@ -97,6 +98,25 @@ export const NavItem = styled(Link)<{ $active: boolean }>`
   }
 
   svg { flex-shrink: 0; }
+
+  .notif-badge {
+    margin-left: auto;
+    background: #e11d48;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 20px;
+    min-width: 20px;
+    text-align: center;
+    line-height: 1.4;
+    animation: pulse-badge 2s infinite;
+  }
+
+  @keyframes pulse-badge {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
 `;
 
 export const SidebarDivider = styled.div`
@@ -227,6 +247,29 @@ const DashboardLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, role, logout } = useAuth();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  // Poll for pending approvals for admin users
+  const fetchPendingCount = useCallback(async () => {
+    if (role !== 'ADMIN') return;
+    try {
+      const [appeals, recovery] = await Promise.all([
+        apiClient.get('/appeals'),
+        apiClient.get('/auth/recovery/pending'),
+      ]);
+      const appealCount = Array.isArray(appeals) ? appeals.length : 0;
+      const recoveryCount = Array.isArray(recovery) ? recovery.length : 0;
+      setPendingCount(appealCount + recoveryCount);
+    } catch (e) {
+      // Silent fail
+    }
+  }, [role]);
+
+  useEffect(() => {
+    fetchPendingCount();
+    const interval = setInterval(fetchPendingCount, 10000); // every 10s
+    return () => clearInterval(interval);
+  }, [fetchPendingCount]);
 
   const handleLogout = () => {
     logout();
@@ -274,6 +317,7 @@ const DashboardLayout = () => {
                 <NavItem to="/admin-portal" $active={location.pathname === '/admin-portal'}>
                   <LayoutDashboard size={18} />
                   Admin Portal
+                  {pendingCount > 0 && <span className="notif-badge">{pendingCount}</span>}
                 </NavItem>
               )}
             </>

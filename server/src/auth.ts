@@ -224,4 +224,131 @@ router.put('/demote', authenticateToken, async (req: any, res: any) => {
   }
 });
 
+// ─── Account Recovery (Forgot Password) ───────────────────────────────────────
+router.post('/recovery/request', async (req: any, res: any) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email is required' });
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      // Don't leak if user exists or not
+      return res.json({ success: true });
+    }
+
+    // Check for existing pending request
+    const existing = await prisma.passwordRecovery.findUnique({ where: { email } });
+    if (existing && existing.status === 'PENDING') {
+      return res.json({ success: true });
+    }
+
+    await prisma.passwordRecovery.upsert({
+      where: { email },
+      update: { status: 'PENDING', token: null, createdAt: new Date() },
+      create: { email, status: 'PENDING' }
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error creating recovery request:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.get('/recovery/status/:email', async (req: any, res: any) => {
+  try {
+    const { email } = req.params;
+    const recovery = await prisma.passwordRecovery.findUnique({ where: { email } });
+    if (!recovery) return res.status(404).json({ error: 'No recovery request found' });
+
+    if (recovery.status === 'APPROVED' && recovery.token) {
+      // Decode the token to get the user data for the frontend
+      const user = await prisma.user.findUnique({ where: { email } });
+      if (user) {
+        const { password, ...userWithoutPassword } = user;
+        return res.json({
+          status: 'APPROVED',
+          token: recovery.token,
+          user: userWithoutPassword
+        });
+      }
+    }
+
+    res.json({ status: recovery.status });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Admin endpoints for recovery
+router.get('/recovery/pending', authenticateToken, async (req: any, res: any) => {
+  try {
+    const requester = await prisma.user.findUnique({ where: { id: req.user.userId } });
+    if (requester?.role !== 'ADMIN') return res.status(403).json({ error: 'Forbidden' });
+
+    const pending = await prisma.passwordRecovery.findMany({
+      where: { status: 'PENDING' },
+      orderBy: { createdAt: 'asc' }
+    });
+    
+    // Fetch user details for each request
+    const pendingWithUsers = await Promise.all(pending.map(async (r) => {
+      const user = await prisma.user.findUnique({ where: { email: r.email } });
+      return { ...r, name: user?.name || 'Unknown' };
+    }));
+
+    res.json(pendingWithUsers);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.put('/recovery/approve', authenticateToken, async (req: any, res: any) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email is required' });
+
+  try {
+    const requester = await prisma.user.findUnique({ where: { id: req.user.userId } });
+    if (requester?.role !== 'ADMIN') return res.status(403).json({ error: 'Forbidden' });
+
+    const targetUser = await prisma.user.findUnique({ where: { email } });
+    if (!targetUser) return res.status(404).json({ error: 'User not found' });
+
+    // Generate a new secure JWT for the user
+    const newToken = jwt.sign(
+      { userId: targetUser.id, email: targetUser.email, role: targetUser.role },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    await prisma.passwordRecovery.update({
+      where: { email },
+      data: { status: 'APPROVED', token: newToken }
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.put('/recovery/reject', authenticateToken, async (req: any, res: any) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email is required' });
+
+  try {
+    const requester = await prisma.user.findUnique({ where: { id: req.user.userId } });
+    if (requester?.role !== 'ADMIN') return res.status(403).json({ error: 'Forbidden' });
+
+    await prisma.passwordRecovery.update({
+      where: { email },
+      data: { status: 'REJECTED' }
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 export default router;

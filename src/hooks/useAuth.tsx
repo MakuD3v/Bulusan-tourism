@@ -5,7 +5,7 @@ import { apiClient } from '../api/client';
 interface AuthContextType {
   user: AppUser | null;
   role: 'USER' | 'ADMIN' | 'OWNER' | null;
-  login: (email: string, password: string) => Promise<{ success: boolean }>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<{ success: boolean }>;
   signup: (name: string, email: string, password: string, additionalDetails?: any) => Promise<{ success: boolean }>;
   logout: () => void;
   updateUser: (data: Partial<AppUser>) => Promise<void>;
@@ -22,20 +22,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const loadUser = async () => {
-      const stored = localStorage.getItem('bulusan_user');
-      const token = localStorage.getItem('auth_token');
+      const stored = localStorage.getItem('bulusan_user') || sessionStorage.getItem('bulusan_user');
+      const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
       if (stored && token) {
         try {
           const res = await apiClient.get('/auth/me');
           setUser(res.user);
-          localStorage.setItem('bulusan_user', JSON.stringify(res.user));
+          const storage = localStorage.getItem('auth_token') ? localStorage : sessionStorage;
+          storage.setItem('bulusan_user', JSON.stringify(res.user));
         } catch (err: any) {
           console.error('Session verification failed:', err);
           const isAuthError = err.message?.includes('401') || err.message?.includes('403');
           if (isAuthError) {
             setUser(null);
-            localStorage.removeItem('bulusan_user');
-            localStorage.removeItem('auth_token');
+            sessionStorage.removeItem('bulusan_user');
+            sessionStorage.removeItem('auth_token');
           } else if (stored) {
             try {
               setUser(JSON.parse(stored));
@@ -45,17 +46,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
       }
+
+      // Check for background password recovery polling
+      const pendingEmail = localStorage.getItem('pending_recovery_email');
+      if (pendingEmail && !token) {
+        try {
+          const res = await apiClient.get(`/auth/recovery/status/${encodeURIComponent(pendingEmail)}`);
+          if (res.status === 'APPROVED' && res.token) {
+            localStorage.setItem('auth_token', res.token);
+            localStorage.setItem('bulusan_user', JSON.stringify(res.user));
+            setUser(res.user);
+            localStorage.removeItem('pending_recovery_email');
+          }
+        } catch (e) {
+          // Silent fail for polling
+        }
+      }
+
       setLoading(false);
     };
     loadUser();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, rememberMe: boolean = true) => {
     try {
       const res = await apiClient.post('/auth/login', { email, password });
       if (res.token) {
-        localStorage.setItem('auth_token', res.token);
-        localStorage.setItem('bulusan_user', JSON.stringify(res.user));
+        const storage = rememberMe ? localStorage : sessionStorage;
+        storage.setItem('auth_token', res.token);
+        storage.setItem('bulusan_user', JSON.stringify(res.user));
         setUser(res.user);
         return { success: true };
       }
@@ -86,6 +105,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('bulusan_user');
+    sessionStorage.removeItem('auth_token');
+    sessionStorage.removeItem('bulusan_user');
     setUser(null);
   };
 
@@ -94,7 +115,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const updated = await apiClient.put(`/users/${user.id}`, data);
       setUser(updated);
-      localStorage.setItem('bulusan_user', JSON.stringify(updated));
+      const storage = localStorage.getItem('auth_token') ? localStorage : sessionStorage;
+      storage.setItem('bulusan_user', JSON.stringify(updated));
     } catch (e) {
       console.error('Update user error', e);
     }
