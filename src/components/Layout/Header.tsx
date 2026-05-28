@@ -52,7 +52,7 @@ const LogoTextContent = styled.div<{ $transparent: boolean, $scrolled: boolean }
 
   .main-text {
     font-family: 'Barabara', sans-serif;
-    font-size: 1.8rem;
+    font-size: 1.3rem;
     font-weight: normal;
     background: linear-gradient(90deg, #1d4ed8, #0ea5e9, #22c55e, #eab308, #ec4899, #b91c1c);
     -webkit-background-clip: text;
@@ -63,7 +63,7 @@ const LogoTextContent = styled.div<{ $transparent: boolean, $scrolled: boolean }
 
   .sub-text {
     font-family: 'Barabara', sans-serif;
-    font-size: 1.8rem;
+    font-size: 1.3rem;
     font-weight: normal;
     color: ${(props) => (!props.$scrolled && props.$transparent ? 'white' : props.theme.colors.darkBlue)};
     line-height: 1;

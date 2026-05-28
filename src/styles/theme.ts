@@ -6,8 +6,8 @@ const shared = {
     body: "'Poppins', Arial, sans-serif"
   },
   fontSizes: {
-    h1: 'clamp(2.2rem, 7vw, 4rem)',
-    h2: 'clamp(1.6rem, 4vw, 2.2rem)',
+    h1: 'clamp(2rem, 5vw, 3rem)',
+    h2: 'clamp(1.4rem, 3.5vw, 2rem)',
     h3: 'clamp(1.1rem, 2vw, 1.4rem)',
     body: '0.975rem',
     small: '0.825rem'
