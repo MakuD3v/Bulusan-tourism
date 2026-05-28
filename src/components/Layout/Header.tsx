@@ -58,6 +58,7 @@ const LogoTextContent = styled.div<{ $transparent: boolean, $scrolled: boolean }
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     line-height: 1;
+    text-transform: uppercase;
   }
 
   .sub-text {
@@ -67,6 +68,7 @@ const LogoTextContent = styled.div<{ $transparent: boolean, $scrolled: boolean }
     color: ${(props) => (!props.$scrolled && props.$transparent ? 'white' : props.theme.colors.darkBlue)};
     line-height: 1;
     letter-spacing: 1px;
+    text-transform: uppercase;
 
     @media (max-width: 768px) {
       display: none;

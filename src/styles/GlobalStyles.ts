@@ -47,6 +47,7 @@ const GlobalStyles = createGlobalStyle`
     font-weight: 700;
     color: ${(props) => props.theme.colors.darkBlue};
     line-height: 1.2;
+    text-transform: uppercase;
   }
 
   h1 { font-size: ${(props) => props.theme.fontSizes.h1}; }
