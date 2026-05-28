@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+﻿import React, { useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { Search, MapPin, Loader2, X, ChevronRight, Star, Zap, TrendingUp, Award, Users } from 'lucide-react';
 import { ATTRACTION_CATEGORIES, ENTERPRISE_CATEGORIES } from '../Admin/CategoryTagConfig';
@@ -33,7 +33,7 @@ const ClassicHeader = styled.div`
   }
   
   h2 {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 1.3rem;
     font-weight: 800;
     color: var(--dark-blue);
@@ -169,7 +169,7 @@ const SearchBar = styled.div`
 `;
 
 const ResultsContainer = styled(motion.div)`
-  /* Mobile: no internal scroll — SidebarContent scrolls the whole drawer */
+  /* Mobile: no internal scroll â€” SidebarContent scrolls the whole drawer */
   padding: 16px 16px 24px;
   display: flex;
   flex-direction: column;
@@ -422,7 +422,7 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
                 >
                   <CardImage $src={item.photos?.[0] || item.img || ''} />
                   <CardContent>
-                    <div className="meta">{categoryLabel} • {item.entityType}</div>
+                    <div className="meta">{categoryLabel} â€¢ {item.entityType}</div>
                     <h4>{item.name}</h4>
                     <div className="loc">{item.location}</div>
                     {getDynamicTags(item, items).length > 0 && (

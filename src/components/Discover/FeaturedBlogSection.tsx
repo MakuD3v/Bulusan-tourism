@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -36,7 +36,7 @@ const SectionHeader = styled(motion.div)`
 
   h2 {
     font-size: clamp(2rem, 3.5vw, 2.8rem);
-    font-family: 'Playfair Display', serif;
+    font-family: 'Outfit', sans-serif;
     color: var(--dark-blue);
     line-height: 1.1;
   }
@@ -105,7 +105,7 @@ const CategoryBadge = styled.div`
 
 const Title = styled.h3`
   font-size: clamp(1.8rem, 3vw, 2.4rem);
-  font-family: 'Playfair Display', serif;
+  font-family: 'Outfit', sans-serif;
   color: var(--dark-blue);
   margin-bottom: 16px;
   line-height: 1.2;
@@ -265,7 +265,7 @@ const FeaturedBlogSection = () => {
               <img src={getMediaUrl(featuredBlog.authorAvatar) || `https://i.pravatar.cc/150?u=${featuredBlog.authorName}`} alt={featuredBlog.authorName} />
               <div className="details">
                 <span className="name">{featuredBlog.authorName || 'Local Explorer'}</span>
-                <span className="date">{featuredBlog.date || 'Recently'} • {featuredBlog.readTime || '5 min read'}</span>
+                <span className="date">{featuredBlog.date || 'Recently'} â€¢ {featuredBlog.readTime || '5 min read'}</span>
               </div>
             </AuthorInfo>
 

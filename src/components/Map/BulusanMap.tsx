@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from 'react';
+﻿import { useEffect, useState, useRef, useMemo } from 'react';
 import styled from 'styled-components';
 import { MapContainer, Marker, Popup, useMap, TileLayer, Tooltip } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -198,7 +198,7 @@ const PopupContent = styled.div`
        .rating { display: flex; align-items: center; gap: 4px; color: var(--dark-blue); font-weight: 800; }
     }
     
-    h3 { margin-bottom: 2px; font-size: 1.2rem; color: var(--dark-blue); font-family: 'Playfair Display', serif; font-weight: 800; }
+    h3 { margin-bottom: 2px; font-size: 1.2rem; color: var(--dark-blue); font-family: 'Outfit', sans-serif; font-weight: 800; }
     
     .location-row {
        font-size: 0.75rem; color: var(--text-light); font-weight: 600; display: flex; align-items: center; gap: 4px; margin-bottom: 12px;
@@ -245,7 +245,7 @@ const MobileBottomSheet = styled(motion.div)`
     transition: background 0.2s;
     &:hover { background: #bbb; }
   }
-  h3 { font-size: 1.3rem; color: #2c3e50; font-family: 'Playfair Display', serif; }
+  h3 { font-size: 1.3rem; color: #2c3e50; font-family: 'Outfit', sans-serif; }
   .nav-btn {
     width: 100%; padding: 14px; background: #2e75b6; color: white; border: none;
     border-radius: 12px; font-weight: 700; display: flex; align-items: center;

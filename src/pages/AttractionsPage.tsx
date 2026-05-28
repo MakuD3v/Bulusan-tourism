@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+﻿import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, MapPin, Heart, Star, X, Clock, DollarSign, Info, Sparkles, Award, TrendingUp, Users, Zap } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -260,7 +260,7 @@ const ImmersiveHeaderContainer = styled.div`
     }
     h2 {
       font-size: 3.5rem;
-      font-family: 'Playfair Display', serif;
+      font-family: 'Outfit', sans-serif;
       margin: 0 0 16px 0;
       background: linear-gradient(135deg, ${(props) => props.theme.colors.darkBlue} 0%, ${(props) => props.theme.colors.ctaBlue} 100%);
       -webkit-background-clip: text;

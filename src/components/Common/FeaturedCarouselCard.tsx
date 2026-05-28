@@ -104,7 +104,7 @@ const CardContainer = styled(motion.div)<{ $bg: string }>`
 
   h3 {
     font-size: 1.8rem;
-    font-family: 'Playfair Display', serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 800;
     margin-bottom: 8px;
     line-height: 1.1;

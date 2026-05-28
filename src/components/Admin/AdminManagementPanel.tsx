@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { UserPlus, ShieldAlert, CheckCircle2, UserMinus, Search, AlertTriangle } from 'lucide-react';
 import { apiClient } from '../../api/client';
@@ -22,7 +22,7 @@ const Header = styled.div`
   
   h2 {
     font-size: 1.5rem;
-    font-family: 'Playfair Display', serif;
+    font-family: 'Outfit', sans-serif;
   }
 `;
 

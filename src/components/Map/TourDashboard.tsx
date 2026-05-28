@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Search, Check, Trash2, Play, Navigation } from 'lucide-react';
@@ -31,7 +31,7 @@ const Header = styled.div`
   align-items: center;
 
   .titles {
-    h1 { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--dark-blue); margin-bottom: 4px; }
+    h1 { font-family: 'Outfit', sans-serif; font-size: 2rem; color: var(--dark-blue); margin-bottom: 4px; }
     p { color: var(--text-light); font-size: 0.9rem; font-weight: 500; }
   }
 
@@ -140,7 +140,7 @@ const DetailHeader = styled.div`
 
     input.tour-name {
       font-size: 1.8rem;
-      font-family: 'Playfair Display', serif;
+      font-family: 'Outfit', sans-serif;
       font-weight: 800;
       color: var(--dark-blue);
       border: none;

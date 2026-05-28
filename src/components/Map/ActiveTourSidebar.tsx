@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+﻿import React, { useMemo } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, CheckCircle2, Circle } from 'lucide-react';
@@ -24,12 +24,12 @@ const ClassicHeader = styled.div`
   }
 
   .label { text-transform: uppercase; font-size: 0.65rem; font-weight: 800; letter-spacing: 2px; color: var(--cta-blue); margin-bottom: 8px; }
-  h2 { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 800; color: var(--dark-blue); line-height: 1.1; margin-bottom: 8px; }
+  h2 { font-family: 'Outfit', sans-serif; font-size: 1.6rem; font-weight: 800; color: var(--dark-blue); line-height: 1.1; margin-bottom: 8px; }
   p { font-size: 0.75rem; color: var(--text-light); font-weight: 500; }
 `;
 
 const RouteList = styled.div`
-  /* Mobile: natural height — SidebarContent scrolls the whole drawer */
+  /* Mobile: natural height â€” SidebarContent scrolls the whole drawer */
   padding: 20px 24px 24px;
   background: #fcfdfe;
 
@@ -117,7 +117,7 @@ const DestinationCard = styled(motion.div)<{ $completed: boolean; $next: boolean
   h4 { font-size: 0.85rem; font-weight: 800; color: ${props => props.$completed ? '#64748b' : 'var(--dark-blue)'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; text-decoration: ${props => props.$completed ? 'line-through' : 'none'}; }
   p { font-size: 0.65rem; color: #94a3b8; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
 
-  .step-num { font-size: 1.2rem; font-family: 'Playfair Display', serif; font-weight: 800; color: ${props => props.$next ? 'var(--cta-blue)' : '#94a3b8'}; width: 24px; text-align: center; }
+  .step-num { font-size: 1.2rem; font-family: 'Outfit', sans-serif; font-weight: 800; color: ${props => props.$next ? 'var(--cta-blue)' : '#94a3b8'}; width: 24px; text-align: center; }
 `;
 
 const CompleteBanner = styled(motion.div)`
@@ -127,7 +127,7 @@ const CompleteBanner = styled(motion.div)`
   text-align: center;
   border-radius: 16px;
   margin-top: 20px;
-  h3 { font-family: 'Playfair Display', serif; font-size: 1.2rem; }
+  h3 { font-family: 'Outfit', sans-serif; font-size: 1.2rem; }
   p { font-size: 0.8rem; opacity: 0.9; margin-top: 4px; }
 `;
 

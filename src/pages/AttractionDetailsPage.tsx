@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
@@ -78,7 +78,7 @@ const HeaderSection = styled.div`
   h2 {
     font-size: 3rem;
     color: var(--dark-blue);
-    font-family: 'Playfair Display', serif;
+    font-family: 'Outfit', sans-serif;
     margin: 0 0 16px 0;
     line-height: 1.1;
     
