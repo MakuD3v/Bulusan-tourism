@@ -3,6 +3,7 @@ import 'styled-components';
 const shared = {
   fonts: {
     heading: "'Barabara', sans-serif",
+    subheading: "'Outfit', sans-serif",
     body: "'Poppins', Arial, sans-serif"
   },
   fontSizes: {

@@ -42,9 +42,17 @@ const GlobalStyles = createGlobalStyle`
     overflow-x: hidden;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1 {
     font-family: ${(props) => props.theme.fonts.heading};
     font-weight: 700;
+    color: ${(props) => props.theme.colors.darkBlue};
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  h2, h3, h4, h5, h6 {
+    font-family: ${(props) => props.theme.fonts.subheading};
+    font-weight: 800;
     color: ${(props) => props.theme.colors.darkBlue};
     line-height: 1.2;
     text-transform: uppercase;
