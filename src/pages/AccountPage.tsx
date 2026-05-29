@@ -499,14 +499,14 @@ export default function AccountPage() {
                                     <div style={{ background: 'rgba(59,130,246,0.1)', color: '#60a5fa', padding: '4px 8px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700, height: 'fit-content' }}>Day {idx+1}</div>
                                     <div>
                                        <div style={{ color: '#e2ecf7', fontSize: '0.9rem', fontWeight: 600, marginBottom: '4px' }}>{new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div>
-                                       {booking.isCustom && booking.customStops ? (
-                                         <div style={{ fontSize: '0.8rem', color: '#90aecb', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                            {booking.customStops.slice(idx * 3, (idx + 1) * 3).map((stop, sIdx) => (
-                                              <div key={sIdx} style={{ display: 'flex', gap: '6px' }}><span style={{ color: '#3b82f6' }}>•</span> {stop.itemName}</div>
-                                            ))}
-                                            {booking.customStops.slice(idx * 3, (idx + 1) * 3).length === 0 && <span style={{ opacity: 0.5 }}>Rest Day / Free Time</span>}
-                                         </div>
-                                       ) : (
+                                        {booking.isCustom && booking.customStops ? (
+                                          <div style={{ fontSize: '0.8rem', color: '#90aecb', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                             {booking.customStops.filter(s => s.dayIndex === idx).map((stop, sIdx) => (
+                                               <div key={sIdx} style={{ display: 'flex', gap: '6px' }}><span style={{ color: '#3b82f6' }}>•</span> {stop.itemName}</div>
+                                             ))}
+                                             {booking.customStops.filter(s => s.dayIndex === idx).length === 0 && <span style={{ opacity: 0.5 }}>Rest Day / Free Time</span>}
+                                          </div>
+                                        ) : (
                                          <div style={{ fontSize: '0.8rem', color: '#90aecb' }}>Curated Stops for Day {idx+1}</div>
                                        )}
                                     </div>

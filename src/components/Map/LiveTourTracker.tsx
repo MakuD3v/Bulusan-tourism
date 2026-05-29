@@ -127,19 +127,32 @@ const LiveTourTracker: React.FC<LiveTourTrackerProps> = ({ bookingId, onExit, on
       </Header>
       
       <ScrollArea>
-        {booking.customStops?.map((stop, idx) => {
-          const visited = visitedStops.includes(stop.itemId);
-          const active = false; // logic for active stop
-          
+        {booking.scheduledDates.map((date, dayIdx) => {
+          const dayStops = booking.customStops?.filter(s => s.dayIndex === dayIdx) || [];
+          if (dayStops.length === 0) return null;
           return (
-            <StopCard key={idx} $visited={visited} $active={active} onClick={() => handleStopClick(stop.itemId)}>
-              <div className="index">{visited ? <CheckCircle size={14} /> : idx + 1}</div>
-              <div className="info">
-                <h4>{stop.itemName}</h4>
-                <div className="type">{stop.entityType}</div>
+            <div key={date} style={{ marginBottom: '8px' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#60a5fa', textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '1px' }}>
+                Day {dayIdx + 1} - {new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
               </div>
-              <CheckCircle size={20} className="check" />
-            </StopCard>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {dayStops.map((stop, sIdx) => {
+                  const visited = visitedStops.includes(stop.itemId);
+                  const active = false; // logic for active stop
+                  
+                  return (
+                    <StopCard key={sIdx} $visited={visited} $active={active} onClick={() => handleStopClick(stop.itemId)}>
+                      <div className="index">{visited ? <CheckCircle size={14} /> : sIdx + 1}</div>
+                      <div className="info">
+                        <h4>{stop.itemName}</h4>
+                        <div className="type">{stop.entityType}</div>
+                      </div>
+                      <CheckCircle size={20} className="check" />
+                    </StopCard>
+                  );
+                })}
+              </div>
+            </div>
           );
         })}
         {(!booking.customStops || booking.customStops.length === 0) && (

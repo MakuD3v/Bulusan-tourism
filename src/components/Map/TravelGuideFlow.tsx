@@ -8,6 +8,9 @@ import { CuratedRoute, TourTheme, CuratedRouteStop } from '../../data/types';
 import { curatedRouteService, bookingService } from '../../utils/bookingService';
 import { useAttractions, useEnterprises } from '../../hooks/useData';
 import { useAuth } from '../../hooks/useAuth';
+import SharedCategoryScroller from '../Common/SharedCategoryScroller';
+import { getMediaUrl } from '../../utils/mediaUtils';
+import { ATTRACTION_CATEGORIES, ENTERPRISE_CATEGORIES } from '../Admin/CategoryTagConfig';
 
 // ─── Styled Components ────────────────────────────────────────────────────────
 
@@ -18,7 +21,7 @@ const Overlay = styled(motion.div)`
 
 const Panel = styled(motion.div)<{ $wide?: boolean }>`
   background: #0b1f45; border: 1px solid rgba(255,255,255,0.08); border-radius: 28px;
-  width: 100%; max-width: ${p => p.$wide ? '1100px' : '760px'}; height: ${p => p.$wide ? '90vh' : 'auto'}; max-height: 90vh;
+  width: 100%; max-width: ${p => p.$wide ? '1400px' : '760px'}; height: ${p => p.$wide ? '90vh' : 'auto'}; max-height: 90vh;
   overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 40px 80px rgba(0,0,0,0.6);
   transition: max-width 0.3s ease, height 0.3s ease;
 `;
@@ -161,19 +164,38 @@ const ItemList = styled.div`
   &::-webkit-scrollbar { width: 4px; }
   &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
 `;
+
+const DayTabs = styled.div`
+  display: flex; overflow-x: auto; gap: 8px; padding: 12px 16px; background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.06);
+  &::-webkit-scrollbar { display: none; }
+`;
+const DayTab = styled.button<{ $active: boolean }>`
+  background: ${p => p.$active ? '#3b82f6' : 'rgba(255,255,255,0.05)'}; color: ${p => p.$active ? 'white' : '#90aecb'}; border: 1px solid ${p => p.$active ? '#3b82f6' : 'rgba(255,255,255,0.1)'};
+  padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; white-space: nowrap; cursor: pointer; transition: all 0.2s;
+  &:hover { background: ${p => p.$active ? '#3b82f6' : 'rgba(255,255,255,0.1)'}; color: white; }
+`;
+
+const CardImage = styled.div<{ $src: string }>`
+  position: absolute; top: 0; left: 0; width: 85px; height: 100%;
+  background-image: url(${props => getMediaUrl(props.$src)}); background-size: cover; background-position: center; z-index: 0;
+  -webkit-mask-image: linear-gradient(to right, black 20%, transparent 100%); mask-image: linear-gradient(to right, black 20%, transparent 100%);
+`;
 const ItemCard = styled.div<{ $added: boolean }>`
   background: ${p => p.$added ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.03)'};
   border: 1px solid ${p => p.$added ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.06)'};
-  border-radius: 12px; padding: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  .info { flex: 1; min-width: 0; }
-  h5 { font-family: 'Outfit', sans-serif; font-size: 0.9rem; color: #e2ecf7; margin: 0 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .type { font-size: 0.65rem; color: #5a7098; text-transform: uppercase; font-weight: 700; }
-  button {
-    width: 28px; height: 28px; border-radius: 8px; border: none; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    background: ${p => p.$added ? 'rgba(16,185,129,0.2)' : 'rgba(59,130,246,0.15)'};
-    color: ${p => p.$added ? '#10b981' : '#60a5fa'};
-    &:hover { background: ${p => p.$added ? '#10b981' : '#3b82f6'}; color: white; }
+  border-radius: 24px; display: flex; align-items: center; justify-content: space-between;
+  position: relative; overflow: hidden; height: 75px; flex-shrink: 0;
+  
+  .content { position: relative; z-index: 1; padding: 8px 12px 8px 90px; flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+  h5 { font-family: 'Outfit', sans-serif; font-size: 0.85rem; color: #e2ecf7; margin: 0 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .type { font-size: 0.6rem; color: ${p => p.$added ? '#10b981' : '#5a7098'}; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
+  
+  .action {
+    position: relative; z-index: 1; padding-right: 12px;
+    button { width: 32px; height: 32px; border-radius: 10px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      background: ${p => p.$added ? 'rgba(16,185,129,0.2)' : 'rgba(59,130,246,0.15)'}; color: ${p => p.$added ? '#10b981' : '#60a5fa'};
+      &:hover { background: ${p => p.$added ? '#10b981' : '#3b82f6'}; color: white; }
+    }
   }
 `;
 const BuilderMap = styled.div`
@@ -227,6 +249,9 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
   const [transport, setTransport] = useState<'Walking' | 'Vehicle' | 'Both'>('Vehicle');
   const [timeRange, setTimeRange] = useState<'Morning' | 'Afternoon' | 'Full Day'>('Full Day');
   
+  // Custom Tour Builder States
+  const [selectedDayIndex, setSelectedDayIndex] = useState(0);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const today = new Date();
   const [calYear, setCalYear] = useState(today.getFullYear());
   const [calMonth, setCalMonth] = useState(today.getMonth());
@@ -297,24 +322,27 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
   // Maps / Pins logic
   const toggleStop = (item: any) => {
     setCustomStops(prev => {
-      const exists = prev.find(s => s.itemId === item.id);
-      if (exists) return prev.filter(s => s.itemId !== item.id);
+      const exists = prev.find(s => s.itemId.toString() === item.id.toString() && s.dayIndex === selectedDayIndex);
+      if (exists) return prev.filter(s => !(s.itemId.toString() === item.id.toString() && s.dayIndex === selectedDayIndex));
       if (prev.length >= recommendedStops + 4) { alert("You've reached the recommended maximum stops for this duration."); return prev; }
       return [...prev, {
-        itemId: item.id,
+        itemId: item.id.toString(),
         entityType: item.entityType as any,
         itemName: item.name,
-        suggestedTime: 'Anytime'
+        suggestedTime: 'Anytime',
+        dayIndex: selectedDayIndex
       }];
     });
   };
 
   const customPolyline = useMemo(() => {
-    return customStops.map(stop => {
-      const item = allItems.find(i => i.id.toString() === stop.itemId.toString());
-      return item && item.coordinates ? [item.coordinates.lat, item.coordinates.lng] as [number, number] : null;
-    }).filter(Boolean) as [number, number][];
-  }, [customStops, allItems]);
+    return customStops
+      .filter(s => s.dayIndex === selectedDayIndex)
+      .map(stop => {
+        const item = allItems.find(i => i.id.toString() === stop.itemId.toString());
+        return item && item.coordinates ? [item.coordinates.lat, item.coordinates.lng] as [number, number] : null;
+      }).filter(Boolean) as [number, number][];
+  }, [customStops, allItems, selectedDayIndex]);
 
   return (
     <Overlay initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
@@ -430,18 +458,43 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
                 
                 <BuilderLayout>
                   <BuilderSidebar>
+                    <DayTabs>
+                      {selectedDates.map((date, idx) => (
+                        <DayTab key={date} $active={selectedDayIndex === idx} onClick={() => setSelectedDayIndex(idx)}>
+                          Day {idx + 1}
+                        </DayTab>
+                      ))}
+                    </DayTabs>
+                    <div style={{ padding: '12px 16px 0' }}>
+                      <SharedCategoryScroller
+                        categories={[...ATTRACTION_CATEGORIES, ...ENTERPRISE_CATEGORIES]}
+                        activeCategories={selectedCategories}
+                        onSelect={setSelectedCategories}
+                      />
+                    </div>
                     <ItemList>
-                      {allItems.map(item => {
-                        const added = customStops.some(s => s.itemId.toString() === item.id.toString());
+                      {allItems
+                        .filter(item => {
+                           if (selectedCategories.length > 0) {
+                             const itemCats = item.categories || [];
+                             return itemCats.some(c => selectedCategories.includes(c));
+                           }
+                           return true;
+                        })
+                        .map(item => {
+                        const added = customStops.some(s => s.itemId.toString() === item.id.toString() && s.dayIndex === selectedDayIndex);
                         return (
                           <ItemCard key={item.id} $added={added}>
-                            <div className="info">
+                            {item.img && <CardImage $src={item.img} />}
+                            <div className="content">
                               <h5>{item.name}</h5>
                               <div className="type">{item.entityType}</div>
                             </div>
-                            <button onClick={() => toggleStop(item)}>
-                              {added ? <Check size={14} /> : <Plus size={14} />}
-                            </button>
+                            <div className="action">
+                              <button onClick={() => toggleStop(item)}>
+                                {added ? <Check size={14} /> : <Plus size={14} />}
+                              </button>
+                            </div>
                           </ItemCard>
                         );
                       })}
@@ -452,7 +505,7 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
                     <MapContainer center={[12.7533, 124.0933]} zoom={12} zoomControl={false} style={{ width: '100%', height: '100%' }}>
                       <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
                       {customPolyline.length > 0 && <Polyline positions={customPolyline} color="#3b82f6" weight={4} dashArray="8, 8" />}
-                      {customStops.map((stop, idx) => {
+                      {customStops.filter(s => s.dayIndex === selectedDayIndex).map((stop, idx) => {
                         const item = allItems.find(i => i.id.toString() === stop.itemId.toString());
                         if (!item || !item.coordinates) return null;
                         const icon = L.divIcon({ html: `<div style="background:#3b82f6;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:12px;border:2px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3);">${idx + 1}</div>`, className: '' });
