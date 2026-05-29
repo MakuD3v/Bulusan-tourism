@@ -3,13 +3,11 @@ import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import BulusanMap from '../components/Map/BulusanMap';
 import MapSidebar from '../components/Map/MapSidebar';
-import TourDashboard from '../components/Map/TourDashboard';
-import ActiveTourSidebar from '../components/Map/ActiveTourSidebar';
 import TravelGuideFlow from '../components/Map/TravelGuideFlow';
 import BookingModal from '../components/Map/BookingModal';
+import LiveTourTracker from '../components/Map/LiveTourTracker';
 import { useAttractions, useEnterprises, useHeritage } from '../hooks/useData';
 import { useAuth } from '../hooks/useAuth';
-import { CustomUserTour } from '../data/types';
 import { useLocation } from 'react-router-dom';
 import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -197,6 +195,7 @@ const ToursAndMapPage: React.FC = () => {
   const focusName = queryParams.get('name');
   const autoRoute = queryParams.get('route') === 'true';
   const urlSearch = queryParams.get('search');
+  const activeTourId = queryParams.get('activeTourId');
 
   const { data: attractions, loading: loadingAttractions } = useAttractions();
   const { data: enterprises, loading: loadingEnterprises } = useEnterprises();
@@ -206,10 +205,6 @@ const ToursAndMapPage: React.FC = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [focusedLocation, setFocusedLocation] = useState<any>(null);
 
-  const [showDashboard, setShowDashboard] = useState(false);
-  const [activeTour, setActiveTour] = useState<CustomUserTour | null>(null);
-  
-  // New Booking Flow states
   const [showTravelGuide, setShowTravelGuide] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [bookingDetails, setBookingDetails] = useState<any>(null);
@@ -286,7 +281,6 @@ const ToursAndMapPage: React.FC = () => {
           focusLng={focusedLocation?.coordinates?.lng}
           focusName={focusedLocation?.name}
           autoRoute={autoRoute}
-          activeTour={activeTour}
         />
       </MapSection>
 
@@ -299,22 +293,15 @@ const ToursAndMapPage: React.FC = () => {
         </MobileSidebarHandle>
         {/* SidebarContent collapses/expands on mobile via max-height */}
         <SidebarContent $isOpen={isSidebarOpen}>
-          {activeTour ? (
-            <ActiveTourSidebar 
-               tour={activeTour}
-               onExit={() => setActiveTour(null)}
-               onUpdateTour={setActiveTour}
-               allItems={allItems}
-               onFocusItem={(item) => {
-                 const clickedId = (item.id || item.id).toString();
-                 const currentId = (focusedLocation?.id || focusedLocation?.id)?.toString();
-                 if (clickedId === currentId && item.entityType === focusedLocation?.entityType) {
-                   setFocusedLocation(null);
-                 } else {
-                   setFocusedLocation(item);
-                 }
+          {activeTourId ? (
+             <LiveTourTracker
+               bookingId={activeTourId}
+               onExit={() => {}}
+               onFocusItem={(itemId) => {
+                 const item = unifiedItems.find(i => i.id.toString() === itemId.toString());
+                 if (item) setFocusedLocation(item);
                }}
-            />
+             />
           ) : (
             <MapSidebar 
               items={unifiedItems}
@@ -331,15 +318,8 @@ const ToursAndMapPage: React.FC = () => {
                   setFocusedLocation(item);
                 }
               }}
-              activeId={focusedLocation ? `${focusedLocation.entityType}-${focusedLocation.id || focusedLocation.id}` : null}
+              activeId={focusedLocation?.id}
               loading={loading}
-              onOpenDashboard={() => {
-                 if (!user) {
-                    alert("Please login to create and view Custom Travel Guides.");
-                    return;
-                 }
-                 setShowDashboard(true);
-              }}
               onOpenTravelGuide={() => setShowTravelGuide(true)}
             />
           )}
@@ -347,17 +327,6 @@ const ToursAndMapPage: React.FC = () => {
       </SidebarSection>
 
       <AnimatePresence>
-        {showDashboard && user && (
-           <TourDashboard 
-              userId={user.id}
-              onClose={() => setShowDashboard(false)}
-              onPlayTour={(tour) => {
-                 setActiveTour(tour);
-                 setShowDashboard(false);
-              }}
-           />
-        )}
-        
         {showTravelGuide && (
            <TravelGuideFlow
               onClose={() => setShowTravelGuide(false)}

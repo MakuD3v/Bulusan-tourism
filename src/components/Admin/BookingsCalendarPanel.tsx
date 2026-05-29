@@ -190,8 +190,12 @@ const BookingsCalendarPanel: React.FC = () => {
   };
 
   const updateStatus = async (id: string, status: TourBooking['status']) => {
-    await bookingService.update(id, { status });
-    setSelectedBooking(prev => prev ? { ...prev, status } : null);
+    const updatePayload: Partial<TourBooking> = { status };
+    if (status === 'Confirmed') {
+      updatePayload.qrCode = `QR-BLSN-${id.slice(-6).toUpperCase()}-${Date.now().toString().slice(-4)}`;
+    }
+    await bookingService.update(id, updatePayload);
+    setSelectedBooking(prev => prev ? { ...prev, ...updatePayload } : null);
     loadBookings();
   };
 
@@ -281,7 +285,7 @@ const BookingsCalendarPanel: React.FC = () => {
           <>
             <DetailHeader $color={selectedBooking.color || '#3b82f6'}>
               <div className="status">{selectedBooking.status}</div>
-              <h4>{selectedBooking.routeName}</h4>
+              <h4>{selectedBooking.routeName} {selectedBooking.isCustom && <span style={{ fontSize: '0.7rem', background: '#3b82f6', padding: '2px 8px', borderRadius: 12, verticalAlign: 'middle' }}>CUSTOM</span>}</h4>
               <div className="ref">REF: {selectedBooking.id.slice(-10).toUpperCase()}</div>
             </DetailHeader>
             <DetailBody>
@@ -322,6 +326,20 @@ const BookingsCalendarPanel: React.FC = () => {
                   <div className="label"><FileText size={12}/> Auto-Schedule Prefs</div>
                   <div className="val" style={{ fontSize: '0.8rem', color: '#90aecb' }}>
                     Pace: {selectedBooking.pace} &bull; Transport: {selectedBooking.transport} &bull; Time: {selectedBooking.preferredTimeRange}
+                  </div>
+                </div>
+              )}
+
+              {selectedBooking.isCustom && selectedBooking.customStops && (
+                <div className="block" style={{ marginTop: 8 }}>
+                  <div className="label"><MapPin size={12}/> Custom Itinerary Stops</div>
+                  <div className="val" style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: '0.8rem' }}>
+                    {selectedBooking.customStops.map((stop, i) => (
+                       <div key={i} style={{ background: 'rgba(255,255,255,0.03)', padding: '6px 10px', borderRadius: 6 }}>
+                         <span style={{ color: '#3b82f6', fontWeight: 800, marginRight: 8 }}>{i+1}</span>
+                         {stop.itemName} <span style={{ color: '#5a7098', fontSize: '0.65rem', marginLeft: 4 }}>({stop.entityType})</span>
+                       </div>
+                    ))}
                   </div>
                 </div>
               )}

@@ -161,7 +161,7 @@ export interface CustomUserTour {
 
 // ─── Curated Itinerary Booking ────────────────────────────────────────────────
 
-export type TourTheme = 'Seascape' | 'Naturescape';
+export type TourTheme = 'Seascape' | 'Naturescape' | 'Mountaineering' | 'Camping' | 'Custom' | string;
 
 export interface CuratedRouteStop {
     itemId: string;
@@ -220,4 +220,9 @@ export interface TourBooking {
     adminNotes?: string;
     createdAt: number;
     color?: string; // Assigned by system for calendar display
+    // Custom Tour Extensions
+    userId?: string;
+    isCustom?: boolean;
+    customStops?: CuratedRouteStop[];
+    qrCode?: string; // Assigned upon approval
 }

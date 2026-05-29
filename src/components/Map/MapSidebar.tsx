@@ -355,14 +355,9 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
       </ClassicHeader>
 
       <SearchSection>
-        <div style={{ display: 'flex', gap: '8px', width: '100%', maxWidth: '320px', marginBottom: '8px' }}>
-           <TourButton onClick={onOpenDashboard} style={{ flex: 1, padding: '10px 4px' }}>
-              <Star size={14} /> My Guides
-           </TourButton>
-           <TourButton onClick={onOpenTravelGuide} style={{ flex: 1, padding: '10px 4px', background: 'linear-gradient(135deg, rgba(59,130,246,0.1), rgba(29,78,216,0.1))', borderColor: 'rgba(59,130,246,0.3)', color: '#3b82f6' }}>
-              <MapPin size={14} /> Curated Tours
-           </TourButton>
-        </div>
+        <TourButton onClick={onOpenTravelGuide} style={{ marginBottom: '8px', background: 'linear-gradient(135deg, rgba(59,130,246,0.1), rgba(29,78,216,0.1))', borderColor: 'rgba(59,130,246,0.3)', color: '#3b82f6' }}>
+           <MapPin size={16} /> Travel Guide & Planner
+        </TourButton>
         
         <TabContainer>
           {(['All', 'Attraction', 'Enterprise'] as const).map(t => (

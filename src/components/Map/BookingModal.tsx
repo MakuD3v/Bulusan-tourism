@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, User, Mail, Phone, Users, Globe, MapPin, Check, Loader2, ChevronLeft, Baby } from 'lucide-react';
 import { CuratedRoute, TourBooking, TravelerBreakdown } from '../../data/types';
 import { bookingService } from '../../utils/bookingService';
+import { useAuth } from '../../hooks/useAuth';
 
 // ─── Styled Components ────────────────────────────────────────────────────────
 
@@ -412,8 +413,9 @@ interface BookingModalProps {
 const BookingModal: React.FC<BookingModalProps> = ({
   route, scheduledDates, autoScheduled, autoAnswers, onClose, onBack
 }) => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const { user } = useAuth();
+  const [name, setName] = useState(user?.name || '');
+  const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState('');
 
   const [travelers, setTravelers] = useState<TravelerBreakdown>({
@@ -454,6 +456,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
     setSubmitting(true);
     setError('');
     try {
+      const isCustom = route.id.startsWith('custom-');
       const newBooking = await bookingService.create({
         routeId: route.id,
         routeName: route.name,
@@ -467,6 +470,9 @@ const BookingModal: React.FC<BookingModalProps> = ({
         pace: autoAnswers?.pace,
         transport: autoAnswers?.transport,
         preferredTimeRange: autoAnswers?.timeRange,
+        isCustom,
+        userId: user?.id,
+        customStops: route.stops,
       });
       setBookingId(newBooking.id);
       setSubmitted(true);

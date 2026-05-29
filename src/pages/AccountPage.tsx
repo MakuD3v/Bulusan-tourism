@@ -15,6 +15,8 @@ import { dbService } from '../api/db';
 import { apiClient } from '../api/client';
 import SmartMedia from '../components/Common/SmartMedia';
 import { MainHeader, ContentArea } from '../components/Layout/DashboardLayout';
+import { TourBooking } from '../data/types';
+import { bookingService } from '../utils/bookingService';
 
 const TabNav = styled.div`
   display: flex;
@@ -162,7 +164,7 @@ const NotificationCard = styled(motion.div)`
 export default function AccountPage() {
   const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'overview' | 'itineraries' | 'reviews' | 'settings' | 'appeal'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'itineraries' | 'tours' | 'reviews' | 'settings' | 'appeal'>('overview');
   const { data: attractions } = useAttractions([]);
   const { data: enterprises } = useEnterprises([]);
   const { data: heritage } = useHeritage([]);
@@ -181,6 +183,18 @@ export default function AccountPage() {
   // Notification states
   const [showNotification, setShowNotification] = useState(false);
   const [notificationDismissed, setNotificationDismissed] = useState(false);
+
+  // Bookings state
+  const [bookings, setBookings] = useState<TourBooking[]>([]);
+  const [loadingBookings, setLoadingBookings] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    bookingService.getAll().then(all => {
+      setBookings(all.filter(b => b.userId === user.id).sort((a,b) => b.createdAt - a.createdAt));
+      setLoadingBookings(false);
+    }).catch(() => setLoadingBookings(false));
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -379,6 +393,7 @@ export default function AccountPage() {
         <TabNav>
           <TabBtn $active={activeTab === 'overview'} onClick={() => setActiveTab('overview')}><LayoutDashboard size={18} /> Overview</TabBtn>
           <TabBtn $active={activeTab === 'itineraries'} onClick={() => setActiveTab('itineraries')}><Compass size={18} /> Saved Wonders</TabBtn>
+          <TabBtn $active={activeTab === 'tours'} onClick={() => setActiveTab('tours')}><MapPin size={18} /> My Tours & Bookings</TabBtn>
           <TabBtn $active={activeTab === 'reviews'} onClick={() => setActiveTab('reviews')}><MessageSquare size={18} /> Contributions</TabBtn>
           {user.role === 'USER' && (
             <TabBtn $active={activeTab === 'appeal'} onClick={() => setActiveTab('appeal')}><ShieldAlert size={18} /> Owner Appeal</TabBtn>
@@ -439,6 +454,86 @@ export default function AccountPage() {
                    </div>
                 )}
               </ItineraryGrid>
+            </motion.div>
+          )}
+
+          {activeTab === 'tours' && (
+            <motion.div key="tours" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
+              <h3 style={{ fontSize: '1.4rem', color: '#e2ecf7', marginBottom: '24px' }}>My Tours & Bookings</h3>
+              {loadingBookings ? (
+                <div style={{ textAlign: 'center', padding: '40px' }}><Loader2 className="animate-spin" size={32} color="#3b82f6" /></div>
+              ) : bookings.length === 0 ? (
+                <div style={{ padding: '64px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '24px', textAlign: 'center' }}>
+                   <MapPin size={48} color="rgba(255,255,255,0.2)" style={{ marginBottom: '16px' }}/>
+                   <p style={{ color: '#94a3b8', fontWeight: 600 }}>You haven't booked any tours yet.</p>
+                   <button onClick={() => navigate('/explore')} style={{ marginTop: '20px', padding: '12px 24px', background: '#3b82f6', color: 'white', borderRadius: '12px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>Plan a Trip</button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  {bookings.map(booking => (
+                    <div key={booking.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', overflow: 'hidden' }}>
+                      <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                        <div>
+                           <div style={{ display: 'inline-flex', padding: '4px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px',
+                             background: booking.status === 'Confirmed' ? 'rgba(16,185,129,0.1)' : booking.status === 'Cancelled' ? 'rgba(239,68,68,0.1)' : 'rgba(245,158,11,0.1)',
+                             color: booking.status === 'Confirmed' ? '#10b981' : booking.status === 'Cancelled' ? '#ef4444' : '#f59e0b' }}>
+                             {booking.status}
+                           </div>
+                           <h4 style={{ fontSize: '1.2rem', color: '#e2ecf7', margin: '0 0 4px' }}>{booking.routeName}</h4>
+                           <div style={{ color: '#90aecb', fontSize: '0.8rem' }}>REF: {booking.id.slice(-10).toUpperCase()}</div>
+                        </div>
+                        {booking.status === 'Confirmed' && booking.qrCode && (
+                          <div style={{ textAlign: 'center', background: 'white', padding: '8px', borderRadius: '12px' }}>
+                             <div style={{ width: '80px', height: '80px', background: `url('https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${booking.qrCode}') center/cover` }}></div>
+                             <div style={{ fontSize: '0.55rem', color: '#1e293b', fontWeight: 800, marginTop: '4px' }}>TICKET CODE</div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px' }}>
+                         <div>
+                            <h5 style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#5a7098', margin: '0 0 12px', letterSpacing: '1px' }}>Itinerary Schedule</h5>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                               {booking.scheduledDates.map((date, idx) => (
+                                 <div key={date} style={{ display: 'flex', gap: '12px' }}>
+                                    <div style={{ background: 'rgba(59,130,246,0.1)', color: '#60a5fa', padding: '4px 8px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700, height: 'fit-content' }}>Day {idx+1}</div>
+                                    <div>
+                                       <div style={{ color: '#e2ecf7', fontSize: '0.9rem', fontWeight: 600, marginBottom: '4px' }}>{new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div>
+                                       {booking.isCustom && booking.customStops ? (
+                                         <div style={{ fontSize: '0.8rem', color: '#90aecb', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                            {booking.customStops.slice(idx * 3, (idx + 1) * 3).map((stop, sIdx) => (
+                                              <div key={sIdx} style={{ display: 'flex', gap: '6px' }}><span style={{ color: '#3b82f6' }}>•</span> {stop.itemName}</div>
+                                            ))}
+                                            {booking.customStops.slice(idx * 3, (idx + 1) * 3).length === 0 && <span style={{ opacity: 0.5 }}>Rest Day / Free Time</span>}
+                                         </div>
+                                       ) : (
+                                         <div style={{ fontSize: '0.8rem', color: '#90aecb' }}>Curated Stops for Day {idx+1}</div>
+                                       )}
+                                    </div>
+                                 </div>
+                               ))}
+                            </div>
+                         </div>
+                         <div>
+                            <h5 style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#5a7098', margin: '0 0 12px', letterSpacing: '1px' }}>Travel Details</h5>
+                            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '16px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem', color: '#cbd5e1' }}>
+                               <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#94a3b8' }}>Pace</span> <strong>{booking.pace || 'Moderate'}</strong></div>
+                               <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#94a3b8' }}>Transport</span> <strong>{booking.transport || 'Vehicle'}</strong></div>
+                               <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#94a3b8' }}>Travelers</span> <strong>{booking.travelers.total} Pax</strong></div>
+                               <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#94a3b8' }}>Breakdown</span> <span>{booking.travelers.males}M / {booking.travelers.females}F / {booking.travelers.children}C</span></div>
+                            </div>
+                            
+                            {booking.status === 'Confirmed' && (
+                              <button onClick={() => navigate(`/explore?activeTourId=${booking.id}`)} style={{ width: '100%', marginTop: '16px', padding: '12px', background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                 <MapPin size={16}/> Start Live Tracking
+                              </button>
+                            )}
+                         </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </motion.div>
           )}
 
