@@ -5,6 +5,8 @@ import BulusanMap from '../components/Map/BulusanMap';
 import MapSidebar from '../components/Map/MapSidebar';
 import TourDashboard from '../components/Map/TourDashboard';
 import ActiveTourSidebar from '../components/Map/ActiveTourSidebar';
+import TravelGuideFlow from '../components/Map/TravelGuideFlow';
+import BookingModal from '../components/Map/BookingModal';
 import { useAttractions, useEnterprises, useHeritage } from '../hooks/useData';
 import { useAuth } from '../hooks/useAuth';
 import { CustomUserTour } from '../data/types';
@@ -207,6 +209,11 @@ const ToursAndMapPage: React.FC = () => {
   const [showDashboard, setShowDashboard] = useState(false);
   const [activeTour, setActiveTour] = useState<CustomUserTour | null>(null);
   
+  // New Booking Flow states
+  const [showTravelGuide, setShowTravelGuide] = useState(false);
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [bookingDetails, setBookingDetails] = useState<any>(null);
+  
   // New State for collapsing the sidebar!
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const initialSearchHandled = React.useRef(false);
@@ -333,6 +340,7 @@ const ToursAndMapPage: React.FC = () => {
                  }
                  setShowDashboard(true);
               }}
+              onOpenTravelGuide={() => setShowTravelGuide(true)}
             />
           )}
         </SidebarContent>
@@ -346,6 +354,31 @@ const ToursAndMapPage: React.FC = () => {
               onPlayTour={(tour) => {
                  setActiveTour(tour);
                  setShowDashboard(false);
+              }}
+           />
+        )}
+        
+        {showTravelGuide && (
+           <TravelGuideFlow
+              onClose={() => setShowTravelGuide(false)}
+              onProceedToBooking={(route, dates, mode, answers) => {
+                 setBookingDetails({ route, dates, mode, answers });
+                 setShowTravelGuide(false);
+                 setShowBookingModal(true);
+              }}
+           />
+        )}
+        
+        {showBookingModal && bookingDetails && (
+           <BookingModal
+              route={bookingDetails.route}
+              scheduledDates={bookingDetails.dates}
+              autoScheduled={bookingDetails.mode === 'auto'}
+              autoAnswers={bookingDetails.answers}
+              onClose={() => setShowBookingModal(false)}
+              onBack={() => {
+                 setShowBookingModal(false);
+                 setShowTravelGuide(true);
               }}
            />
         )}

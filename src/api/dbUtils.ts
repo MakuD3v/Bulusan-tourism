@@ -5,7 +5,7 @@
  */
 
 const DB_NAME = 'BulusanTourismDB_v2'; 
-const DB_VERSION = 3; // Bumped for userTours
+const DB_VERSION = 4; // Bumped for bookings and curatedRoutes
 
 export const idbService = {
   db: null as IDBDatabase | null,
@@ -22,7 +22,7 @@ export const idbService = {
       request.onupgradeneeded = (event: any) => {
         const db = event.target.result;
         console.log('Upgrading IndexedDB stores...');
-        const stores = ['attractions', 'enterprises', 'heritage', 'blogs', 'inquiries', 'users', 'media', 'global_stats', 'userTours'];
+        const stores = ['attractions', 'enterprises', 'heritage', 'blogs', 'inquiries', 'users', 'media', 'global_stats', 'userTours', 'bookings', 'curatedRoutes'];
         
         stores.forEach(store => {
           if (!db.objectStoreNames.contains(store)) {

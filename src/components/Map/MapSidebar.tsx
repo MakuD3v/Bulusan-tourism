@@ -1,4 +1,4 @@
-﻿import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { Search, MapPin, Loader2, X, ChevronRight, Star, Zap, TrendingUp, Award, Users } from 'lucide-react';
 import { ATTRACTION_CATEGORIES, ENTERPRISE_CATEGORIES } from '../Admin/CategoryTagConfig';
@@ -318,10 +318,11 @@ interface MapSidebarProps {
   onItemClick?: (item: any) => void;
   activeId?: string | null;
   onOpenDashboard?: () => void;
+  onOpenTravelGuide?: () => void;
 }
 
 const MapSidebar: React.FC<MapSidebarProps> = ({
-  items, searchQuery, setSearchQuery, selectedCategories, setSelectedCategories, loading, onItemClick, activeId, onOpenDashboard
+  items, searchQuery, setSearchQuery, selectedCategories, setSelectedCategories, loading, onItemClick, activeId, onOpenDashboard, onOpenTravelGuide
 }) => {
   const [activeTab, setActiveTab] = useState<'All' | 'Attraction' | 'Enterprise'>('All');
 
@@ -354,9 +355,14 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
       </ClassicHeader>
 
       <SearchSection>
-        <TourButton onClick={onOpenDashboard}>
-           <Star size={14} /> My Travel Guides
-        </TourButton>
+        <div style={{ display: 'flex', gap: '8px', width: '100%', maxWidth: '320px', marginBottom: '8px' }}>
+           <TourButton onClick={onOpenDashboard} style={{ flex: 1, padding: '10px 4px' }}>
+              <Star size={14} /> My Guides
+           </TourButton>
+           <TourButton onClick={onOpenTravelGuide} style={{ flex: 1, padding: '10px 4px', background: 'linear-gradient(135deg, rgba(59,130,246,0.1), rgba(29,78,216,0.1))', borderColor: 'rgba(59,130,246,0.3)', color: '#3b82f6' }}>
+              <MapPin size={14} /> Curated Tours
+           </TourButton>
+        </div>
         
         <TabContainer>
           {(['All', 'Attraction', 'Enterprise'] as const).map(t => (

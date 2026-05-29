@@ -10,7 +10,8 @@ import {
   Settings,
   History,
   ShieldAlert,
-  UserCheck
+  UserCheck,
+  Calendar
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useAttractions, useEnterprises, useBlogs, useInquiries, useHeritage } from '../hooks/useData';
@@ -22,6 +23,8 @@ import AttractionsManager from '../components/Admin/AttractionsManager';
 import EnterprisesManager from '../components/Admin/EnterprisesManager';
 import AdminManagementPanel from '../components/Admin/AdminManagementPanel';
 import PendingApprovalsPanel from '../components/Admin/PendingApprovalsPanel';
+import BookingsCalendarPanel from '../components/Admin/BookingsCalendarPanel';
+import CuratedRoutesManager from '../components/Admin/CuratedRoutesManager';
 import { MainHeader, ContentArea } from '../components/Layout/DashboardLayout';
 
 const TabNav = styled.div`
@@ -62,7 +65,7 @@ const AdminPortalPage = () => {
         return 'overview';
     };
 
-    const [activeTab, setActiveTab] = useState<'overview' | 'attractions' | 'enterprises' | 'heritage' | 'moderation' | 'inbox' | 'admin_management' | 'pending_approvals'>(getInitialTab);
+    const [activeTab, setActiveTab] = useState<'overview' | 'attractions' | 'enterprises' | 'heritage' | 'moderation' | 'inbox' | 'admin_management' | 'pending_approvals' | 'tour_bookings' | 'curated_routes'>(getInitialTab);
     
     const { data: attractions } = useAttractions([]);
     const { data: enterprises } = useEnterprises([]);
@@ -102,6 +105,8 @@ const AdminPortalPage = () => {
                     <TabBtn $active={activeTab === 'enterprises'} onClick={() => setActiveTab('enterprises')}><MapPin size={18} /> Enterprises</TabBtn>
                     <TabBtn $active={activeTab === 'moderation'} onClick={() => setActiveTab('moderation')}><FileText size={18} /> Moderation</TabBtn>
                     <TabBtn $active={activeTab === 'inbox'} onClick={() => setActiveTab('inbox')}><Mail size={18} /> Inbox</TabBtn>
+                    <TabBtn $active={activeTab === 'tour_bookings'} onClick={() => setActiveTab('tour_bookings')}><Calendar size={18} /> Tour Bookings</TabBtn>
+                    <TabBtn $active={activeTab === 'curated_routes'} onClick={() => setActiveTab('curated_routes')}><MapPin size={18} /> Curated Routes</TabBtn>
                     <TabBtn $active={activeTab === 'pending_approvals'} onClick={() => setActiveTab('pending_approvals')}><UserCheck size={18} /> Pending Appeals</TabBtn>
                     {user?.email === 'admin@bulusan.com' && (
                         <TabBtn $active={activeTab === 'admin_management'} onClick={() => setActiveTab('admin_management')}><ShieldAlert size={18} /> Admin Management</TabBtn>
@@ -138,6 +143,8 @@ const AdminPortalPage = () => {
                         {activeTab === 'inbox' && <InboxReader inquiries={inboxInquiries} />}
                         {activeTab === 'pending_approvals' && <PendingApprovalsPanel />}
                         {activeTab === 'admin_management' && user?.email === 'admin@bulusan.com' && <AdminManagementPanel />}
+                        {activeTab === 'tour_bookings' && <BookingsCalendarPanel />}
+                        {activeTab === 'curated_routes' && <CuratedRoutesManager />}
                     </motion.div>
                 </AnimatePresence>
             </ContentArea>

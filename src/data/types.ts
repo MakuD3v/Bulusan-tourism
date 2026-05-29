@@ -158,3 +158,66 @@ export interface CustomUserTour {
     destinations: UserTourDestination[];
     createdAt: number;
 }
+
+// ─── Curated Itinerary Booking ────────────────────────────────────────────────
+
+export type TourTheme = 'Seascape' | 'Naturescape';
+
+export interface CuratedRouteStop {
+    itemId: string;
+    entityType: 'Attraction' | 'Enterprise' | 'Heritage';
+    itemName: string;
+    suggestedTime?: string; // e.g. "Morning", "Afternoon"
+    durationHours?: number;
+    notes?: string;
+}
+
+export interface CuratedRoute {
+    id: string;
+    name: string;
+    theme: TourTheme;
+    description: string;
+    coverImage?: string;
+    stops: CuratedRouteStop[];
+    estimatedDays: number;
+    difficulty?: 'Easy' | 'Moderate' | 'Challenging';
+    createdAt: number;
+    updatedAt: number;
+    isActive: boolean;
+}
+
+export interface TravelerBreakdown {
+    total: number;
+    males: number;
+    females: number;
+    local: number;
+    foreign: number;
+    children: number;
+}
+
+export type BookingStatus = 'Pending' | 'Confirmed' | 'Cancelled' | 'Completed';
+
+export interface TourBooking {
+    id: string;
+    routeId: string;
+    routeName: string;
+    theme: TourTheme;
+    // Contact
+    contactName: string;
+    contactEmail: string;
+    contactPhone: string;
+    // Travelers
+    travelers: TravelerBreakdown;
+    // Schedule — array of date strings e.g. ["2025-05-02", "2025-05-03", "2025-05-04"]
+    scheduledDates: string[];
+    // Auto-schedule answers
+    autoScheduled: boolean;
+    pace?: 'Relaxed' | 'Moderate' | 'Fast';
+    transport?: 'Walking' | 'Vehicle' | 'Both';
+    preferredTimeRange?: 'Morning' | 'Afternoon' | 'Full Day';
+    // Admin
+    status: BookingStatus;
+    adminNotes?: string;
+    createdAt: number;
+    color?: string; // Assigned by system for calendar display
+}
