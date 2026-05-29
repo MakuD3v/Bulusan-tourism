@@ -504,12 +504,25 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
                   <BuilderMap>
                     <MapContainer center={[12.7533, 124.0933]} zoom={12} zoomControl={false} style={{ width: '100%', height: '100%' }}>
                       <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+                      
+                      {/* Unselected Items */}
+                      {allItems.map(item => {
+                        if (!item.coordinates) return null;
+                        const isSelectedInCurrentDay = customStops.some(s => s.itemId.toString() === item.id.toString() && s.dayIndex === selectedDayIndex);
+                        if (isSelectedInCurrentDay) return null;
+                        
+                        const icon = L.divIcon({ html: `<div style="background:#5a7098;width:12px;height:12px;border-radius:50%;border:2px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3); opacity: 0.7;"></div>`, className: '' });
+                        return <Marker key={`base-${item.id}`} position={[item.coordinates.lat, item.coordinates.lng]} icon={icon} />;
+                      })}
+
                       {customPolyline.length > 0 && <Polyline positions={customPolyline} color="#3b82f6" weight={4} dashArray="8, 8" />}
+                      
+                      {/* Selected Items */}
                       {customStops.filter(s => s.dayIndex === selectedDayIndex).map((stop, idx) => {
                         const item = allItems.find(i => i.id.toString() === stop.itemId.toString());
                         if (!item || !item.coordinates) return null;
                         const icon = L.divIcon({ html: `<div style="background:#3b82f6;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:12px;border:2px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3);">${idx + 1}</div>`, className: '' });
-                        return <Marker key={stop.itemId} position={[item.coordinates.lat, item.coordinates.lng]} icon={icon} />;
+                        return <Marker key={`selected-${stop.itemId}`} position={[item.coordinates.lat, item.coordinates.lng]} icon={icon} />;
                       })}
                       <MapAutoFitter coordinates={customPolyline} />
                     </MapContainer>
