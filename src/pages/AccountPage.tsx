@@ -17,7 +17,7 @@ import SmartMedia from '../components/Common/SmartMedia';
 import { MainHeader, ContentArea } from '../components/Layout/DashboardLayout';
 import { TourBooking } from '../data/types';
 import { bookingService } from '../utils/bookingService';
-
+import { useAlert } from '../components/Common/AlertProvider';
 const TabNav = styled.div`
   display: flex;
   gap: 12px;
@@ -164,6 +164,7 @@ const NotificationCard = styled(motion.div)`
 export default function AccountPage() {
   const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
+  const { showAlert, showConfirm } = useAlert();
   const [activeTab, setActiveTab] = useState<'overview' | 'itineraries' | 'tours' | 'reviews' | 'settings' | 'appeal'>('overview');
   const { data: attractions } = useAttractions([]);
   const { data: enterprises } = useEnterprises([]);
@@ -261,19 +262,20 @@ export default function AccountPage() {
   const handleUpdateName = async () => {
     try {
         await dbService.update('users', (user as any).id, { name: userName });
-        alert('Profile updated!');
-    } catch (err) { alert('Update failed.'); }
+        showAlert('Success', 'Profile updated!', 'success');
+    } catch (err) { showAlert('Error', 'Update failed.', 'error'); }
   };
 
   const removeItem = async (baseId: number, entityType: string) => {
-    if (!confirm('Remove this place from your itinerary?')) return;
-    const globalId = entityType === 'Enterprise' ? baseId + 1000000 
-                   : entityType === 'Heritage' ? baseId + 2000000 
-                   : baseId;
-    const newItinerary = (user?.itinerary || []).filter(iid => String(iid) !== String(globalId));
-    try {
-      await updateUser({ itinerary: newItinerary });
-    } catch (err) { console.error(err); }
+    showConfirm('Remove from Itinerary', 'Remove this place from your itinerary?', async () => {
+      const globalId = entityType === 'Enterprise' ? baseId + 1000000 
+                     : entityType === 'Heritage' ? baseId + 2000000 
+                     : baseId;
+      const newItinerary = (user?.itinerary || []).filter(iid => String(iid) !== String(globalId));
+      try {
+        await updateUser({ itinerary: newItinerary });
+      } catch (err) { console.error(err); }
+    });
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -286,7 +288,7 @@ export default function AccountPage() {
 
   const submitAppeal = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!appealMsg || !appealImage) return alert('Message and image are required.');
+    if (!appealMsg || !appealImage) return showAlert('Validation Error', 'Message and image are required.', 'error');
     setSubmittingAppeal(true);
     
     try {
@@ -311,10 +313,10 @@ export default function AccountPage() {
       });
       
       setAppealData(res);
-      alert('Appeal submitted successfully! Admin will review it soon.');
+      showAlert('Success', 'Appeal submitted successfully! Admin will review it soon.', 'success');
     } catch (err) {
       console.error(err);
-      alert('Failed to submit appeal. Please try again.');
+      showAlert('Error', 'Failed to submit appeal. Please try again.', 'error');
     } finally {
       setSubmittingAppeal(false);
     }
@@ -331,7 +333,7 @@ export default function AccountPage() {
       }
     } catch (e) {
       console.error(e);
-      alert('Failed to claim badge.');
+      showAlert('Error', 'Failed to claim badge.', 'error');
     }
   };
 

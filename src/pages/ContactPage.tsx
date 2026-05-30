@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { useState } from 'react';
 import { dbService } from '../api/db';
 import StandardPageHeader from '../components/Common/StandardPageHeader';
+import { useAlert } from '../components/Common/AlertProvider';
 
 const PageContainer = styled(motion.div)`
   width: 100%;
@@ -180,6 +181,7 @@ const GlassForm = styled(motion.form)`
 const ContactPage = () => {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [sent, setSent] = useState(false);
+  const { showAlert } = useAlert();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -201,7 +203,7 @@ const ContactPage = () => {
       setSent(true);
       setFormData({ name: '', email: '', message: '' });
     } catch (err) {
-      alert('Failed to send inquiry. Please try again or call our direct line.');
+      showAlert('Error', 'Failed to send inquiry. Please try again or call our direct line.', 'error');
     }
   };
 

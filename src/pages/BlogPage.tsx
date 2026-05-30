@@ -16,7 +16,7 @@ import CentricCarousel from '../components/Common/CentricCarousel';
 import SharedCategoryScroller from '../components/Common/SharedCategoryScroller';
 import { BLOG_CATEGORIES } from '../components/Admin/CategoryTagConfig';
 import SmartMedia from '../components/Common/SmartMedia';
-
+import { useAlert } from '../components/Common/AlertProvider';
 const PageContainer = styled(motion.div)`
   width: 100%;
   padding: 0 64px 64px;
@@ -309,6 +309,7 @@ const CreateModalContent = styled(motion.div)`
 const BlogPage = () => {
   const { data: blogPosts, loading, refresh } = useBlogs();
   const { user } = useAuth();
+  const { showAlert } = useAlert();
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newPost, setNewPost] = useState({ title: '', category: 'Travel Guide', excerpt: '', content: '' });
@@ -358,9 +359,9 @@ const BlogPage = () => {
       setShowCreateModal(false);
       setNewPost({ title: '', category: 'Travel Guide', excerpt: '', content: '' });
       setPostImage(null);
-      alert('Story submitted for review!');
+      showAlert('Success', 'Story submitted for review!', 'success');
     } catch (error) {
-      alert('Failed to share your story. Please try again.');
+      showAlert('Error', 'Failed to share your story. Please try again.', 'error');
     } finally {
       setIsUploading(false);
     }

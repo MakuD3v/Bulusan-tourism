@@ -5,6 +5,7 @@ import { Attraction, Enterprise, BlogPost } from '../../data/types';
 import { Search, User, Star, Building2, BookOpen, Clock, MapPin, Trash2 } from 'lucide-react';
 import { dbService } from '../../api/db';
 import AdminSearchBar from './AdminSearchBar';
+import { useAlert } from '../Common/AlertProvider';
 
 const Grid = styled.div`
   display: grid;
@@ -125,6 +126,7 @@ interface ModerationDashboardProps {
 const ModerationDashboard: React.FC<ModerationDashboardProps> = ({ attractions, enterprises, blogPosts }) => {
     const [selectedBlog, setSelectedBlog] = useState<BlogPost | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const { showConfirm, showAlert } = useAlert();
 
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -162,14 +164,14 @@ const ModerationDashboard: React.FC<ModerationDashboardProps> = ({ attractions, 
                                     animate={{ opacity: 1 }}
                                     style={{ cursor: 'pointer' }}
                                     onClick={async () => {
-                                        if (window.confirm(`Delete review by ${rev.author} from ${attr.name}?`)) {
+                                        showConfirm('Delete Review', `Delete review by ${rev.author} from ${attr.name}?`, async () => {
                                             try {
                                                 const newReviews = attr.reviews.filter(r => r.id !== rev.id);
                                                 await dbService.update('attractions', attr.id!, { reviews: newReviews });
                                             } catch (e) {
                                                 console.error("Failed to delete review", e);
                                             }
-                                        }
+                                        });
                                     }}
                                 >
                                     <div className="entity-ref">{attr.name}</div>
@@ -203,14 +205,14 @@ const ModerationDashboard: React.FC<ModerationDashboardProps> = ({ attractions, 
                                     animate={{ opacity: 1 }}
                                     style={{ cursor: 'pointer' }}
                                     onClick={async () => {
-                                        if (window.confirm(`Delete review by ${rev.author} from ${acc.name}?`)) {
+                                        showConfirm('Delete Review', `Delete review by ${rev.author} from ${acc.name}?`, async () => {
                                             try {
                                                 const newReviews = acc.reviews.filter(r => r.id !== rev.id);
                                                 await dbService.update('enterprises', acc.id!, { reviews: newReviews });
                                             } catch (e) {
                                                 console.error("Failed to delete review", e);
                                             }
-                                        }
+                                        });
                                     }}
                                 >
                                     <div className="entity-ref">{acc.name}</div>
@@ -243,15 +245,15 @@ const ModerationDashboard: React.FC<ModerationDashboardProps> = ({ attractions, 
                                     </button>
                                     <button 
                                       onClick={async () => {
-                                          if (window.confirm(`Delete blog post: ${blog.title}?`)) {
+                                          showConfirm('Delete Blog Post', `Delete blog post: ${blog.title}?`, async () => {
                                               try {
                                                   await dbService.delete('blogs', blog.id || blog.id);
                                                   window.location.reload();
                                               } catch (e) {
                                                   console.error("Failed to delete blog", e);
-                                                  alert("Failed to delete the blog post.");
+                                                  showAlert('Error', "Failed to delete the blog post.", 'error');
                                               }
-                                          }
+                                          });
                                       }}
                                       style={{ padding: '6px', borderRadius: 8, background: '#fee2e2', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                                       title="Delete Blog"

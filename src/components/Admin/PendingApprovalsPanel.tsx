@@ -6,6 +6,7 @@ import {
   Loader2, ShieldCheck, MessageSquare, ImageIcon, Key, AlertTriangle
 } from 'lucide-react';
 import { apiClient } from '../../api/client';
+import { useAlert } from '../Common/AlertProvider';
 
 interface PendingAppeal {
   id: string;
@@ -278,6 +279,7 @@ const PendingApprovalsPanel: React.FC = () => {
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
   const [replies, setReplies] = useState<Record<string, string>>({});
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const { showConfirm, showAlert } = useAlert();
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -298,30 +300,46 @@ const PendingApprovalsPanel: React.FC = () => {
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
   const handleAppealAction = async (appealId: string, status: 'APPROVED' | 'REJECTED') => {
-    if (status === 'REJECTED' && !confirm('Are you sure you want to reject this appeal?')) return;
-    setActionLoading(prev => ({ ...prev, [appealId]: true }));
-    try {
-      await apiClient.put(`/appeals/${appealId}`, { status, adminReply: replies[appealId] || '' });
-      setAppeals(prev => prev.filter(a => a.id !== appealId));
-    } catch (e) {
-      console.error(`${status} failed`, e);
-      alert(`Failed to ${status.toLowerCase()} appeal.`);
-    } finally {
-      setActionLoading(prev => ({ ...prev, [appealId]: false }));
+    const performAction = async () => {
+      setActionLoading(prev => ({ ...prev, [appealId]: true }));
+      try {
+        await apiClient.put(`/appeals/${appealId}`, { status, adminReply: replies[appealId] || '' });
+        setAppeals(prev => prev.filter(a => a.id !== appealId));
+        showAlert('Success', `Appeal ${status.toLowerCase()} successfully.`, 'success');
+      } catch (e) {
+        console.error(`${status} failed`, e);
+        showAlert('Error', `Failed to ${status.toLowerCase()} appeal.`, 'error');
+      } finally {
+        setActionLoading(prev => ({ ...prev, [appealId]: false }));
+      }
+    };
+
+    if (status === 'REJECTED') {
+      showConfirm('Reject Appeal', 'Are you sure you want to reject this appeal?', performAction);
+    } else {
+      performAction();
     }
   };
 
   const handleRecoveryAction = async (email: string, action: 'approve' | 'reject') => {
-    if (action === 'reject' && !confirm('Are you sure you want to reject this recovery request?')) return;
-    setActionLoading(prev => ({ ...prev, [email]: true }));
-    try {
-      await apiClient.put(`/auth/recovery/${action}`, { email });
-      setRecoveryRequests(prev => prev.filter(r => r.email !== email));
-    } catch (e) {
-      console.error(`Recovery ${action} failed`, e);
-      alert(`Failed to ${action} recovery request.`);
-    } finally {
-      setActionLoading(prev => ({ ...prev, [email]: false }));
+    const performAction = async () => {
+      setActionLoading(prev => ({ ...prev, [email]: true }));
+      try {
+        await apiClient.put(`/auth/recovery/${action}`, { email });
+        setRecoveryRequests(prev => prev.filter(r => r.email !== email));
+        showAlert('Success', `Recovery request ${action}d successfully.`, 'success');
+      } catch (e) {
+        console.error(`Recovery ${action} failed`, e);
+        showAlert('Error', `Failed to ${action} recovery request.`, 'error');
+      } finally {
+        setActionLoading(prev => ({ ...prev, [email]: false }));
+      }
+    };
+
+    if (action === 'reject') {
+      showConfirm('Reject Request', 'Are you sure you want to reject this recovery request?', performAction);
+    } else {
+      performAction();
     }
   };
 

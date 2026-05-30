@@ -11,6 +11,7 @@ import { useAuth } from '../hooks/useAuth';
 import { dbService } from '../api/db';
 import { apiClient } from '../api/client';
 import { getDynamicTags } from '../utils/tagUtils';
+import { useAlert } from '../components/Common/AlertProvider';
 
 const PageContainer = styled(motion.div)`
   position: fixed;
@@ -290,6 +291,7 @@ const ActionButton = styled.button<{ $primary?: boolean, $success?: boolean }>`
 const AttractionDetailsPage = ({ item: selectedItem, onClose }: { item: any, onClose: () => void }) => {
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();
+  const { showAlert } = useAlert();
   const [isAuthPopupOpen, setIsAuthPopupOpen] = useState(false);
   const [authAction, setAuthAction] = useState('');
   const [newRating, setNewRating] = useState(0);
@@ -537,7 +539,7 @@ const AttractionDetailsPage = ({ item: selectedItem, onClose }: { item: any, onC
                         disabled={submitting}
                         onClick={async () => {
                           if (!user) { setAuthAction('post review'); setIsAuthPopupOpen(true); return; }
-                          if (newRating === 0) return alert('Please select a star rating first.');
+                          if (newRating === 0) return showAlert('Validation Error', 'Please select a star rating first.', 'error');
                           setSubmitting(true);
                           try {
                             const reviewPayload = {
@@ -550,7 +552,7 @@ const AttractionDetailsPage = ({ item: selectedItem, onClose }: { item: any, onC
                             // Optimistic update for current view using fresh review from server
                             setItem((prev: any) => ({ ...prev, reviews: [...(prev.reviews || []), newReview] }));
                             setNewComment(''); setNewRating(0);
-                          } catch (err) { alert('Failed to post review. Please try again.'); } finally { setSubmitting(false); }
+                          } catch (err) { showAlert('Error', 'Failed to post review. Please try again.', 'error'); } finally { setSubmitting(false); }
                         }}
                         style={{ background: 'var(--cta-blue)', color: 'white', padding: '8px 16px', borderRadius: '12px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
                       >

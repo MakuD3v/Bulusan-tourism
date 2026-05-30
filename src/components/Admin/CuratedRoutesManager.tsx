@@ -12,6 +12,7 @@ import { curatedRouteService } from '../../utils/bookingService';
 import { useAttractions, useEnterprises, useHeritage } from '../../hooks/useData';
 import { getMediaUrl } from '../../utils/mediaUtils';
 import { ATTRACTION_CATEGORIES, ENTERPRISE_CATEGORIES, getMapIconUrl } from './CategoryTagConfig';
+import { useAlert } from '../Common/AlertProvider';
 
 // ─── Route List Styles ────────────────────────────────────────────────────────
 
@@ -333,6 +334,7 @@ const initialTour = (): Partial<CuratedRoute> => ({
 const CuratedRoutesManager: React.FC = () => {
   const [routes, setRoutes] = useState<CuratedRoute[]>([]);
   const [loading, setLoading] = useState(true);
+  const { showConfirm } = useAlert();
   const [editing, setEditing] = useState<Partial<CuratedRoute> | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -420,7 +422,7 @@ const CuratedRoutesManager: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Delete this tour?")) { await curatedRouteService.delete(id); loadTours(); }
+    showConfirm('Delete Tour', "Delete this tour?", async () => { await curatedRouteService.delete(id); loadTours(); });
   };
 
   // ── Pool toggle ──

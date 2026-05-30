@@ -12,6 +12,7 @@ import SharedCategoryScroller from '../Common/SharedCategoryScroller';
 import { getMediaUrl } from '../../utils/mediaUtils';
 import { ATTRACTION_CATEGORIES, ENTERPRISE_CATEGORIES, getMapIconUrl } from '../Admin/CategoryTagConfig';
 import SmartSchedulerStep from './SmartSchedulerStep';
+import { useAlert } from '../Common/AlertProvider';
 
 // ─── Styled Components ────────────────────────────────────────────────────────
 
@@ -242,6 +243,7 @@ interface TravelGuideFlowProps {
 
 const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToBooking, items }) => {
   const { user } = useAuth();
+  const { showAlert } = useAlert();
   
   // 0 = Dates/Logistics, 1 = Hub, 2 = Custom Builder, 3 = Route Selection, 4 = Smart Scheduler
   const [step, setStep] = useState(0); 
@@ -301,7 +303,7 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
   };
 
   const handleSelectCurated = (r: CuratedRoute) => {
-    if (!user) { alert("Please log in to book a tour."); return; }
+    if (!user) { showAlert('Authentication Required', "Please log in to book a tour.", 'error'); return; }
     setPendingBooking(r);
     // If the tour has named routes, go to Route Selection (Step 3)
     // If it only has legacy stops and no named routes, skip to Scheduler (Step 4)
@@ -313,7 +315,7 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
   };
 
   const handleFinishCustom = () => {
-    if (!user) { alert("Please log in to create and book a custom tour."); return; }
+    if (!user) { showAlert('Authentication Required', "Please log in to create and book a custom tour.", 'error'); return; }
     if (customStops.length === 0) return;
     
     const customRoute: CuratedRoute = {
@@ -354,9 +356,9 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
   // Maps / Pins logic
   const toggleStop = (item: any) => {
     setCustomStops(prev => {
+      if (prev.length >= recommendedStops + 4) { showAlert('Limit Reached', "You've reached the recommended maximum stops for this duration.", 'error'); return prev; }
       const exists = prev.find(s => s.itemId.toString() === item.id.toString() && s.dayIndex === selectedDayIndex);
       if (exists) return prev.filter(s => !(s.itemId.toString() === item.id.toString() && s.dayIndex === selectedDayIndex));
-      if (prev.length >= recommendedStops + 4) { alert("You've reached the recommended maximum stops for this duration."); return prev; }
       return [...prev, {
         itemId: item.id.toString(),
         entityType: item.entityType as any,
@@ -689,7 +691,7 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
 
           {step === 0 && (
             <NavBtn $primary disabled={selectedDates.length === 0} onClick={() => {
-              if (!user) { alert("Please log in to continue planning your trip."); return; }
+              if (!user) { showAlert('Authentication Required', "Please log in to continue planning your trip.", 'error'); return; }
               setStep(1);
             }}>
               Browse Tours <ChevronRight size={14} />

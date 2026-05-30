@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import styled from 'styled-components';
 import { Upload, X, FileVideo, Plus } from 'lucide-react';
+import { useAlert } from './AlertProvider';
 
 const UploaderContainer = styled.div<{ $isDragOver: boolean, $hasFiles: boolean }>`
   border: 2px dashed ${(props) => props.$isDragOver ? props.theme.colors.ctaBlue : '#ddd'};
@@ -102,6 +103,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     const [isDragOver, setIsDragOver] = useState(false);
     const [filesData, setFilesData] = useState<FileData[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const { showAlert } = useAlert();
 
     const handleFiles = (incomingFiles: FileList | File[]) => {
         let validFiles = Array.from(incomingFiles);
@@ -113,7 +115,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
         let processing = validFiles.length;
 
         if (multiple && filesData.length >= maxFiles) {
-             alert(`Maximum of ${maxFiles} files allowed.`);
+             showAlert('File Limit', `Maximum of ${maxFiles} files allowed.`, 'error');
              return;
         }
 

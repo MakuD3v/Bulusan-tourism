@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { BlogPost } from '../../data/types';
 import { Eye, Trash2 } from 'lucide-react';
 import { dbService } from '../../api/db';
+import { useAlert } from '../Common/AlertProvider';
 const GlassTable = styled.div`
   background: var(--surface-bg);
   border-radius: 24px;
@@ -75,6 +76,7 @@ interface BlogModeratorProps {
 
 const BlogModerator: React.FC<BlogModeratorProps> = ({ blogPosts }) => {
   const [blogPopup, setBlogPopup] = useState<(BlogPost & { id?: string }) | null>(null);
+  const { showConfirm, showAlert } = useAlert();
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
@@ -100,15 +102,15 @@ const BlogModerator: React.FC<BlogModeratorProps> = ({ blogPosts }) => {
                     <button 
                       className="delete" 
                       onClick={async () => {
-                        if (window.confirm(`Delete blog post: ${post.title}?`)) {
+                        showConfirm('Delete Blog Post', `Delete blog post: ${post.title}?`, async () => {
                           try {
                             await dbService.delete('blogs', post.id || post.id);
                             window.location.reload();
                           } catch (e) {
                             console.error("Failed to delete blog", e);
-                            alert("Failed to delete the blog post.");
+                            showAlert('Error', "Failed to delete the blog post.", 'error');
                           }
-                        }
+                        });
                       }} 
                       style={{ display: 'flex', alignItems: 'center', gap: 4 }}
                     >
