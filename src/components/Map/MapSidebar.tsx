@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import styled from 'styled-components';
 import { Search, MapPin, Loader2, X, ChevronRight, Star, Zap, TrendingUp, Award, Users } from 'lucide-react';
 import { ATTRACTION_CATEGORIES, ENTERPRISE_CATEGORIES } from '../Admin/CategoryTagConfig';
@@ -314,6 +314,8 @@ interface MapSidebarProps {
   setSearchQuery: (q: string) => void;
   selectedCategories: string[];
   setSelectedCategories: (cats: string[]) => void;
+  activeTab: 'All' | 'Attraction' | 'Enterprise';
+  onTabChange: (tab: 'All' | 'Attraction' | 'Enterprise') => void;
   loading: boolean;
   onItemClick?: (item: any) => void;
   activeId?: string | null;
@@ -322,9 +324,8 @@ interface MapSidebarProps {
 }
 
 const MapSidebar: React.FC<MapSidebarProps> = ({
-  items, searchQuery, setSearchQuery, selectedCategories, setSelectedCategories, loading, onItemClick, activeId, onOpenDashboard, onOpenTravelGuide
+  items, searchQuery, setSearchQuery, selectedCategories, setSelectedCategories, activeTab, onTabChange, loading, onItemClick, activeId, onOpenDashboard, onOpenTravelGuide
 }) => {
-  const [activeTab, setActiveTab] = useState<'All' | 'Attraction' | 'Enterprise'>('All');
 
   const displayItems = useMemo(() => {
     if (activeTab === 'All') return items;
@@ -361,7 +362,7 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
         
         <TabContainer>
           {(['All', 'Attraction', 'Enterprise'] as const).map(t => (
-            <Tab key={t} $active={activeTab === t} onClick={() => setActiveTab(t)}>
+            <Tab key={t} $active={activeTab === t} onClick={() => onTabChange(t)}>
               {t === 'All' ? 'ALL' : `${t}s`}
             </Tab>
           ))}

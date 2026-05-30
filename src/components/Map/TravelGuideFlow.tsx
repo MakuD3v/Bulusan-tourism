@@ -10,7 +10,7 @@ import { useAttractions, useEnterprises } from '../../hooks/useData';
 import { useAuth } from '../../hooks/useAuth';
 import SharedCategoryScroller from '../Common/SharedCategoryScroller';
 import { getMediaUrl } from '../../utils/mediaUtils';
-import { ATTRACTION_CATEGORIES, ENTERPRISE_CATEGORIES } from '../Admin/CategoryTagConfig';
+import { ATTRACTION_CATEGORIES, ENTERPRISE_CATEGORIES, getMapIconUrl } from '../Admin/CategoryTagConfig';
 
 // ─── Styled Components ────────────────────────────────────────────────────────
 
@@ -511,7 +511,11 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
                         const isSelectedInCurrentDay = customStops.some(s => s.itemId.toString() === item.id.toString() && s.dayIndex === selectedDayIndex);
                         if (isSelectedInCurrentDay) return null;
                         
-                        const icon = L.divIcon({ html: `<div style="background:#5a7098;width:12px;height:12px;border-radius:50%;border:2px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3); opacity: 0.7;"></div>`, className: '' });
+                        const itemCats = (Array.isArray(item.categories) ? item.categories : [((item as any).category || (item as any).type || 'Others')]);
+                        const iconUrl = getMapIconUrl(itemCats[0] || 'Others');
+                        const html = `<img src="${iconUrl}" style="width:32px;height:32px; opacity: 0.6; filter: grayscale(0.4);" />`;
+                        const icon = L.divIcon({ html, className: '', iconSize: [32, 32], iconAnchor: [16, 32] });
+                        
                         return <Marker key={`base-${item.id}`} position={[item.coordinates.lat, item.coordinates.lng]} icon={icon} />;
                       })}
 
@@ -521,7 +525,15 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
                       {customStops.filter(s => s.dayIndex === selectedDayIndex).map((stop, idx) => {
                         const item = allItems.find(i => i.id.toString() === stop.itemId.toString());
                         if (!item || !item.coordinates) return null;
-                        const icon = L.divIcon({ html: `<div style="background:#3b82f6;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:12px;border:2px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3);">${idx + 1}</div>`, className: '' });
+                        
+                        const itemCats = (Array.isArray(item.categories) ? item.categories : [((item as any).category || (item as any).type || 'Others')]);
+                        const iconUrl = getMapIconUrl(itemCats[0] || 'Others');
+                        const html = `<div style="position:relative;">
+                                        <img src="${iconUrl}" style="width:42px;height:42px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));" />
+                                        <div style="position:absolute;top:-5px;right:-5px;background:#3b82f6;color:white;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:11px;border:2px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3);">${idx + 1}</div>
+                                      </div>`;
+                        const icon = L.divIcon({ html, className: '', iconSize: [42, 42], iconAnchor: [21, 42] });
+                        
                         return <Marker key={`selected-${stop.itemId}`} position={[item.coordinates.lat, item.coordinates.lng]} icon={icon} />;
                       })}
                       <MapAutoFitter coordinates={customPolyline} />

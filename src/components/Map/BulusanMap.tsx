@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import styled from 'styled-components';
 import { MapContainer, Marker, Popup, useMap, TileLayer, Tooltip } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -469,7 +469,7 @@ const BulusanMarker = ({ item, priorityCategory, onHandleSelect, isMobile, setMo
       ref={markerRef}
       position={[item.coordinates.lat, item.coordinates.lng]}
       icon={stableIcon}
-      opacity={isFocused ? 1 : isGhosted ? 0.3 : isMatch ? 1 : 0.4}
+      opacity={isFocused ? 1 : isGhosted ? 0.3 : isMatch ? 1 : 0.12}
       interactive={true} // Always allow interaction
       zIndexOffset={isFocused ? 2000 : isMatch ? 1000 : 0} 
       eventHandlers={{ 
@@ -547,6 +547,7 @@ interface BulusanMapProps {
   items: any[];
   searchQuery?: string;
   selectedCategories?: string[];
+  activeTab?: 'All' | 'Attraction' | 'Enterprise' | 'Heritage';
   focusLat?: number;
   focusLng?: number;
   focusName?: string;
@@ -554,7 +555,7 @@ interface BulusanMapProps {
   activeTour?: any; // CustomUserTour
 }
 
-const BulusanMap = ({ items, searchQuery = '', selectedCategories = [], focusLat, focusLng, focusName, autoRoute, activeTour }: BulusanMapProps) => {
+const BulusanMap = ({ items, searchQuery = '', selectedCategories = [], activeTab = 'All', focusLat, focusLng, focusName, autoRoute, activeTour }: BulusanMapProps) => {
   const [selection, setSelection] = useState<any[]>([]);
   const [routeInfo, setRouteInfo] = useState<any>(null);
   const [mobileDetail, setMobileDetail] = useState<any>(null);
@@ -769,13 +770,23 @@ const BulusanMap = ({ items, searchQuery = '', selectedCategories = [], focusLat
             : itemCats[0];
           
           const queryLower = searchQuery.toLowerCase().trim();
-          const itemText = (item.name + ' ' + (item.description || '')).toLowerCase().trim();
-          const queryMatch = queryLower === '' || itemText.includes(queryLower);
-          const categoryMatch = selectedCategories.length === 0 || selectedCategories.every(sc => itemCats.some(ic => ic.toLowerCase().trim() === sc.toLowerCase().trim()));
-          const isMatch = (queryLower !== '' && item.name.toLowerCase().includes(queryLower)) || (queryMatch && categoryMatch);
+          const searchMatch = queryLower === '' || item.name.toLowerCase().includes(queryLower);
+          const categoryMatch = selectedCategories.length === 0 || itemCats.some(ic => selectedCategories.some(sc => ic.toLowerCase().trim() === sc.toLowerCase().trim()));
+          const tabMatch = activeTab === 'All' || item.entityType === activeTab;
           const isFocused = focusName === item.name;
-          const isFiltering = !!focusName || queryLower !== '' || selectedCategories.length > 0;
-          const effectiveMatch = isFiltering ? (focusName ? isFocused : isMatch) : true;
+          
+          // Any filter active?
+          const isFiltering = !!focusName || queryLower !== '' || selectedCategories.length > 0 || activeTab !== 'All';
+          
+          // Compute match: if something is focused only that item stays bright; otherwise check all filters
+          let effectiveMatch = true;
+          if (isFiltering) {
+            if (focusName) {
+              effectiveMatch = isFocused;
+            } else {
+              effectiveMatch = searchMatch && categoryMatch && tabMatch;
+            }
+          }
           
           const tourDest = activeTour?.destinations.find((d: any) => d.itemId === (item.id || item.id).toString());
           const isGhosted = tourDest && tourDest.completed;

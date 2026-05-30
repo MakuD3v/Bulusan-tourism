@@ -203,6 +203,7 @@ const ToursAndMapPage: React.FC = () => {
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<'All' | 'Attraction' | 'Enterprise'>('All');
   const [focusedLocation, setFocusedLocation] = useState<any>(null);
 
   const [showTravelGuide, setShowTravelGuide] = useState(false);
@@ -309,6 +310,8 @@ const ToursAndMapPage: React.FC = () => {
               setSearchQuery={setSearchQuery}
               selectedCategories={selectedCategories}
               setSelectedCategories={setSelectedCategories}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
               onItemClick={(item) => {
                 const clickedId = (item.id || item.id).toString();
                 const currentId = (focusedLocation?.id || focusedLocation?.id)?.toString();
