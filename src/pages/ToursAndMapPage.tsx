@@ -332,6 +332,7 @@ const ToursAndMapPage: React.FC = () => {
       <AnimatePresence>
         {showTravelGuide && (
            <TravelGuideFlow
+              items={allItems}
               onClose={() => setShowTravelGuide(false)}
               onProceedToBooking={(route, dates, mode, answers) => {
                  setBookingDetails({ route, dates, mode, answers });

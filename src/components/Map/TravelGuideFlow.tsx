@@ -236,9 +236,10 @@ const MapAutoFitter = ({ coordinates }: { coordinates: [number, number][] }) => 
 interface TravelGuideFlowProps {
   onClose: () => void;
   onProceedToBooking: (route: CuratedRoute, dates: string[], mode: 'auto'|'manual', answers: any) => void;
+  items?: any[];
 }
 
-const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToBooking }) => {
+const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToBooking, items }) => {
   const { user } = useAuth();
   
   // 0 = Dates/Logistics, 1 = Hub, 2 = Custom Builder
@@ -263,10 +264,13 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
   const [loadingRoutes, setLoadingRoutes] = useState(false);
   const { data: attractions } = useAttractions();
   const { data: enterprises } = useEnterprises();
-  const allItems = useMemo(() => [
-    ...attractions.map(a => ({ ...a, entityType: 'Attraction' })),
-    ...enterprises.map(e => ({ ...e, entityType: 'Enterprise' }))
-  ], [attractions, enterprises]);
+  const allItems = useMemo(() => {
+    if (items) return items;
+    return [
+      ...attractions.map(a => ({ ...a, entityType: 'Attraction' })),
+      ...enterprises.map(e => ({ ...e, entityType: 'Enterprise' }))
+    ];
+  }, [attractions, enterprises, items]);
 
   // Custom Builder State
   const [customStops, setCustomStops] = useState<CuratedRouteStop[]>([]);
