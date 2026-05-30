@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, Zap, Loader2, ChevronRight, ChevronLeft, MapPin, Star, Plus, Minus, Check, Map as MapIcon } from 'lucide-react';
+import { X, Calendar, Zap, Loader2, ChevronRight, ChevronLeft, MapPin, Star, Plus, Minus, Check, Map as MapIcon, Edit2 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { CuratedRoute, TourTheme, CuratedRouteStop } from '../../data/types';
@@ -243,7 +243,7 @@ interface TravelGuideFlowProps {
 const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToBooking, items }) => {
   const { user } = useAuth();
   
-  // 0 = Dates/Logistics, 1 = Hub, 2 = Custom Builder
+  // 0 = Dates/Logistics, 1 = Hub, 2 = Custom Builder, 3 = Route Selection, 4 = Smart Scheduler
   const [step, setStep] = useState(0); 
 
   // Logistics & Dates
@@ -303,7 +303,13 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
   const handleSelectCurated = (r: CuratedRoute) => {
     if (!user) { alert("Please log in to book a tour."); return; }
     setPendingBooking(r);
-    setStep(3);
+    // If the tour has named routes, go to Route Selection (Step 3)
+    // If it only has legacy stops and no named routes, skip to Scheduler (Step 4)
+    if (r.tourRoutes && r.tourRoutes.length > 0) {
+      setStep(3);
+    } else {
+      setStep(4);
+    }
   };
 
   const handleFinishCustom = () => {
@@ -321,10 +327,28 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
       createdAt: Date.now(),
       updatedAt: Date.now(),
       isActive: true,
+      availableAttractions: pendingBooking?.availableAttractions
     };
 
     setPendingBooking(customRoute);
-    setStep(3);
+    setStep(4);
+  };
+
+  const handleBack = () => {
+    if (step === 4) {
+      if (pendingBooking?.id.startsWith('custom')) {
+        setStep(2);
+      } else if (pendingBooking?.tourRoutes && pendingBooking.tourRoutes.length > 0) {
+        setStep(3);
+      } else {
+        setStep(1);
+      }
+    } else if (step === 2 && pendingBooking && pendingBooking.availableAttractions) {
+      // If we were customizing a specific tour pool, go back to route selection
+      setStep(3);
+    } else {
+      setStep(s => s - 1);
+    }
   };
 
   // Maps / Pins logic
@@ -424,7 +448,7 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
             {step === 1 && (
               <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                 <HubLayout>
-                  <CustomTourBanner onClick={() => setStep(2)}>
+                  <CustomTourBanner onClick={() => { setPendingBooking(null); setStep(2); }}>
                     <div className="info">
                       <h3>Create Your Own Tour</h3>
                       <p>Hand-pick up to {recommendedStops + 4} attractions and enterprises to build your perfect {selectedDates.length}-day journey.</p>
@@ -487,6 +511,10 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
                     <ItemList>
                       {allItems
                         .filter(item => {
+                           // If we are customizing a specific tour, restrict to its available pool
+                           if (pendingBooking && pendingBooking.availableAttractions?.length) {
+                             if (!pendingBooking.availableAttractions.includes(item.id.toString())) return false;
+                           }
                            if (selectedCategories.length > 0) {
                              const itemCats = item.categories || [];
                              return itemCats.some(c => selectedCategories.includes(c));
@@ -575,9 +603,68 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
               </motion.div>
             )}
 
-            {/* ── STEP 3: Smart Scheduler ── */}
+            {/* ── STEP 3: Route Selection ── */}
             {step === 3 && pendingBooking && (
-              <motion.div key="step3" style={{ height: '100%', overflow: 'hidden' }} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+              <motion.div key="step3" style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,0.02)' }} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                <div style={{ padding: '24px 32px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <h3 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '1.4rem', color: '#e2ecf7', margin: '0 0 8px' }}>Choose your Route</h3>
+                  <p style={{ fontSize: '0.85rem', color: '#90aecb', margin: 0 }}>The <strong>{pendingBooking.name}</strong> offers {pendingBooking.tourRoutes?.length || 0} carefully planned routes. Select one to continue, or customize your own path from its approved attractions.</p>
+                </div>
+                
+                <div style={{ flex: 1, overflowY: 'auto', padding: '32px', display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px', flex: 1 }}>
+                    {(pendingBooking.tourRoutes || []).map((route, i) => (
+                      <div 
+                        key={route.id}
+                        onClick={() => { setPendingBooking({ ...pendingBooking, stops: route.stops }); setStep(4); }}
+                        style={{ background: 'rgba(11,31,69,0.5)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '16px', padding: '20px', cursor: 'pointer', transition: 'all 0.2s', position: 'relative', overflow: 'hidden' }}
+                        onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                        onMouseLeave={e => e.currentTarget.style.transform = 'none'}
+                      >
+                        <div style={{ position: 'absolute', top: 0, right: 0, width: '60px', height: '60px', background: 'radial-gradient(circle at top right, rgba(59,130,246,0.2) 0%, transparent 70%)' }} />
+                        <h4 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '1.2rem', color: '#e2ecf7', margin: '0 0 12px' }}>{route.name}</h4>
+                        <div style={{ fontSize: '0.8rem', color: '#90aecb', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}>
+                          <MapPin size={12} color="#60a5fa" /> {route.stops.length} Stops planned
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {route.stops.slice(0, 3).map((stop, idx) => (
+                            <div key={idx} style={{ fontSize: '0.75rem', color: '#e2ecf7', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'rgba(59,130,246,0.2)', color: '#60a5fa', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: 700 }}>{idx + 1}</span>
+                              {stop.itemName}
+                            </div>
+                          ))}
+                          {route.stops.length > 3 && (
+                            <div style={{ fontSize: '0.7rem', color: '#5a7098', paddingLeft: '24px', fontStyle: 'italic' }}>+ {route.stops.length - 3} more stops</div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {pendingBooking.availableAttractions && pendingBooking.availableAttractions.length > 0 && (
+                    <div style={{ width: '280px', flexShrink: 0, background: 'rgba(0,0,0,0.3)', border: '1px dashed rgba(255,255,255,0.15)', borderRadius: '16px', padding: '24px', textAlign: 'center' }}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                        <Edit2 size={20} color="#90aecb" />
+                      </div>
+                      <h4 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '1.1rem', color: '#e2ecf7', margin: '0 0 8px' }}>Customize Route</h4>
+                      <p style={{ fontSize: '0.8rem', color: '#90aecb', margin: '0 0 20px', lineHeight: 1.5 }}>Prefer to build your own path? Choose from {pendingBooking.availableAttractions.length} approved attractions for this tour.</p>
+                      <button 
+                        onClick={() => { setCustomName(`${pendingBooking.name} (Custom)`); setCustomTheme(pendingBooking.theme); setStep(2); }}
+                        style={{ background: 'transparent', border: '1px solid #3b82f6', color: '#60a5fa', padding: '8px 20px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', width: '100%', transition: 'all 0.2s' }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.1)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                      >
+                        Build Custom Route
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── STEP 4: Smart Scheduler ── */}
+            {step === 4 && pendingBooking && (
+              <motion.div key="step4" style={{ height: '100%', overflow: 'hidden' }} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                 <SmartSchedulerStep
                   stops={pendingBooking.stops}
                   pace={pace}
@@ -597,7 +684,7 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
           {step === 0 ? (
             <NavBtn onClick={onClose}>Cancel</NavBtn>
           ) : (
-            <NavBtn onClick={() => setStep(s => s - 1)}><ChevronLeft size={14} /> Back</NavBtn>
+            <NavBtn onClick={handleBack}><ChevronLeft size={14} /> Back</NavBtn>
           )}
 
           {step === 0 && (
