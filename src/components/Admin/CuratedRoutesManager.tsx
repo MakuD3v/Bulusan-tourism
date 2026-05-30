@@ -317,16 +317,17 @@ const ALL_CATEGORIES = [
   ...ENTERPRISE_CATEGORIES.map(c => ({ label: c.label })),
 ].filter((c, i, arr) => arr.findIndex(x => x.label === c.label) === i);
 
-const mkRoute = (n: number): TourRoute => ({
+const mkRoute = (n: number, days: number): TourRoute => ({
   id: `r-${Date.now()}-${n}`,
-  name: `Day ${n}`,
-  stops: []
+  name: `Route ${n}`,
+  stops: [],
+  days: Array.from({ length: days }, (_, i) => ({ dayIndex: i + 1, stops: [] }))
 });
 
 const initialTour = (): Partial<CuratedRoute> => ({
   name: '', description: '', coverImage: '', theme: 'Seascape', estimatedDays: 1,
   difficulty: 'Moderate', isActive: true, stops: [],
-  availableAttractions: [], tourRoutes: [mkRoute(1)]
+  availableAttractions: [], tourRoutes: [mkRoute(1, 1)]
 });
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -347,6 +348,7 @@ const CuratedRoutesManager: React.FC = () => {
 
   // Routes tab
   const [activeRouteId, setActiveRouteId] = useState<string>('');
+  const [activeDayIndex, setActiveDayIndex] = useState<number>(1); // 1-based
   const [editingRouteName, setEditingRouteName] = useState<string | null>(null);
   const [routeNameDraft, setRouteNameDraft] = useState('');
 
@@ -380,6 +382,17 @@ const CuratedRoutesManager: React.FC = () => {
     return (editing?.tourRoutes || []).find(r => r.id === activeRouteId) || null;
   }, [editing?.tourRoutes, activeRouteId]);
 
+  // Active day's stops within the active route
+  const activeDayStops = useMemo(() => {
+    if (!activeRoute) return [];
+    // Support both new days[] structure and legacy flat stops
+    if (activeRoute.days && activeRoute.days.length > 0) {
+      return activeRoute.days.find(d => d.dayIndex === activeDayIndex)?.stops || [];
+    }
+    // Legacy: return all stops
+    return activeRoute.stops || [];
+  }, [activeRoute, activeDayIndex]);
+
   useEffect(() => { loadTours(); }, []);
 
   const loadTours = () => {
@@ -396,23 +409,43 @@ const CuratedRoutesManager: React.FC = () => {
   };
 
   const openEdit = (r: CuratedRoute) => {
-    const withRoutes = { ...r, tourRoutes: r.tourRoutes?.length ? r.tourRoutes : [mkRoute(1)], availableAttractions: r.availableAttractions || [] };
+    const days = r.estimatedDays || 1;
+    // Migrate existing routes to have days[] if they don't have it yet
+    const migratedRoutes = (r.tourRoutes?.length ? r.tourRoutes : [mkRoute(1, days)]).map(route => ({
+      ...route,
+      days: route.days && route.days.length > 0
+        ? (() => {
+            // Ensure days array matches current estimatedDays
+            let arr = [...route.days];
+            for (let i = arr.length; i < days; i++) arr.push({ dayIndex: i + 1, stops: [] });
+            if (arr.length > days) arr = arr.slice(0, days);
+            return arr;
+          })()
+        : Array.from({ length: days }, (_, i) => ({ dayIndex: i + 1, stops: [] }))
+    }));
+    const withRoutes = { ...r, tourRoutes: migratedRoutes, availableAttractions: r.availableAttractions || [] };
     setEditing(withRoutes);
     setActiveTab('tours');
     setActiveRouteId((withRoutes.tourRoutes || [])[0]?.id || '');
+    setActiveDayIndex(1);
     setSelectedCategory('All');
   };
 
   const handleSave = async () => {
     if (!editing || !editing.name) return;
     setSaving(true);
+    // Flatten all days' stops back to top-level stops for backward compat
+    const tourRoutes = (editing.tourRoutes || []).map(route => ({
+      ...route,
+      stops: (route.days || []).flatMap(d => d.stops),
+    }));
     const r: CuratedRoute = {
       ...editing,
       id: editing.id || `tour-${Date.now()}`,
       createdAt: editing.createdAt || Date.now(),
       updatedAt: Date.now(),
-      stops: (editing.tourRoutes || []).flatMap(tr => tr.stops), // union of all route stops
-      tourRoutes: editing.tourRoutes || [],
+      stops: tourRoutes.flatMap(tr => tr.stops),
+      tourRoutes,
       availableAttractions: editing.availableAttractions || [],
     } as CuratedRoute;
     await curatedRouteService.save(r);
@@ -449,7 +482,27 @@ const CuratedRoutesManager: React.FC = () => {
   }, [editing?.availableAttractions, allItems]);
 
   // ── Route management ──
-  // Routes are now automatically managed based on estimatedDays
+  const addRoute = () => {
+    setEditing(prev => {
+      if (!prev) return prev;
+      const n = (prev.tourRoutes || []).length + 1;
+      const days = prev.estimatedDays || 1;
+      const newR = mkRoute(n, days);
+      const updated = [...(prev.tourRoutes || []), newR];
+      setActiveRouteId(newR.id);
+      setActiveDayIndex(1);
+      return { ...prev, tourRoutes: updated };
+    });
+  };
+
+  const deleteRoute = (id: string) => {
+    setEditing(prev => {
+      if (!prev) return prev;
+      const updated = (prev.tourRoutes || []).filter(r => r.id !== id);
+      if (activeRouteId === id) { setActiveRouteId(updated[0]?.id || ''); setActiveDayIndex(1); }
+      return { ...prev, tourRoutes: updated };
+    });
+  };
 
   const renameRoute = (id: string, newName: string) => {
     setEditing(prev => {
@@ -459,7 +512,7 @@ const CuratedRoutesManager: React.FC = () => {
     setEditingRouteName(null);
   };
 
-  // ── Stop management within active route ──
+  // ── Stop management within active route's active day ──
   const updateRoute = (updatedRoute: TourRoute) => {
     setEditing(prev => {
       if (!prev) return prev;
@@ -467,15 +520,23 @@ const CuratedRoutesManager: React.FC = () => {
     });
   };
 
-  const toggleStop = (item: any) => {
+  // Update stops for the active day in the active route
+  const updateActiveDayStops = (newStops: CuratedRouteStop[]) => {
     if (!activeRoute) return;
-    const stops = [...activeRoute.stops];
+    const updatedDays = (activeRoute.days || []).map(d =>
+      d.dayIndex === activeDayIndex ? { ...d, stops: newStops } : d
+    );
+    updateRoute({ ...activeRoute, days: updatedDays, stops: updatedDays.flatMap(d => d.stops) });
+  };
+
+  const toggleStop = (item: any) => {
+    const stops = [...activeDayStops];
     const idx = stops.findIndex(s => s.itemId === item.id.toString());
     if (idx >= 0) { stops.splice(idx, 1); }
     else {
-      stops.push({ itemId: item.id.toString(), entityType: item.entityType, itemName: item.name, durationHours: 1, scheduledTime: '' });
+      stops.push({ itemId: item.id.toString(), entityType: item.entityType, itemName: item.name, durationHours: 1, scheduledTime: '', dayIndex: activeDayIndex });
     }
-    updateRoute({ ...activeRoute, stops });
+    updateActiveDayStops(stops);
   };
 
   // Helper: parse "HH:MM" into minutes
@@ -483,8 +544,7 @@ const CuratedRoutesManager: React.FC = () => {
   const toHours = (mins: number) => Math.round((mins / 60) * 10) / 10;
 
   const updateStopRange = (stopIdx: number, field: 'scheduledTime' | 'endTime', value: string) => {
-    if (!activeRoute) return;
-    const stops = activeRoute.stops.map((s, i) => {
+    const stops = activeDayStops.map((s, i) => {
       if (i !== stopIdx) return s;
       const updated = { ...s, [field]: value };
       const start = field === 'scheduledTime' ? value : (s.scheduledTime || '');
@@ -495,34 +555,31 @@ const CuratedRoutesManager: React.FC = () => {
       }
       return updated;
     });
-    updateRoute({ ...activeRoute, stops });
+    updateActiveDayStops(stops);
   };
 
   const moveStop = (idx: number, dir: number) => {
-    if (!activeRoute) return;
-    const stops = [...activeRoute.stops];
+    const stops = [...activeDayStops];
     if (idx + dir < 0 || idx + dir >= stops.length) return;
     [stops[idx], stops[idx + dir]] = [stops[idx + dir], stops[idx]];
-    updateRoute({ ...activeRoute, stops });
+    updateActiveDayStops(stops);
   };
 
   const removeStop = (idx: number) => {
-    if (!activeRoute) return;
-    const stops = activeRoute.stops.filter((_, i) => i !== idx);
-    updateRoute({ ...activeRoute, stops });
+    updateActiveDayStops(activeDayStops.filter((_, i) => i !== idx));
   };
 
-  // Route map polyline
+  // Route map polyline (shows active day's stops)
   const routeCoords = useMemo<[number, number][]>(() => {
     if (!activeRoute) return [];
-    return activeRoute.stops.map(stop => {
+    return activeDayStops.map(stop => {
       const item = allItems.find(i => i.id.toString() === stop.itemId);
       if (!item) return null;
       const lat = (item as any).lat || (item as any).coordinates?.lat;
       const lng = (item as any).lng || (item as any).coordinates?.lng;
       return lat && lng ? [lat, lng] as [number, number] : null;
     }).filter(Boolean) as [number, number][];
-  }, [activeRoute, allItems]);
+  }, [activeRoute, activeDayStops, allItems]);
 
   // ─────────────────────────────────────────────────────────────────────────────
   // RENDER
@@ -618,16 +675,16 @@ const CuratedRoutesManager: React.FC = () => {
                           const newDays = parseInt(e.target.value) || 1;
                           setEditing(prev => {
                             if (!prev) return prev;
-                            let newRoutes = [...(prev.tourRoutes || [])];
-                            if (newDays > newRoutes.length) {
-                              for (let i = newRoutes.length; i < newDays; i++) {
-                                newRoutes.push(mkRoute(i + 1));
-                              }
-                            } else if (newDays < newRoutes.length) {
-                              newRoutes = newRoutes.slice(0, newDays);
-                            }
-                            return { ...prev, estimatedDays: newDays, tourRoutes: newRoutes };
+                            // Sync days[] inside each existing route — don't add/remove routes
+                            const updatedRoutes = (prev.tourRoutes || []).map(route => {
+                              let arr = [...(route.days || [])];
+                              for (let i = arr.length; i < newDays; i++) arr.push({ dayIndex: i + 1, stops: [] });
+                              if (arr.length > newDays) arr = arr.slice(0, newDays);
+                              return { ...route, days: arr };
+                            });
+                            return { ...prev, estimatedDays: newDays, tourRoutes: updatedRoutes };
                           });
+                          if (activeDayIndex > newDays) setActiveDayIndex(1);
                         }} />
                       </div>
                       <div><label>Difficulty</label>
@@ -714,10 +771,10 @@ const CuratedRoutesManager: React.FC = () => {
               {/* ══ ROUTES TAB ══ */}
               {activeTab === 'routes' && (
                 <RoutesPanel>
-                  {/* Route tabs */}
+                  {/* Row 1: Route tabs + add route button */}
                   <RouteTabsBar>
                     {(editing.tourRoutes || []).map(r => (
-                      <RouteTab key={r.id} $active={r.id === activeRouteId} onClick={() => setActiveRouteId(r.id)}>
+                      <RouteTab key={r.id} $active={r.id === activeRouteId} onClick={() => { setActiveRouteId(r.id); setActiveDayIndex(1); }}>
                         {editingRouteName === r.id ? (
                           <input
                             autoFocus
@@ -736,9 +793,36 @@ const CuratedRoutesManager: React.FC = () => {
                             </span>
                           </>
                         )}
+                        {(editing.tourRoutes || []).length > 1 && (
+                          <span className="del" onClick={e => { e.stopPropagation(); deleteRoute(r.id); }}>
+                            <X size={9} />
+                          </span>
+                        )}
+                        <span style={{ fontSize: '0.62rem', opacity: 0.6 }}>({(r.days || []).reduce((sum, d) => sum + d.stops.length, 0)})</span>
                       </RouteTab>
                     ))}
+                    <AddRouteBtn onClick={addRoute}><Plus size={12} /> New Route</AddRouteBtn>
                   </RouteTabsBar>
+
+                  {/* Row 2: Day sub-tabs for the active route */}
+                  {activeRoute && (editing.estimatedDays || 1) > 1 && (
+                    <div style={{ display: 'flex', gap: 4, padding: '8px 16px', background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.04)', overflowX: 'auto' }}>
+                      {(activeRoute.days || Array.from({ length: editing.estimatedDays || 1 }, (_, i) => ({ dayIndex: i + 1, stops: [] }))).map(day => (
+                        <button
+                          key={day.dayIndex}
+                          onClick={() => setActiveDayIndex(day.dayIndex)}
+                          style={{
+                            padding: '4px 14px', borderRadius: 20, fontSize: '0.72rem', fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
+                            border: `1px solid ${activeDayIndex === day.dayIndex ? '#10b981' : 'rgba(255,255,255,0.1)'}`,
+                            background: activeDayIndex === day.dayIndex ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.04)',
+                            color: activeDayIndex === day.dayIndex ? '#10b981' : '#90aecb',
+                          }}
+                        >
+                          Day {day.dayIndex} <span style={{ opacity: 0.6, fontSize: '0.6rem' }}>({day.stops.length})</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
                   {poolItems.length === 0 ? (
                     <EmptyRoutesMsg>
@@ -748,14 +832,14 @@ const CuratedRoutesManager: React.FC = () => {
                     </EmptyRoutesMsg>
                   ) : (
                     <RouteContent>
-                      {/* Left: stops list for this route */}
+                      {/* Left: stops list for this route's active day */}
                       <RouteStopsSidebar>
                         <StopsSidebarHeader>
-                          <span className="title">{activeRoute?.name} — Stops</span>
-                          <span className="hint">{activeRoute?.stops.length || 0} stops</span>
+                          <span className="title">{activeRoute?.name}{(editing.estimatedDays || 1) > 1 ? ` · Day ${activeDayIndex}` : ' — Stops'}</span>
+                          <span className="hint">{activeDayStops.length} stops</span>
                         </StopsSidebarHeader>
                         <StopsScrollArea>
-                          {(activeRoute?.stops || []).map((stop, idx) => (
+                          {activeDayStops.map((stop, idx) => (
                             <RouteStopCard key={`${stop.itemId}-${idx}`}>
                               <span className="num">{idx + 1}</span>
                               <div className="info">
@@ -776,24 +860,24 @@ const CuratedRoutesManager: React.FC = () => {
                               </div>
                               <div className="sort-btns">
                                 <button disabled={idx === 0} onClick={() => moveStop(idx, -1)}><ArrowUp size={10} /></button>
-                                <button disabled={idx === (activeRoute?.stops.length || 0) - 1} onClick={() => moveStop(idx, 1)}><ArrowDown size={10} /></button>
+                                <button disabled={idx === activeDayStops.length - 1} onClick={() => moveStop(idx, 1)}><ArrowDown size={10} /></button>
                               </div>
                               <button className="del-btn" onClick={() => removeStop(idx)}><X size={12} /></button>
                             </RouteStopCard>
                           ))}
-                          {(activeRoute?.stops.length || 0) === 0 && (
+                          {activeDayStops.length === 0 && (
                             <div style={{ padding: 20, textAlign: 'center', color: '#5a7098', fontSize: '0.8rem' }}>
-                              Pick attractions from the pool below to build this route.
+                              Pick attractions from the pool below to add to Day {activeDayIndex}.
                             </div>
                           )}
                         </StopsScrollArea>
 
                         {/* Pool picker chips */}
                         <PoolPickerRow>
-                          <div className="label">Add from tour attractions</div>
+                          <div className="label">Add to {activeRoute?.name}{(editing.estimatedDays || 1) > 1 ? ` · Day ${activeDayIndex}` : ''}</div>
                           <PoolChipGrid>
                             {poolItems.map(item => {
-                              const inRoute = activeRoute?.stops.some(s => s.itemId === item.id.toString()) || false;
+                              const inRoute = activeDayStops.some(s => s.itemId === item.id.toString()) || false;
                               return (
                                 <PoolItemChip key={item.id} $added={inRoute} onClick={() => toggleStop(item)}>
                                   {inRoute ? '✓ ' : '+ '}{item.name}
@@ -811,7 +895,7 @@ const CuratedRoutesManager: React.FC = () => {
 
                           {/* Faded pool items not in route */}
                           {poolItems.map(item => {
-                            const inRoute = activeRoute?.stops.some(s => s.itemId === item.id.toString());
+                            const inRoute = activeDayStops.some(s => s.itemId === item.id.toString());
                             if (inRoute) return null;
                             const lat = (item as any).lat || (item as any).coordinates?.lat;
                             const lng = (item as any).lng || (item as any).coordinates?.lng;
@@ -823,9 +907,9 @@ const CuratedRoutesManager: React.FC = () => {
                             return <Marker key={`f-${item.id}`} position={[lat, lng]} icon={icon} />;
                           })}
 
-                          {/* Active route stops with numbered pins */}
+                          {/* Active day's stops with numbered pins */}
                           {routeCoords.length > 1 && <Polyline positions={routeCoords} color="#3b82f6" weight={4} dashArray="8,8" />}
-                          {(activeRoute?.stops || []).map((stop, idx) => {
+                          {activeDayStops.map((stop, idx) => {
                             const item = allItems.find(i => i.id.toString() === stop.itemId);
                             if (!item) return null;
                             const lat = (item as any).lat || (item as any).coordinates?.lat;

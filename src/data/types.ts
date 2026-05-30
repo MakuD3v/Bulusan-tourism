@@ -175,11 +175,18 @@ export interface CuratedRouteStop {
     dayIndex?: number;
 }
 
+// A single day's plan within a Route
+export interface RouteDay {
+    dayIndex: number; // 1-based day number
+    stops: CuratedRouteStop[];
+}
+
 // A named premade route within a Tour (e.g. "Route A", "The Coastal Loop")
 export interface TourRoute {
     id: string;
     name: string;
-    stops: CuratedRouteStop[]; // ordered stops with scheduledTime per stop
+    stops: CuratedRouteStop[]; // legacy flat stops (union of all days) kept for backward compat
+    days?: RouteDay[];         // per-day breakdown of stops
 }
 
 export interface CuratedRoute {
