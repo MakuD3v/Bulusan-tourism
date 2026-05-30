@@ -54,9 +54,9 @@ const InboxReader: React.FC<InboxReaderProps> = ({ inquiries }) => {
   const handleReply = async () => {
     if (!selectedInquiry) return;
     
-    // Open Gmail / default mail client
-    const mailtoLink = `mailto:${selectedInquiry.email}?subject=Re: ${selectedInquiry.subject}`;
-    window.location.href = mailtoLink;
+    // Open Gmail directly in compose mode
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(selectedInquiry.email)}`;
+    window.open(gmailUrl, '_blank');
 
     // Auto-mark as read when replying
     if (selectedInquiry.status === 'New') {
