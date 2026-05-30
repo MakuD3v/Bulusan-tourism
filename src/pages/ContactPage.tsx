@@ -195,9 +195,7 @@ const ContactPage = () => {
         status: 'New'
       });
 
-      // 2. Direct Email Link (Optional fallback)
-      const mailtoLink = `mailto:info@bulusantourism.ph?subject=Website Inquiry&body=From: ${formData.name}%0D%0AEmail: ${formData.email}%0D%0A%0D%0AMessage:%0D%0A${formData.message}`;
-      window.location.href = mailtoLink;
+      // 2. Direct Email Link (Removed as per user request)
 
       setSent(true);
       setFormData({ name: '', email: '', message: '' });
