@@ -171,7 +171,14 @@ export interface CuratedRouteStop {
     durationHours?: number;
     scheduledTime?: string; // e.g. "08:00", "14:30" (24hr format)
     notes?: string;
-    dayIndex?: number; // Added to map specific stops to specific days in custom tours
+    dayIndex?: number;
+}
+
+// A named premade route within a Tour (e.g. "Route A", "The Coastal Loop")
+export interface TourRoute {
+    id: string;
+    name: string;
+    stops: CuratedRouteStop[]; // ordered stops with scheduledTime per stop
 }
 
 export interface CuratedRoute {
@@ -180,6 +187,11 @@ export interface CuratedRoute {
     theme: TourTheme;
     description: string;
     coverImage?: string;
+    // Pool of attraction/enterprise/heritage itemIds approved for this tour
+    availableAttractions?: string[];
+    // Premade routes for the tour (each has its own ordered stop schedule)
+    tourRoutes?: TourRoute[];
+    // Legacy flat stops kept for backwards compat with user custom tours
     stops: CuratedRouteStop[];
     estimatedDays: number;
     difficulty?: 'Easy' | 'Moderate' | 'Challenging';

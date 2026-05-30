@@ -3,17 +3,17 @@ import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Edit2, Trash2, MapPin, Waves, TreePine, Save, X,
-  Loader2, ArrowUp, ArrowDown, ChevronLeft, Check, Map as MapIcon
+  Loader2, ChevronLeft, Check, Map as MapIcon, Clock, ArrowUp, ArrowDown, Pencil
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { CuratedRoute, TourTheme, CuratedRouteStop } from '../../data/types';
+import { CuratedRoute, TourTheme, CuratedRouteStop, TourRoute } from '../../data/types';
 import { curatedRouteService } from '../../utils/bookingService';
 import { useAttractions, useEnterprises, useHeritage } from '../../hooks/useData';
 import { getMediaUrl } from '../../utils/mediaUtils';
 import { ATTRACTION_CATEGORIES, ENTERPRISE_CATEGORIES, getMapIconUrl } from './CategoryTagConfig';
 
-// ─── Styled: Route List ───────────────────────────────────────────────────────
+// ─── Route List Styles ────────────────────────────────────────────────────────
 
 const Container = styled.div`
   display: flex; flex-direction: column; gap: 20px; height: 100%;
@@ -34,145 +34,138 @@ const RouteList = styled.div`
   display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;
 `;
 
-const RouteCard = styled.div`
+const TourCard = styled.div`
   background: rgba(11,31,69,0.5); border: 1px solid rgba(255,255,255,0.05);
-  border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 12px;
+  border-radius: 20px; padding: 0; display: flex; flex-direction: column;
   position: relative; overflow: hidden;
-  .rc-bg { position: absolute; top: 0; left: 0; right: 0; height: 120px; background-size: cover; background-position: center; opacity: 0.2; z-index: 0; }
-  > * { z-index: 1; position: relative; }
-  .rc-header { display: flex; justify-content: space-between; align-items: flex-start;
-    .theme { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; background: rgba(59,130,246,0.15); color: #60a5fa; }
-    .actions { display: flex; gap: 8px; button { background: rgba(0,0,0,0.5); border-radius: 8px; border: none; color: #90aecb; cursor: pointer; padding: 6px; &:hover { color: white; background: rgba(0,0,0,0.8); } } }
+  .card-img { width: 100%; height: 120px; background-size: cover; background-position: center; position: relative;
+    &::after { content:''; position:absolute; inset:0; background: linear-gradient(to bottom, transparent 40%, rgba(5,13,30,0.95)); }
   }
-  h4 { font-family: 'Outfit', sans-serif; font-size: 1.2rem; color: #e2ecf7; margin-bottom: 4px; margin-top: 20px; }
-  p { font-size: 0.8rem; color: #90aecb; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .meta { display: flex; gap: 12px; font-size: 0.75rem; color: #5a7098; font-weight: 600; margin-top: auto; align-items: center; }
+  .card-body { padding: 0 16px 16px; }
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; background: rgba(59,130,246,0.15); color: #60a5fa; margin: 10px 0 6px; }
+  h4 { font-family: 'Outfit', sans-serif; font-size: 1.1rem; color: #e2ecf7; margin: 0 0 4px; }
+  p { font-size: 0.78rem; color: #90aecb; line-height: 1.4; margin: 0 0 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .meta { display: flex; gap: 10px; font-size: 0.72rem; color: #5a7098; font-weight: 600; align-items: center; }
+  .actions { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; z-index: 2;
+    button { background: rgba(0,0,0,0.6); border-radius: 8px; border: none; color: #90aecb; cursor: pointer; padding: 6px; backdrop-filter: blur(4px); &:hover { color: white; } }
+  }
 `;
 
-// ─── Styled: Full-Screen Builder ──────────────────────────────────────────────
+// ─── Full-Screen Editor Styles ────────────────────────────────────────────────
 
 const BuilderScreen = styled(motion.div)`
-  position: fixed; inset: 0; z-index: 2000;
-  background: #050d1e; display: flex; flex-direction: column;
+  position: fixed; inset: 0; z-index: 2000; background: #050d1e; display: flex; flex-direction: column;
 `;
 
 const TopBar = styled.div`
-  height: 64px; flex-shrink: 0;
-  background: rgba(11,31,69,0.95); border-bottom: 1px solid rgba(255,255,255,0.08);
-  display: flex; align-items: center; justify-content: space-between; padding: 0 24px; gap: 16px;
+  height: 60px; flex-shrink: 0; background: rgba(11,31,69,0.95); border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex; align-items: center; justify-content: space-between; padding: 0 20px; gap: 16px;
   backdrop-filter: blur(12px);
 `;
 
 const TopBarLeft = styled.div`
-  display: flex; align-items: center; gap: 16px;
-  .back-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; color: #90aecb; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; &:hover { background: rgba(255,255,255,0.1); color: white; } }
-  .route-name { font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 800; color: #e2ecf7; }
-  .tab-pills { display: flex; gap: 4px; padding: 4px; background: rgba(0,0,0,0.3); border-radius: 12px; }
+  display: flex; align-items: center; gap: 12px; min-width: 0;
+  .back-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; color: #90aecb; width: 34px; height: 34px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; &:hover { background: rgba(255,255,255,0.1); color: white; } }
+  .tour-name { font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 800; color: #e2ecf7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px; }
+  .tab-pills { display: flex; gap: 3px; padding: 3px; background: rgba(0,0,0,0.3); border-radius: 10px; flex-shrink: 0; }
 `;
 
 const TabPill = styled.button<{ $active: boolean }>`
-  padding: 6px 16px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s;
+  padding: 6px 16px; border-radius: 7px; font-size: 0.8rem; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s; white-space: nowrap;
   background: ${p => p.$active ? '#3b82f6' : 'transparent'}; color: ${p => p.$active ? 'white' : '#5a7098'};
   &:hover { color: white; }
 `;
 
 const SaveBtn = styled.button`
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: none; color: white;
-  padding: 10px 24px; border-radius: 12px; font-size: 0.85rem; font-weight: 700; cursor: pointer;
+  padding: 9px 22px; border-radius: 10px; font-size: 0.85rem; font-weight: 700; cursor: pointer; flex-shrink: 0;
   display: flex; align-items: center; gap: 8px;
   &:hover { box-shadow: 0 8px 24px rgba(59,130,246,0.4); transform: translateY(-1px); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 `;
 
-const BuilderBody = styled.div`
+const EditorBody = styled.div`
   flex: 1; display: flex; min-height: 0;
 `;
 
-// ─── Settings Panel ───────────────────────────────────────────────────────────
+// ─── Tours Tab Styles ─────────────────────────────────────────────────────────
 
 const SettingsPanel = styled.div`
-  width: 320px; flex-shrink: 0; background: rgba(11,31,69,0.8);
-  border-right: 1px solid rgba(255,255,255,0.06);
-  overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px;
+  width: 300px; flex-shrink: 0; background: rgba(11,31,69,0.8); border-right: 1px solid rgba(255,255,255,0.06);
+  overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px;
   &::-webkit-scrollbar { width: 4px; }
   &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
-
-  h5 { font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 800; color: #e2ecf7; margin: 0; }
-  label { font-size: 0.7rem; font-weight: 700; color: #5a7098; text-transform: uppercase; margin-bottom: 6px; display: block; }
+  label { font-size: 0.68rem; font-weight: 700; color: #5a7098; text-transform: uppercase; margin-bottom: 5px; display: block; }
   input, select, textarea {
     width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 10px; padding: 10px 14px; color: white; font-size: 0.85rem; outline: none; box-sizing: border-box;
+    border-radius: 8px; padding: 9px 12px; color: white; font-size: 0.82rem; outline: none; box-sizing: border-box;
     &:focus { border-color: #3b82f6; }
   }
 `;
 
-const CoverPreview = styled.div<{ $src: string }>`
-  width: 100%; height: 100px; border-radius: 10px; background: rgba(255,255,255,0.05);
-  background-image: url(${p => p.$src}); background-size: cover; background-position: center;
-  border: 1px solid rgba(255,255,255,0.1); overflow: hidden;
+const SectionTitle = styled.div`
+  font-family: 'Outfit', sans-serif; font-size: 0.85rem; font-weight: 800; color: #e2ecf7;
+  border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 8px; margin-bottom: 0;
 `;
 
-// ─── Stop Builder Panel ───────────────────────────────────────────────────────
+const CoverPreview = styled.div<{ $src: string }>`
+  width: 100%; height: 90px; border-radius: 8px;
+  background-image: url(${p => p.$src}); background-size: cover; background-position: center;
+  border: 1px solid rgba(255,255,255,0.1);
+`;
 
-const StopBuilderPanel = styled.div`
+// ─── Attraction Pool Styles (right side of Tours tab) ─────────────────────────
+
+const PoolPanel = styled.div`
   flex: 1; display: flex; flex-direction: column; min-width: 0;
 `;
 
-const DayRow = styled.div`
-  padding: 12px 16px; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.06);
-  display: flex; align-items: center; gap: 8px; flex-shrink: 0; overflow-x: auto;
-  &::-webkit-scrollbar { height: 0; }
-`;
-
-const DayTab = styled.button<{ $active: boolean }>`
-  padding: 6px 16px; border-radius: 20px; font-size: 0.78rem; font-weight: 800; cursor: pointer; white-space: nowrap; transition: all 0.2s; border: 1px solid;
-  background: ${p => p.$active ? '#3b82f6' : 'rgba(255,255,255,0.05)'};
-  color: ${p => p.$active ? 'white' : '#90aecb'};
-  border-color: ${p => p.$active ? '#3b82f6' : 'rgba(255,255,255,0.1)'};
-  &:hover { color: white; background: ${p => p.$active ? '#3b82f6' : 'rgba(255,255,255,0.1)'}; }
+const PoolHeader = styled.div`
+  padding: 12px 16px; background: rgba(0,0,0,0.25); border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
+  .title { font-family: 'Outfit', sans-serif; font-size: 0.9rem; font-weight: 800; color: #e2ecf7; }
+  .sub { font-size: 0.72rem; color: #5a7098; }
 `;
 
 const CategorySection = styled.div`
   background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.04); flex-shrink: 0;
 `;
-
 const CategoryGrid = styled.div<{ $expanded: boolean }>`
-  display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 16px;
-  max-height: ${p => p.$expanded ? '200px' : '46px'};
+  display: flex; flex-wrap: wrap; gap: 5px; padding: 8px 14px;
+  max-height: ${p => p.$expanded ? '180px' : '42px'};
   overflow: hidden; transition: max-height 0.3s ease;
 `;
-
 const CatChip = styled.button<{ $active: boolean }>`
-  padding: 5px 10px 5px 6px; border-radius: 30px; font-size: 0.72rem; font-weight: 700;
+  padding: 4px 10px 4px 5px; border-radius: 30px; font-size: 0.7rem; font-weight: 700;
   white-space: nowrap; cursor: pointer; border: 1px solid; flex-shrink: 0;
-  display: inline-flex; align-items: center; gap: 5px;
+  display: inline-flex; align-items: center; gap: 4px;
   background: ${p => p.$active ? 'rgba(59,130,246,0.25)' : 'rgba(255,255,255,0.04)'};
   color: ${p => p.$active ? '#60a5fa' : '#5a7098'};
   border-color: ${p => p.$active ? '#3b82f6' : 'rgba(255,255,255,0.08)'};
   transition: all 0.15s;
   &:hover { color: white; border-color: rgba(59,130,246,0.4); }
-  img { width: 18px; height: 18px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3)); }
+  img { width: 16px; height: 16px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3)); }
 `;
-
 const ExpandCatBtn = styled.button`
-  display: block; width: 100%; padding: 6px; font-size: 0.72rem; font-weight: 700; cursor: pointer;
-  background: rgba(255,255,255,0.03); border: none; border-top: 1px solid rgba(255,255,255,0.04);
+  display: block; width: 100%; padding: 5px; font-size: 0.7rem; font-weight: 700; cursor: pointer;
+  background: rgba(255,255,255,0.02); border: none; border-top: 1px solid rgba(255,255,255,0.04);
   color: #3b82f6; transition: background 0.2s;
   &:hover { background: rgba(59,130,246,0.08); }
 `;
 
-const BuilderMain = styled.div`
+const PoolMain = styled.div`
   flex: 1; display: flex; min-height: 0;
 `;
 
 const ItemSidebar = styled.div`
-  width: 360px; flex-shrink: 0; background: rgba(0,0,0,0.15); border-right: 1px solid rgba(255,255,255,0.06);
-  overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 12px;
+  width: 340px; flex-shrink: 0; background: rgba(0,0,0,0.15); border-right: 1px solid rgba(255,255,255,0.06);
+  overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding: 10px;
   &::-webkit-scrollbar { width: 4px; }
   &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
 `;
 
 const CardImage = styled.div<{ $src: string }>`
-  position: absolute; top: 0; left: 0; width: 85px; height: 100%;
+  position: absolute; top: 0; left: 0; width: 80px; height: 100%;
   background-image: url(${p => getMediaUrl(p.$src)}); background-size: cover; background-position: center; z-index: 0;
   -webkit-mask-image: linear-gradient(to right, black 20%, transparent 100%);
   mask-image: linear-gradient(to right, black 20%, transparent 100%);
@@ -181,17 +174,16 @@ const CardImage = styled.div<{ $src: string }>`
 const ItemCard = styled.div<{ $added: boolean }>`
   background: ${p => p.$added ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.03)'};
   border: 1px solid ${p => p.$added ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.06)'};
-  border-radius: 20px; display: flex; align-items: center; justify-content: space-between;
-  position: relative; overflow: hidden; height: 72px; flex-shrink: 0; cursor: pointer;
-  transition: all 0.2s;
-  &:hover { border-color: ${p => p.$added ? 'rgba(16,185,129,0.6)' : 'rgba(59,130,246,0.4)'}; background: ${p => p.$added ? 'rgba(16,185,129,0.15)' : 'rgba(59,130,246,0.06)'}; }
-
-  .content { position: relative; z-index: 1; padding: 8px 10px 8px 90px; flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
-  h5 { font-family: 'Outfit', sans-serif; font-size: 0.82rem; color: #e2ecf7; margin: 0 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .type { font-size: 0.58rem; color: ${p => p.$added ? '#10b981' : '#5a7098'}; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
-  .action { position: relative; z-index: 1; padding-right: 12px;
-    button { width: 32px; height: 32px; border-radius: 10px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
-      background: ${p => p.$added ? 'rgba(16,185,129,0.2)' : 'rgba(59,130,246,0.15)'}; color: ${p => p.$added ? '#10b981' : '#60a5fa'};
+  border-radius: 16px; display: flex; align-items: center; justify-content: space-between;
+  position: relative; overflow: hidden; height: 68px; flex-shrink: 0; cursor: pointer; transition: all 0.2s;
+  &:hover { border-color: ${p => p.$added ? 'rgba(16,185,129,0.6)' : 'rgba(59,130,246,0.4)'}; }
+  .content { position: relative; z-index: 1; padding: 6px 8px 6px 86px; flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+  h5 { font-family: 'Outfit', sans-serif; font-size: 0.8rem; color: #e2ecf7; margin: 0 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .type { font-size: 0.58rem; color: ${p => p.$added ? '#10b981' : '#5a7098'}; text-transform: uppercase; font-weight: 800; }
+  .action { position: relative; z-index: 1; padding-right: 10px;
+    button { width: 28px; height: 28px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      background: ${p => p.$added ? 'rgba(16,185,129,0.2)' : 'rgba(59,130,246,0.15)'};
+      color: ${p => p.$added ? '#10b981' : '#60a5fa'};
       &:hover { background: ${p => p.$added ? '#10b981' : '#3b82f6'}; color: white; }
     }
   }
@@ -199,23 +191,105 @@ const ItemCard = styled.div<{ $added: boolean }>`
 
 const MapWrap = styled.div`flex: 1; background: #050d1e;`;
 
-const AddedBar = styled.div`
-  padding: 12px 16px; background: rgba(11,31,69,0.95); backdrop-filter: blur(8px);
-  border-top: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px;
-  overflow-x: auto; flex-shrink: 0; min-height: 56px;
+// ─── Routes Tab Styles ────────────────────────────────────────────────────────
+
+const RoutesPanel = styled.div`
+  flex: 1; display: flex; flex-direction: column; min-width: 0;
+`;
+
+const RouteTabsBar = styled.div`
+  height: 50px; flex-shrink: 0; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex; align-items: center; gap: 4px; padding: 0 16px; overflow-x: auto;
   &::-webkit-scrollbar { height: 0; }
-  .label { font-size: 0.72rem; font-weight: 800; color: #5a7098; white-space: nowrap; }
 `;
 
-const StopChip = styled.div`
-  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px;
-  padding: 5px 12px; font-size: 0.7rem; font-weight: 700; color: #e2ecf7;
-  display: flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0;
-  .num { background: #3b82f6; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.55rem; color: white; }
-  button { background: none; border: none; color: #5a7098; cursor: pointer; padding: 0; display: flex; &:hover { color: #ef4444; } }
+const RouteTab = styled.button<{ $active: boolean }>`
+  padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; white-space: nowrap;
+  border: 1px solid ${p => p.$active ? '#3b82f6' : 'rgba(255,255,255,0.1)'};
+  background: ${p => p.$active ? '#3b82f6' : 'rgba(255,255,255,0.04)'};
+  color: ${p => p.$active ? 'white' : '#90aecb'};
+  display: flex; align-items: center; gap: 6px; transition: all 0.15s;
+  &:hover { color: white; background: ${p => p.$active ? '#3b82f6' : 'rgba(255,255,255,0.1)'}; }
+  .del { opacity: 0; transition: opacity 0.15s; width: 14px; height: 14px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; }
+  &:hover .del { opacity: 1; }
 `;
 
-// ─── Map Auto-Fitter ──────────────────────────────────────────────────────────
+const AddRouteBtn = styled.button`
+  padding: 6px 12px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  border: 1px dashed rgba(59,130,246,0.4); background: transparent; color: #3b82f6;
+  display: flex; align-items: center; gap: 5px; transition: all 0.15s;
+  &:hover { background: rgba(59,130,246,0.1); border-color: #3b82f6; }
+`;
+
+const RouteContent = styled.div`
+  flex: 1; display: flex; min-height: 0;
+`;
+
+const RouteStopsSidebar = styled.div`
+  width: 320px; flex-shrink: 0; background: rgba(0,0,0,0.15); border-right: 1px solid rgba(255,255,255,0.06);
+  display: flex; flex-direction: column; overflow: hidden;
+`;
+
+const StopsSidebarHeader = styled.div`
+  padding: 12px 14px; background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.05); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  .title { font-size: 0.8rem; font-weight: 800; color: #e2ecf7; }
+  .hint { font-size: 0.68rem; color: #5a7098; }
+`;
+
+const StopsScrollArea = styled.div`
+  flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px;
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+`;
+
+const RouteStopCard = styled.div`
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 10px;
+  .num { width: 22px; height: 22px; border-radius: 50%; background: #3b82f6; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 800; flex-shrink: 0; }
+  .info { flex: 1; min-width: 0;
+    .name { font-size: 0.82rem; color: #e2ecf7; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .type { font-size: 0.6rem; color: #5a7098; text-transform: uppercase; font-weight: 700; }
+  }
+  .time-wrap {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0;
+    input[type="time"] { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #60a5fa; font-family: monospace; font-size: 0.78rem; font-weight: 700; padding: 4px 6px; outline: none; width: 82px; text-align: center; &:focus { border-color: #3b82f6; } &::-webkit-calendar-picker-indicator { filter: invert(1) opacity(0.4); cursor: pointer; } }
+    .dur { font-size: 0.6rem; color: #5a7098; }
+  }
+  .sort-btns { display: flex; flex-direction: column; gap: 2px;
+    button { background: transparent; border: none; color: #5a7098; cursor: pointer; padding: 1px; &:hover { color: #e2ecf7; } &:disabled { opacity: 0.2; cursor: default; } }
+  }
+  .del-btn { background: transparent; border: none; color: #5a7098; cursor: pointer; padding: 2px; &:hover { color: #ef4444; } flex-shrink: 0; }
+`;
+
+const PoolPickerRow = styled.div`
+  padding: 10px 14px; background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.05); flex-shrink: 0;
+  .label { font-size: 0.68rem; font-weight: 800; color: #5a7098; text-transform: uppercase; margin-bottom: 6px; }
+`;
+
+const PoolChipGrid = styled.div`
+  display: flex; flex-wrap: wrap; gap: 5px; max-height: 90px; overflow-y: auto;
+  &::-webkit-scrollbar { width: 3px; }
+  &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+`;
+
+const PoolItemChip = styled.button<{ $added: boolean }>`
+  padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; cursor: pointer;
+  border: 1px solid ${p => p.$added ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.1)'};
+  background: ${p => p.$added ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)'};
+  color: ${p => p.$added ? '#10b981' : '#90aecb'};
+  transition: all 0.15s; white-space: nowrap;
+  &:hover { border-color: ${p => p.$added ? 'rgba(16,185,129,0.7)' : 'rgba(59,130,246,0.4)'}; color: white; }
+`;
+
+const EmptyRoutesMsg = styled.div`
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  color: #5a7098; text-align: center; padding: 40px;
+  h4 { font-family: 'Outfit', sans-serif; color: #90aecb; font-size: 1rem; margin: 0; }
+  p { font-size: 0.82rem; margin: 0; }
+`;
+
+// ─── Shared Map Helper ────────────────────────────────────────────────────────
 
 const MapAutoFitter: React.FC<{ coordinates: [number, number][] }> = ({ coordinates }) => {
   const map = useMap();
@@ -227,16 +301,24 @@ const MapAutoFitter: React.FC<{ coordinates: [number, number][] }> = ({ coordina
   return null;
 };
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const ALL_CATEGORIES = [
-  { label: 'All', icon: '' },
-  ...ATTRACTION_CATEGORIES.map(c => ({ label: c.label, icon: c.icon })),
-  ...ENTERPRISE_CATEGORIES.map(c => ({ label: c.label, icon: c.icon })),
+  { label: 'All' },
+  ...ATTRACTION_CATEGORIES.map(c => ({ label: c.label })),
+  ...ENTERPRISE_CATEGORIES.map(c => ({ label: c.label })),
 ].filter((c, i, arr) => arr.findIndex(x => x.label === c.label) === i);
 
-const initialRoute = (): Partial<CuratedRoute> => ({
-  name: '', description: '', coverImage: '', theme: 'Seascape', estimatedDays: 1, difficulty: 'Moderate', isActive: true, stops: []
+const mkRoute = (n: number): TourRoute => ({
+  id: `r-${Date.now()}-${n}`,
+  name: `Route ${String.fromCharCode(64 + n)}`,
+  stops: []
+});
+
+const initialTour = (): Partial<CuratedRoute> => ({
+  name: '', description: '', coverImage: '', theme: 'Seascape', estimatedDays: 1,
+  difficulty: 'Moderate', isActive: true, stops: [],
+  availableAttractions: [], tourRoutes: [mkRoute(1)]
 });
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -247,11 +329,17 @@ const CuratedRoutesManager: React.FC = () => {
   const [editing, setEditing] = useState<Partial<CuratedRoute> | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Builder state
-  const [activeTab, setActiveTab] = useState<'settings' | 'builder'>('settings');
-  const [selectedDayIndex, setSelectedDayIndex] = useState(0);
+  // Tab state
+  const [activeTab, setActiveTab] = useState<'tours' | 'routes'>('tours');
+
+  // Tours tab
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [catFilterExpanded, setCatFilterExpanded] = useState(false);
+  const [catExpanded, setCatExpanded] = useState(false);
+
+  // Routes tab
+  const [activeRouteId, setActiveRouteId] = useState<string>('');
+  const [editingRouteName, setEditingRouteName] = useState<string | null>(null);
+  const [routeNameDraft, setRouteNameDraft] = useState('');
 
   const { data: attractions } = useAttractions();
   const { data: enterprises } = useEnterprises();
@@ -263,305 +351,488 @@ const CuratedRoutesManager: React.FC = () => {
     ...heritage.map(x => ({ ...x, entityType: 'Heritage' as const })),
   ], [attractions, enterprises, heritage]);
 
+  // Items filtered by category (for pool picker)
   const filteredItems = useMemo(() => {
     if (selectedCategory === 'All') return allItems;
     return allItems.filter(item => {
-      const cats = Array.isArray((item as any).categories)
-        ? (item as any).categories
-        : [(item as any).category || (item as any).type || ''];
+      const cats = Array.isArray((item as any).categories) ? (item as any).categories : [(item as any).category || ''];
       return cats.some((c: string) => c?.toLowerCase() === selectedCategory.toLowerCase());
     });
   }, [allItems, selectedCategory]);
 
-  useEffect(() => { loadRoutes(); }, []);
+  // Items in pool (for routes tab)
+  const poolItems = useMemo(() => {
+    const poolIds = new Set(editing?.availableAttractions || []);
+    return allItems.filter(i => poolIds.has(i.id.toString()));
+  }, [allItems, editing?.availableAttractions]);
 
-  const loadRoutes = () => {
+  // Active route object
+  const activeRoute = useMemo(() => {
+    return (editing?.tourRoutes || []).find(r => r.id === activeRouteId) || null;
+  }, [editing?.tourRoutes, activeRouteId]);
+
+  useEffect(() => { loadTours(); }, []);
+
+  const loadTours = () => {
     setLoading(true);
     curatedRouteService.getAll().then(res => { setRoutes(res); setLoading(false); });
   };
 
-  const openNew = () => { setEditing(initialRoute()); setActiveTab('settings'); setSelectedDayIndex(0); };
-  const openEdit = (r: CuratedRoute) => { setEditing({ ...r }); setActiveTab('settings'); setSelectedDayIndex(0); };
-  const closeEditor = () => setEditing(null);
+  const openNew = () => {
+    const t = initialTour();
+    setEditing(t);
+    setActiveTab('tours');
+    setActiveRouteId((t.tourRoutes || [])[0]?.id || '');
+    setSelectedCategory('All');
+  };
+
+  const openEdit = (r: CuratedRoute) => {
+    const withRoutes = { ...r, tourRoutes: r.tourRoutes?.length ? r.tourRoutes : [mkRoute(1)], availableAttractions: r.availableAttractions || [] };
+    setEditing(withRoutes);
+    setActiveTab('tours');
+    setActiveRouteId((withRoutes.tourRoutes || [])[0]?.id || '');
+    setSelectedCategory('All');
+  };
 
   const handleSave = async () => {
     if (!editing || !editing.name) return;
     setSaving(true);
     const r: CuratedRoute = {
       ...editing,
-      id: editing.id || `route-${Date.now()}`,
+      id: editing.id || `tour-${Date.now()}`,
       createdAt: editing.createdAt || Date.now(),
       updatedAt: Date.now(),
-      stops: editing.stops || []
+      stops: (editing.tourRoutes || []).flatMap(tr => tr.stops), // union of all route stops
+      tourRoutes: editing.tourRoutes || [],
+      availableAttractions: editing.availableAttractions || [],
     } as CuratedRoute;
     await curatedRouteService.save(r);
     setSaving(false);
     setEditing(null);
-    loadRoutes();
+    loadTours();
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Delete this route?")) { await curatedRouteService.delete(id); loadRoutes(); }
+    if (confirm("Delete this tour?")) { await curatedRouteService.delete(id); loadTours(); }
   };
 
-  const toggleStop = useCallback((item: any) => {
+  // ── Pool toggle ──
+  const togglePool = useCallback((item: any) => {
     setEditing(prev => {
       if (!prev) return prev;
-      const stops = prev.stops || [];
-      const exists = stops.find(s => s.itemId === item.id.toString() && s.dayIndex === selectedDayIndex);
-      if (exists) return { ...prev, stops: stops.filter(s => !(s.itemId === item.id.toString() && s.dayIndex === selectedDayIndex)) };
-      const newStop: CuratedRouteStop = {
-        itemId: item.id.toString(), entityType: item.entityType, itemName: item.name, dayIndex: selectedDayIndex, durationHours: 1
-      };
-      return { ...prev, stops: [...stops, newStop] };
+      const pool = [...(prev.availableAttractions || [])];
+      const id = item.id.toString();
+      const idx = pool.indexOf(id);
+      if (idx >= 0) pool.splice(idx, 1); else pool.push(id);
+      return { ...prev, availableAttractions: pool };
     });
-  }, [selectedDayIndex]);
+  }, []);
+
+  // Pool map polyline (all pool items)
+  const poolCoords = useMemo<[number, number][]>(() => {
+    return (editing?.availableAttractions || []).map(id => {
+      const item = allItems.find(i => i.id.toString() === id);
+      if (!item) return null;
+      const lat = (item as any).lat || (item as any).coordinates?.lat;
+      const lng = (item as any).lng || (item as any).coordinates?.lng;
+      return lat && lng ? [lat, lng] as [number, number] : null;
+    }).filter(Boolean) as [number, number][];
+  }, [editing?.availableAttractions, allItems]);
+
+  // ── Route management ──
+  const addRoute = () => {
+    setEditing(prev => {
+      if (!prev) return prev;
+      const n = (prev.tourRoutes || []).length + 1;
+      const newR = mkRoute(n);
+      const updated = [...(prev.tourRoutes || []), newR];
+      setActiveRouteId(newR.id);
+      return { ...prev, tourRoutes: updated };
+    });
+  };
+
+  const deleteRoute = (id: string) => {
+    setEditing(prev => {
+      if (!prev) return prev;
+      const updated = (prev.tourRoutes || []).filter(r => r.id !== id);
+      if (activeRouteId === id) setActiveRouteId(updated[0]?.id || '');
+      return { ...prev, tourRoutes: updated };
+    });
+  };
+
+  const renameRoute = (id: string, newName: string) => {
+    setEditing(prev => {
+      if (!prev) return prev;
+      return { ...prev, tourRoutes: (prev.tourRoutes || []).map(r => r.id === id ? { ...r, name: newName } : r) };
+    });
+    setEditingRouteName(null);
+  };
+
+  // ── Stop management within active route ──
+  const updateRoute = (updatedRoute: TourRoute) => {
+    setEditing(prev => {
+      if (!prev) return prev;
+      return { ...prev, tourRoutes: (prev.tourRoutes || []).map(r => r.id === updatedRoute.id ? updatedRoute : r) };
+    });
+  };
+
+  const toggleStop = (item: any) => {
+    if (!activeRoute) return;
+    const stops = [...activeRoute.stops];
+    const idx = stops.findIndex(s => s.itemId === item.id.toString());
+    if (idx >= 0) { stops.splice(idx, 1); }
+    else {
+      stops.push({ itemId: item.id.toString(), entityType: item.entityType, itemName: item.name, durationHours: 1, scheduledTime: '' });
+    }
+    updateRoute({ ...activeRoute, stops });
+  };
+
+  const updateStopTime = (stopIdx: number, field: 'scheduledTime' | 'durationHours', value: string | number) => {
+    if (!activeRoute) return;
+    const stops = activeRoute.stops.map((s, i) => i === stopIdx ? { ...s, [field]: value } : s);
+    updateRoute({ ...activeRoute, stops });
+  };
+
+  const moveStop = (idx: number, dir: number) => {
+    if (!activeRoute) return;
+    const stops = [...activeRoute.stops];
+    if (idx + dir < 0 || idx + dir >= stops.length) return;
+    [stops[idx], stops[idx + dir]] = [stops[idx + dir], stops[idx]];
+    updateRoute({ ...activeRoute, stops });
+  };
 
   const removeStop = (idx: number) => {
-    setEditing(prev => { if (!prev) return prev; const s = [...(prev.stops || [])]; s.splice(idx, 1); return { ...prev, stops: s }; });
-  };
-  const moveStop = (idx: number, dir: number) => {
-    setEditing(prev => {
-      if (!prev) return prev;
-      const s = [...(prev.stops || [])];
-      if (idx + dir < 0 || idx + dir >= s.length) return prev;
-      [s[idx], s[idx + dir]] = [s[idx + dir], s[idx]];
-      return { ...prev, stops: s };
-    });
+    if (!activeRoute) return;
+    const stops = activeRoute.stops.filter((_, i) => i !== idx);
+    updateRoute({ ...activeRoute, stops });
   };
 
-  const currentDayStops = useMemo(() => (editing?.stops || []).filter(s => s.dayIndex === selectedDayIndex), [editing?.stops, selectedDayIndex]);
-
-  const polylineCoords = useMemo<[number, number][]>(() => {
-    return currentDayStops.map(stop => {
+  // Route map polyline
+  const routeCoords = useMemo<[number, number][]>(() => {
+    if (!activeRoute) return [];
+    return activeRoute.stops.map(stop => {
       const item = allItems.find(i => i.id.toString() === stop.itemId);
       if (!item) return null;
       const lat = (item as any).lat || (item as any).coordinates?.lat;
       const lng = (item as any).lng || (item as any).coordinates?.lng;
       return lat && lng ? [lat, lng] as [number, number] : null;
     }).filter(Boolean) as [number, number][];
-  }, [currentDayStops, allItems]);
+  }, [activeRoute, allItems]);
 
+  // ─────────────────────────────────────────────────────────────────────────────
+  // RENDER
+  // ─────────────────────────────────────────────────────────────────────────────
   return (
     <Container>
       <HeaderRow>
-        <h3>Curated Routes</h3>
-        <button onClick={openNew}><Plus size={16} /> New Route</button>
+        <h3>Tours</h3>
+        <button onClick={openNew}><Plus size={16} /> New Tour</button>
       </HeaderRow>
 
       {loading ? (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Loader2 size={32} className="animate-spin" color="#3b82f6" /></div>
       ) : routes.length === 0 ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#5a7098' }}>No curated routes yet. Create one above!</div>
+        <div style={{ padding: 40, textAlign: 'center', color: '#5a7098' }}>No tours yet. Create one above!</div>
       ) : (
         <RouteList>
           {routes.map(r => (
-            <RouteCard key={r.id}>
-              {r.coverImage && <div className="rc-bg" style={{ backgroundImage: `url(${r.coverImage})` }} />}
-              <div className="rc-header">
-                <div className="theme">{r.theme === 'Seascape' ? <Waves size={10} /> : <TreePine size={10} />} {r.theme}</div>
-                <div className="actions">
-                  <button onClick={() => openEdit(r)}><Edit2 size={14} /></button>
-                  <button onClick={() => handleDelete(r.id)}><Trash2 size={14} /></button>
+            <TourCard key={r.id}>
+              {r.coverImage && <div className="card-img" style={{ backgroundImage: `url(${r.coverImage})` }} />}
+              <div className="actions">
+                <button onClick={() => openEdit(r)}><Edit2 size={13} /></button>
+                <button onClick={() => handleDelete(r.id)}><Trash2 size={13} /></button>
+              </div>
+              <div className="card-body">
+                <div className="badge">{r.theme === 'Seascape' ? <Waves size={9} /> : <TreePine size={9} />} {r.theme}</div>
+                <h4>{r.name}</h4>
+                <p>{r.description}</p>
+                <div className="meta">
+                  <MapPin size={10} /> {r.availableAttractions?.length || 0} Attractions &nbsp;·&nbsp;
+                  <span style={{ color: '#60a5fa' }}>{r.tourRoutes?.length || 0} Routes</span> &nbsp;·&nbsp;
+                  {r.estimatedDays} Days &nbsp;·&nbsp;
+                  <span style={{ color: r.isActive ? '#10b981' : '#ef4444', marginLeft: 'auto' }}>{r.isActive ? 'Active' : 'Draft'}</span>
                 </div>
               </div>
-              <h4>{r.name}</h4>
-              <p>{r.description}</p>
-              <div className="meta">
-                <MapPin size={10} /> {r.stops?.length || 0} Stops &nbsp;·&nbsp; {r.estimatedDays} Days &nbsp;·&nbsp; {r.difficulty}
-                <span style={{ color: r.isActive ? '#10b981' : '#ef4444', marginLeft: 'auto' }}>{r.isActive ? 'Active' : 'Draft'}</span>
-              </div>
-            </RouteCard>
+            </TourCard>
           ))}
         </RouteList>
       )}
 
-      {/* ─── Full-Screen Builder ─── */}
+      {/* ─── Full-Screen Editor ─── */}
       <AnimatePresence>
         {editing && (
-          <BuilderScreen initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} transition={{ duration: 0.2 }}>
-            {/* Top bar */}
+          <BuilderScreen initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} transition={{ duration: 0.18 }}>
             <TopBar>
               <TopBarLeft>
-                <button className="back-btn" onClick={closeEditor}><ChevronLeft size={18} /></button>
-                <span className="route-name">{editing.name || 'New Curated Route'}</span>
+                <button className="back-btn" onClick={() => setEditing(null)}><ChevronLeft size={18} /></button>
+                <span className="tour-name">{editing.name || 'New Tour'}</span>
                 <div className="tab-pills">
-                  <TabPill $active={activeTab === 'settings'} onClick={() => setActiveTab('settings')}>⚙ Settings</TabPill>
-                  <TabPill $active={activeTab === 'builder'} onClick={() => setActiveTab('builder')}><MapIcon size={12} style={{ display:'inline', marginRight:4, verticalAlign:'middle' }} />Stop Builder</TabPill>
+                  <TabPill $active={activeTab === 'tours'} onClick={() => setActiveTab('tours')}>🏷 Tours</TabPill>
+                  <TabPill $active={activeTab === 'routes'} onClick={() => setActiveTab('routes')}><MapIcon size={12} style={{ display: 'inline', marginRight: 3, verticalAlign: 'middle' }} />Routes</TabPill>
                 </div>
               </TopBarLeft>
-              <SaveBtn onClick={handleSave} disabled={saving}>
-                {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                {saving ? 'Saving…' : 'Save Route'}
+              <SaveBtn onClick={handleSave} disabled={saving || !editing.name}>
+                {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
+                {saving ? 'Saving…' : 'Save Tour'}
               </SaveBtn>
             </TopBar>
 
-            <BuilderBody>
-              {/* Settings Panel (always visible on left) */}
-              {activeTab === 'settings' && (
-                <SettingsPanel>
-                  <h5>Route Details</h5>
-                  <div><label>Route Name</label><input value={editing.name || ''} onChange={e => setEditing({ ...editing, name: e.target.value })} placeholder="e.g. Seascape Adventure" /></div>
-                  <div><label>Description</label><textarea rows={4} value={editing.description || ''} onChange={e => setEditing({ ...editing, description: e.target.value })} /></div>
-                  <div>
-                    <label>Cover Image URL</label>
-                    <input placeholder="https://..." value={editing.coverImage || ''} onChange={e => setEditing({ ...editing, coverImage: e.target.value })} />
-                    {editing.coverImage && <CoverPreview $src={editing.coverImage} style={{ marginTop: 8 }} />}
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <div><label>Theme</label>
-                      <select value={editing.theme || 'Seascape'} onChange={e => setEditing({ ...editing, theme: e.target.value as TourTheme })}>
-                        <option value="Seascape">Seascape</option>
-                        <option value="Naturescape">Naturescape</option>
-                        <option value="Mountaineering">Mountaineering</option>
-                        <option value="Camping">Camping</option>
-                      </select>
+            <EditorBody>
+              {/* ══ TOURS TAB ══ */}
+              {activeTab === 'tours' && (
+                <>
+                  {/* Left: Settings */}
+                  <SettingsPanel>
+                    <SectionTitle>Tour Details</SectionTitle>
+                    <div><label>Tour Name</label><input value={editing.name || ''} onChange={e => setEditing({ ...editing, name: e.target.value })} placeholder="e.g. Bulusan Seascape" /></div>
+                    <div><label>Description</label><textarea rows={3} value={editing.description || ''} onChange={e => setEditing({ ...editing, description: e.target.value })} /></div>
+                    <div>
+                      <label>Cover Image URL</label>
+                      <input placeholder="https://..." value={editing.coverImage || ''} onChange={e => setEditing({ ...editing, coverImage: e.target.value })} />
+                      {editing.coverImage && <CoverPreview $src={editing.coverImage} style={{ marginTop: 8 }} />}
                     </div>
-                    <div><label>Status</label>
-                      <select value={editing.isActive ? 'active' : 'draft'} onChange={e => setEditing({ ...editing, isActive: e.target.value === 'active' })}>
-                        <option value="active">Active</option>
-                        <option value="draft">Draft</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <div><label>Estimated Days</label>
-                      <input type="number" min={1} max={14} value={editing.estimatedDays || 1} onChange={e => setEditing({ ...editing, estimatedDays: parseInt(e.target.value) || 1 })} />
-                    </div>
-                    <div><label>Difficulty</label>
-                      <select value={editing.difficulty || 'Moderate'} onChange={e => setEditing({ ...editing, difficulty: e.target.value as any })}>
-                        <option value="Easy">Easy</option>
-                        <option value="Moderate">Moderate</option>
-                        <option value="Challenging">Challenging</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 16 }}>
-                    <h5 style={{ marginBottom: 12 }}>Stops Summary ({editing.stops?.length || 0})</h5>
-                    {(editing.stops || []).map((stop, idx) => (
-                      <div key={`${stop.itemId}-${idx}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                        <span style={{ background: '#3b82f6', color: 'white', width: 20, height: 20, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 800, flexShrink: 0 }}>{idx + 1}</span>
-                        <span style={{ flex: 1, fontSize: '0.8rem', color: '#e2ecf7', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{stop.itemName}</span>
-                        <span style={{ fontSize: '0.65rem', color: '#5a7098', flexShrink: 0 }}>Day {(stop.dayIndex || 0) + 1}</span>
-                        <button onClick={() => moveStop(idx, -1)} style={{ background: 'transparent', border: 'none', color: '#5a7098', cursor: 'pointer', padding: 2 }}><ArrowUp size={12} /></button>
-                        <button onClick={() => moveStop(idx, 1)} style={{ background: 'transparent', border: 'none', color: '#5a7098', cursor: 'pointer', padding: 2 }}><ArrowDown size={12} /></button>
-                        <button onClick={() => removeStop(idx)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 2 }}><X size={12} /></button>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                      <div><label>Theme</label>
+                        <select value={editing.theme || 'Seascape'} onChange={e => setEditing({ ...editing, theme: e.target.value as TourTheme })}>
+                          <option value="Seascape">Seascape</option>
+                          <option value="Naturescape">Naturescape</option>
+                          <option value="Mountaineering">Mountaineering</option>
+                          <option value="Camping">Camping</option>
+                        </select>
                       </div>
-                    ))}
-                    {(editing.stops || []).length === 0 && (
-                      <div style={{ color: '#5a7098', fontSize: '0.8rem', padding: '12px 0', textAlign: 'center' }}>
-                        No stops yet. <button onClick={() => setActiveTab('builder')} style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', fontWeight: 700, fontSize: '0.8rem' }}>Open Builder →</button>
+                      <div><label>Status</label>
+                        <select value={editing.isActive ? 'active' : 'draft'} onChange={e => setEditing({ ...editing, isActive: e.target.value === 'active' })}>
+                          <option value="active">Active</option>
+                          <option value="draft">Draft</option>
+                        </select>
                       </div>
-                    )}
-                  </div>
-                </SettingsPanel>
-              )}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                      <div><label>Days</label>
+                        <input type="number" min={1} max={14} value={editing.estimatedDays || 1} onChange={e => setEditing({ ...editing, estimatedDays: parseInt(e.target.value) || 1 })} />
+                      </div>
+                      <div><label>Difficulty</label>
+                        <select value={editing.difficulty || 'Moderate'} onChange={e => setEditing({ ...editing, difficulty: e.target.value as any })}>
+                          <option value="Easy">Easy</option>
+                          <option value="Moderate">Moderate</option>
+                          <option value="Challenging">Challenging</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12 }}>
+                      <SectionTitle>Approved Attractions ({editing.availableAttractions?.length || 0})</SectionTitle>
+                      <div style={{ marginTop: 8, fontSize: '0.72rem', color: '#5a7098', lineHeight: 1.5 }}>
+                        Select attractions on the right. These will be the <em>only</em> options users can pick from when booking this tour.
+                      </div>
+                    </div>
+                  </SettingsPanel>
 
-              {/* Builder Panel */}
-              {activeTab === 'builder' && (
-                <StopBuilderPanel>
-                  {/* Day tabs */}
-                  <DayRow>
-                    <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#5a7098', flexShrink: 0 }}>DAY:</span>
-                    {Array.from({ length: editing.estimatedDays || 1 }).map((_, i) => (
-                      <DayTab key={i} $active={selectedDayIndex === i} onClick={() => setSelectedDayIndex(i)}>
-                        Day {i + 1} <span style={{ opacity: 0.7, fontSize: '0.65rem' }}>({(editing.stops || []).filter(s => s.dayIndex === i).length})</span>
-                      </DayTab>
-                    ))}
-                  </DayRow>
-
-                  {/* Category filters – collapsible */}
-                  <CategorySection>
-                    <CategoryGrid $expanded={catFilterExpanded}>
-                      {ALL_CATEGORIES.map(cat => (
-                        <CatChip key={cat.label} $active={selectedCategory === cat.label} onClick={() => setSelectedCategory(cat.label)}>
-                          <img src={cat.label === 'All' ? '/map-icons/general.svg' : getMapIconUrl(cat.label)} alt={cat.label} />
-                          {cat.label}
-                        </CatChip>
-                      ))}
-                    </CategoryGrid>
-                    <ExpandCatBtn onClick={() => setCatFilterExpanded(e => !e)}>
-                      {catFilterExpanded ? '▲ Show Less' : '▼ Show More Categories'}
-                    </ExpandCatBtn>
-                  </CategorySection>
-
-                  {/* Main: sidebar + map */}
-                  <BuilderMain>
-                    <ItemSidebar>
-                      {filteredItems.map(item => {
-                        const added = (editing.stops || []).some(s => s.itemId === item.id.toString() && s.dayIndex === selectedDayIndex);
-                        const img = (item as any).img || '';
-                        return (
-                          <ItemCard key={item.id} $added={added} onClick={() => toggleStop(item)}>
-                            {img && <CardImage $src={img} />}
-                            <div className="content">
-                              <h5>{item.name}</h5>
-                              <div className="type">{item.entityType} {added && '· Added'}</div>
-                            </div>
-                            <div className="action">
-                              <button onClick={e => { e.stopPropagation(); toggleStop(item); }}>
-                                {added ? <Check size={14} /> : <Plus size={14} />}
-                              </button>
-                            </div>
-                          </ItemCard>
-                        );
-                      })}
-                      {filteredItems.length === 0 && (
-                        <div style={{ padding: 40, textAlign: 'center', color: '#5a7098', fontSize: '0.85rem' }}>No items found for this category.</div>
-                      )}
-                    </ItemSidebar>
-
-                    {/* Map */}
-                    <MapWrap>
-                      <MapContainer center={[12.7533, 124.0933]} zoom={12} zoomControl={false} style={{ width: '100%', height: '100%' }}>
-                        <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
-                        {polylineCoords.length > 1 && <Polyline positions={polylineCoords} color="#3b82f6" weight={4} dashArray="8, 8" />}
-                        {currentDayStops.map((stop, idx) => {
-                          const item = allItems.find(i => i.id.toString() === stop.itemId);
-                          if (!item) return null;
-                          const lat = (item as any).lat || (item as any).coordinates?.lat;
-                          const lng = (item as any).lng || (item as any).coordinates?.lng;
-                          if (!lat || !lng) return null;
-                          const cats = Array.isArray((item as any).categories) ? (item as any).categories : [(item as any).category || (item as any).type || 'Others'];
-                          const iconUrl = getMapIconUrl(cats[0] || 'Others');
-                          const html = `<div style="position:relative;"><img src="${iconUrl}" style="width:40px;height:40px;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.4));"/><div style="position:absolute;top:-6px;right:-6px;background:#3b82f6;color:white;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:10px;border:2px solid white;">${idx + 1}</div></div>`;
-                          const icon = L.divIcon({ html, className: '', iconSize: [40, 40], iconAnchor: [20, 40] });
-                          return <Marker key={`m-${stop.itemId}`} position={[lat, lng]} icon={icon} />;
-                        })}
-                        {/* Unselected faded pins */}
+                  {/* Right: Attraction Pool Picker */}
+                  <PoolPanel>
+                    <PoolHeader>
+                      <span className="title">Attraction Library</span>
+                      <span className="sub">{editing.availableAttractions?.length || 0} selected for this tour</span>
+                    </PoolHeader>
+                    <CategorySection>
+                      <CategoryGrid $expanded={catExpanded}>
+                        {ALL_CATEGORIES.map(cat => (
+                          <CatChip key={cat.label} $active={selectedCategory === cat.label} onClick={() => setSelectedCategory(cat.label)}>
+                            <img src={cat.label === 'All' ? '/map-icons/general.svg' : getMapIconUrl(cat.label)} alt={cat.label} />
+                            {cat.label}
+                          </CatChip>
+                        ))}
+                      </CategoryGrid>
+                      <ExpandCatBtn onClick={() => setCatExpanded(e => !e)}>{catExpanded ? '▲ Show Less' : '▼ Show All Categories'}</ExpandCatBtn>
+                    </CategorySection>
+                    <PoolMain>
+                      <ItemSidebar>
                         {filteredItems.map(item => {
-                          const isAdded = currentDayStops.some(s => s.itemId === item.id.toString());
-                          if (isAdded) return null;
-                          const lat = (item as any).lat || (item as any).coordinates?.lat;
-                          const lng = (item as any).lng || (item as any).coordinates?.lng;
-                          if (!lat || !lng) return null;
-                          const cats = Array.isArray((item as any).categories) ? (item as any).categories : [(item as any).category || (item as any).type || 'Others'];
-                          const iconUrl = getMapIconUrl(cats[0] || 'Others');
-                          const html = `<img src="${iconUrl}" style="width:28px;height:28px;opacity:0.45;filter:grayscale(0.3);"/>`;
-                          const icon = L.divIcon({ html, className: '', iconSize: [28, 28], iconAnchor: [14, 28] });
-                          return <Marker key={`f-${item.id}`} position={[lat, lng]} icon={icon} />;
+                          const inPool = (editing.availableAttractions || []).includes(item.id.toString());
+                          const img = (item as any).img || '';
+                          return (
+                            <ItemCard key={item.id} $added={inPool} onClick={() => togglePool(item)}>
+                              {img && <CardImage $src={img} />}
+                              <div className="content">
+                                <h5>{item.name}</h5>
+                                <div className="type">{item.entityType}{inPool ? ' · ✓ In Tour' : ''}</div>
+                              </div>
+                              <div className="action">
+                                <button onClick={e => { e.stopPropagation(); togglePool(item); }}>
+                                  {inPool ? <Check size={13} /> : <Plus size={13} />}
+                                </button>
+                              </div>
+                            </ItemCard>
+                          );
                         })}
-                        {polylineCoords.length > 0 && <MapAutoFitter coordinates={polylineCoords} />}
-                      </MapContainer>
-                    </MapWrap>
-                  </BuilderMain>
-
-                  {/* Bottom added-stops bar */}
-                  <AddedBar>
-                    <span className="label">{currentDayStops.length} Stop{currentDayStops.length !== 1 ? 's' : ''} — Day {selectedDayIndex + 1}:</span>
-                    {currentDayStops.map((s, idx) => (
-                      <StopChip key={s.itemId}>
-                        <span className="num">{idx + 1}</span>
-                        {s.itemName}
-                        <button onClick={() => removeStop((editing.stops || []).findIndex(x => x.itemId === s.itemId && x.dayIndex === selectedDayIndex))}><X size={10} /></button>
-                      </StopChip>
-                    ))}
-                    {currentDayStops.length === 0 && <span style={{ fontSize: '0.75rem', color: '#5a7098' }}>Click items on the left or pins on the map to add stops.</span>}
-                  </AddedBar>
-                </StopBuilderPanel>
+                        {filteredItems.length === 0 && <div style={{ padding: 40, textAlign: 'center', color: '#5a7098', fontSize: '0.82rem' }}>No items in this category.</div>}
+                      </ItemSidebar>
+                      <MapWrap>
+                        <MapContainer center={[12.7533, 124.0933]} zoom={11} zoomControl={false} style={{ width: '100%', height: '100%' }}>
+                          <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+                          {filteredItems.map(item => {
+                            const inPool = (editing.availableAttractions || []).includes(item.id.toString());
+                            const lat = (item as any).lat || (item as any).coordinates?.lat;
+                            const lng = (item as any).lng || (item as any).coordinates?.lng;
+                            if (!lat || !lng) return null;
+                            const cats = Array.isArray((item as any).categories) ? (item as any).categories : [(item as any).category || 'Others'];
+                            const iconUrl = getMapIconUrl(cats[0] || 'Others');
+                            const size = inPool ? 40 : 26;
+                            const opacity = inPool ? 1 : 0.4;
+                            const html = inPool
+                              ? `<div style="position:relative;"><img src="${iconUrl}" style="width:${size}px;height:${size}px;filter:drop-shadow(0 3px 8px rgba(0,0,0,0.5));"/><div style="position:absolute;top:-5px;right:-5px;background:#10b981;width:14px;height:14px;border-radius:50%;border:2px solid white;"></div></div>`
+                              : `<img src="${iconUrl}" style="width:${size}px;height:${size}px;opacity:${opacity};filter:grayscale(0.3);"/>`;
+                            const icon = L.divIcon({ html, className: '', iconSize: [size, size], iconAnchor: [size / 2, size] });
+                            return <Marker key={`pool-${item.id}`} position={[lat, lng]} icon={icon} />;
+                          })}
+                          {poolCoords.length > 0 && <MapAutoFitter coordinates={poolCoords} />}
+                        </MapContainer>
+                      </MapWrap>
+                    </PoolMain>
+                  </PoolPanel>
+                </>
               )}
-            </BuilderBody>
+
+              {/* ══ ROUTES TAB ══ */}
+              {activeTab === 'routes' && (
+                <RoutesPanel>
+                  {/* Route tabs */}
+                  <RouteTabsBar>
+                    {(editing.tourRoutes || []).map(r => (
+                      <RouteTab key={r.id} $active={r.id === activeRouteId} onClick={() => setActiveRouteId(r.id)}>
+                        {editingRouteName === r.id ? (
+                          <input
+                            autoFocus
+                            value={routeNameDraft}
+                            onChange={e => setRouteNameDraft(e.target.value)}
+                            onBlur={() => renameRoute(r.id, routeNameDraft || r.name)}
+                            onKeyDown={e => { if (e.key === 'Enter') renameRoute(r.id, routeNameDraft || r.name); }}
+                            onClick={e => e.stopPropagation()}
+                            style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: 700, fontSize: '0.8rem', outline: 'none', width: '80px' }}
+                          />
+                        ) : (
+                          <>
+                            {r.name}
+                            <span title="Rename" style={{ cursor: 'pointer', color: 'rgba(255,255,255,0.5)' }} onClick={e => { e.stopPropagation(); setEditingRouteName(r.id); setRouteNameDraft(r.name); }}>
+                              <Pencil size={10} />
+                            </span>
+                          </>
+                        )}
+                        {(editing.tourRoutes || []).length > 1 && (
+                          <span className="del" onClick={e => { e.stopPropagation(); deleteRoute(r.id); }}>
+                            <X size={9} />
+                          </span>
+                        )}
+                        <span style={{ fontSize: '0.62rem', opacity: 0.6 }}>({r.stops.length})</span>
+                      </RouteTab>
+                    ))}
+                    <AddRouteBtn onClick={addRoute}><Plus size={12} /> New Route</AddRouteBtn>
+                  </RouteTabsBar>
+
+                  {poolItems.length === 0 ? (
+                    <EmptyRoutesMsg>
+                      <MapIcon size={40} color="#3b82f6" />
+                      <h4>No attractions in this tour yet</h4>
+                      <p>Go to the <strong>Tours</strong> tab and add attractions to the pool first. Then come back to build routes from those attractions.</p>
+                    </EmptyRoutesMsg>
+                  ) : (
+                    <RouteContent>
+                      {/* Left: stops list for this route */}
+                      <RouteStopsSidebar>
+                        <StopsSidebarHeader>
+                          <span className="title">{activeRoute?.name} — Stops</span>
+                          <span className="hint">{activeRoute?.stops.length || 0} stops</span>
+                        </StopsSidebarHeader>
+                        <StopsScrollArea>
+                          {(activeRoute?.stops || []).map((stop, idx) => (
+                            <RouteStopCard key={`${stop.itemId}-${idx}`}>
+                              <span className="num">{idx + 1}</span>
+                              <div className="info">
+                                <div className="name">{stop.itemName}</div>
+                                <div className="type">{stop.entityType}</div>
+                              </div>
+                              <div className="time-wrap">
+                                <input type="time" value={stop.scheduledTime || ''} onChange={e => updateStopTime(idx, 'scheduledTime', e.target.value)} />
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                  <Clock size={9} color="#5a7098" />
+                                  <input
+                                    type="number" step="0.5" min="0.5" value={stop.durationHours || 1}
+                                    onChange={e => updateStopTime(idx, 'durationHours', parseFloat(e.target.value) || 1)}
+                                    style={{ width: 44, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 5, color: '#90aecb', fontSize: '0.7rem', padding: '2px 4px', outline: 'none', textAlign: 'center' }}
+                                  />
+                                  <span style={{ fontSize: '0.6rem', color: '#5a7098' }}>hrs</span>
+                                </div>
+                              </div>
+                              <div className="sort-btns">
+                                <button disabled={idx === 0} onClick={() => moveStop(idx, -1)}><ArrowUp size={10} /></button>
+                                <button disabled={idx === (activeRoute?.stops.length || 0) - 1} onClick={() => moveStop(idx, 1)}><ArrowDown size={10} /></button>
+                              </div>
+                              <button className="del-btn" onClick={() => removeStop(idx)}><X size={12} /></button>
+                            </RouteStopCard>
+                          ))}
+                          {(activeRoute?.stops.length || 0) === 0 && (
+                            <div style={{ padding: 20, textAlign: 'center', color: '#5a7098', fontSize: '0.8rem' }}>
+                              Pick attractions from the pool below to build this route.
+                            </div>
+                          )}
+                        </StopsScrollArea>
+
+                        {/* Pool picker chips */}
+                        <PoolPickerRow>
+                          <div className="label">Add from tour attractions</div>
+                          <PoolChipGrid>
+                            {poolItems.map(item => {
+                              const inRoute = activeRoute?.stops.some(s => s.itemId === item.id.toString()) || false;
+                              return (
+                                <PoolItemChip key={item.id} $added={inRoute} onClick={() => toggleStop(item)}>
+                                  {inRoute ? '✓ ' : '+ '}{item.name}
+                                </PoolItemChip>
+                              );
+                            })}
+                          </PoolChipGrid>
+                        </PoolPickerRow>
+                      </RouteStopsSidebar>
+
+                      {/* Map for this route */}
+                      <MapWrap>
+                        <MapContainer center={[12.7533, 124.0933]} zoom={12} zoomControl={false} style={{ width: '100%', height: '100%' }}>
+                          <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+
+                          {/* Faded pool items not in route */}
+                          {poolItems.map(item => {
+                            const inRoute = activeRoute?.stops.some(s => s.itemId === item.id.toString());
+                            if (inRoute) return null;
+                            const lat = (item as any).lat || (item as any).coordinates?.lat;
+                            const lng = (item as any).lng || (item as any).coordinates?.lng;
+                            if (!lat || !lng) return null;
+                            const cats = Array.isArray((item as any).categories) ? (item as any).categories : [(item as any).category || 'Others'];
+                            const iconUrl = getMapIconUrl(cats[0] || 'Others');
+                            const html = `<img src="${iconUrl}" style="width:26px;height:26px;opacity:0.4;filter:grayscale(0.4);"/>`;
+                            const icon = L.divIcon({ html, className: '', iconSize: [26, 26], iconAnchor: [13, 26] });
+                            return <Marker key={`f-${item.id}`} position={[lat, lng]} icon={icon} />;
+                          })}
+
+                          {/* Active route stops with numbered pins */}
+                          {routeCoords.length > 1 && <Polyline positions={routeCoords} color="#3b82f6" weight={4} dashArray="8,8" />}
+                          {(activeRoute?.stops || []).map((stop, idx) => {
+                            const item = allItems.find(i => i.id.toString() === stop.itemId);
+                            if (!item) return null;
+                            const lat = (item as any).lat || (item as any).coordinates?.lat;
+                            const lng = (item as any).lng || (item as any).coordinates?.lng;
+                            if (!lat || !lng) return null;
+                            const cats = Array.isArray((item as any).categories) ? (item as any).categories : [(item as any).category || 'Others'];
+                            const iconUrl = getMapIconUrl(cats[0] || 'Others');
+                            const html = `<div style="position:relative;"><img src="${iconUrl}" style="width:40px;height:40px;filter:drop-shadow(0 3px 8px rgba(0,0,0,0.5));"/><div style="position:absolute;top:-6px;right:-6px;background:#3b82f6;color:white;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:10px;border:2px solid white;">${idx + 1}</div>${stop.scheduledTime ? `<div style="position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);background:rgba(11,31,69,0.9);color:#60a5fa;font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;white-space:nowrap;">${stop.scheduledTime}</div>` : ''}</div>`;
+                            const icon = L.divIcon({ html, className: '', iconSize: [40, 58], iconAnchor: [20, 40] });
+                            return <Marker key={`r-${stop.itemId}-${idx}`} position={[lat, lng]} icon={icon} />;
+                          })}
+                          {routeCoords.length > 0 && <MapAutoFitter coordinates={routeCoords} />}
+                        </MapContainer>
+                      </MapWrap>
+                    </RouteContent>
+                  )}
+                </RoutesPanel>
+              )}
+            </EditorBody>
           </BuilderScreen>
         )}
       </AnimatePresence>
