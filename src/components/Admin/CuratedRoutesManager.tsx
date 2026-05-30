@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Edit2, Trash2, MapPin, Waves, TreePine, Save, X,
-  Loader2, ChevronLeft, Check, Map as MapIcon, Clock, ArrowUp, ArrowDown, Pencil
+  Loader2, ChevronLeft, Check, Map as MapIcon, ArrowUp, ArrowDown, Pencil
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -252,9 +252,16 @@ const RouteStopCard = styled.div`
     .type { font-size: 0.6rem; color: #5a7098; text-transform: uppercase; font-weight: 700; }
   }
   .time-wrap {
-    display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0;
-    input[type="time"] { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #60a5fa; font-family: monospace; font-size: 0.78rem; font-weight: 700; padding: 4px 6px; outline: none; width: 82px; text-align: center; &:focus { border-color: #3b82f6; } &::-webkit-calendar-picker-indicator { filter: invert(1) opacity(0.4); cursor: pointer; } }
-    .dur { font-size: 0.6rem; color: #5a7098; }
+    display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0;
+    .time-range { display: flex; align-items: center; gap: 5px;
+      input[type="time"] { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;
+        color: #60a5fa; font-family: monospace; font-size: 0.76rem; font-weight: 700; padding: 4px 6px; outline: none; width: 80px;
+        &:focus { border-color: #3b82f6; }
+        &::-webkit-calendar-picker-indicator { filter: invert(1) opacity(0.4); cursor: pointer; }
+      }
+      .sep { font-size: 0.72rem; color: #5a7098; font-weight: 700; }
+    }
+    .dur-label { font-size: 0.62rem; color: #5a7098; font-weight: 600; }
   }
   .sort-btns { display: flex; flex-direction: column; gap: 2px;
     button { background: transparent; border: none; color: #5a7098; cursor: pointer; padding: 1px; &:hover { color: #e2ecf7; } &:disabled { opacity: 0.2; cursor: default; } }
@@ -487,9 +494,23 @@ const CuratedRoutesManager: React.FC = () => {
     updateRoute({ ...activeRoute, stops });
   };
 
-  const updateStopTime = (stopIdx: number, field: 'scheduledTime' | 'durationHours', value: string | number) => {
+  // Helper: parse "HH:MM" into minutes
+  const toMinutes = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + (m || 0); };
+  const toHours = (mins: number) => Math.round((mins / 60) * 10) / 10;
+
+  const updateStopRange = (stopIdx: number, field: 'scheduledTime' | 'endTime', value: string) => {
     if (!activeRoute) return;
-    const stops = activeRoute.stops.map((s, i) => i === stopIdx ? { ...s, [field]: value } : s);
+    const stops = activeRoute.stops.map((s, i) => {
+      if (i !== stopIdx) return s;
+      const updated = { ...s, [field]: value };
+      const start = field === 'scheduledTime' ? value : (s.scheduledTime || '');
+      const end   = field === 'endTime'       ? value : (s.endTime || '');
+      if (start && end) {
+        const diff = toMinutes(end) - toMinutes(start);
+        updated.durationHours = diff > 0 ? toHours(diff) : 0;
+      }
+      return updated;
+    });
     updateRoute({ ...activeRoute, stops });
   };
 
@@ -751,15 +772,15 @@ const CuratedRoutesManager: React.FC = () => {
                                 <div className="type">{stop.entityType}</div>
                               </div>
                               <div className="time-wrap">
-                                <input type="time" value={stop.scheduledTime || ''} onChange={e => updateStopTime(idx, 'scheduledTime', e.target.value)} />
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                  <Clock size={9} color="#5a7098" />
-                                  <input
-                                    type="number" step="0.5" min="0.5" value={stop.durationHours || 1}
-                                    onChange={e => updateStopTime(idx, 'durationHours', parseFloat(e.target.value) || 1)}
-                                    style={{ width: 44, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 5, color: '#90aecb', fontSize: '0.7rem', padding: '2px 4px', outline: 'none', textAlign: 'center' }}
-                                  />
-                                  <span style={{ fontSize: '0.6rem', color: '#5a7098' }}>hrs</span>
+                                <div className="time-range">
+                                  <input type="time" value={stop.scheduledTime || ''} onChange={e => updateStopRange(idx, 'scheduledTime', e.target.value)} />
+                                  <span className="sep">→</span>
+                                  <input type="time" value={stop.endTime || ''} onChange={e => updateStopRange(idx, 'endTime', e.target.value)} />
+                                </div>
+                                <div className="dur-label">
+                                  {stop.scheduledTime && stop.endTime && (stop.durationHours || 0) > 0
+                                    ? `${stop.durationHours} hr${stop.durationHours === 1 ? '' : 's'}`
+                                    : 'Set start & end time'}
                                 </div>
                               </div>
                               <div className="sort-btns">

@@ -168,8 +168,9 @@ export interface CuratedRouteStop {
     entityType: 'Attraction' | 'Enterprise' | 'Heritage';
     itemName: string;
     suggestedTime?: string; // e.g. "Morning", "Afternoon"
-    durationHours?: number;
-    scheduledTime?: string; // e.g. "08:00", "14:30" (24hr format)
+    durationHours?: number; // auto-derived from scheduledTime → endTime
+    scheduledTime?: string; // start time e.g. "08:00" (24hr)
+    endTime?: string;       // end time e.g. "09:30" (24hr)
     notes?: string;
     dayIndex?: number;
 }
