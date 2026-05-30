@@ -319,7 +319,7 @@ const ALL_CATEGORIES = [
 
 const mkRoute = (n: number): TourRoute => ({
   id: `r-${Date.now()}-${n}`,
-  name: `Route ${String.fromCharCode(64 + n)}`,
+  name: `Day ${n}`,
   stops: []
 });
 
@@ -449,25 +449,7 @@ const CuratedRoutesManager: React.FC = () => {
   }, [editing?.availableAttractions, allItems]);
 
   // ── Route management ──
-  const addRoute = () => {
-    setEditing(prev => {
-      if (!prev) return prev;
-      const n = (prev.tourRoutes || []).length + 1;
-      const newR = mkRoute(n);
-      const updated = [...(prev.tourRoutes || []), newR];
-      setActiveRouteId(newR.id);
-      return { ...prev, tourRoutes: updated };
-    });
-  };
-
-  const deleteRoute = (id: string) => {
-    setEditing(prev => {
-      if (!prev) return prev;
-      const updated = (prev.tourRoutes || []).filter(r => r.id !== id);
-      if (activeRouteId === id) setActiveRouteId(updated[0]?.id || '');
-      return { ...prev, tourRoutes: updated };
-    });
-  };
+  // Routes are now automatically managed based on estimatedDays
 
   const renameRoute = (id: string, newName: string) => {
     setEditing(prev => {
@@ -632,7 +614,21 @@ const CuratedRoutesManager: React.FC = () => {
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                       <div><label>Days</label>
-                        <input type="number" min={1} max={14} value={editing.estimatedDays || 1} onChange={e => setEditing({ ...editing, estimatedDays: parseInt(e.target.value) || 1 })} />
+                        <input type="number" min={1} max={14} value={editing.estimatedDays || 1} onChange={e => {
+                          const newDays = parseInt(e.target.value) || 1;
+                          setEditing(prev => {
+                            if (!prev) return prev;
+                            let newRoutes = [...(prev.tourRoutes || [])];
+                            if (newDays > newRoutes.length) {
+                              for (let i = newRoutes.length; i < newDays; i++) {
+                                newRoutes.push(mkRoute(i + 1));
+                              }
+                            } else if (newDays < newRoutes.length) {
+                              newRoutes = newRoutes.slice(0, newDays);
+                            }
+                            return { ...prev, estimatedDays: newDays, tourRoutes: newRoutes };
+                          });
+                        }} />
                       </div>
                       <div><label>Difficulty</label>
                         <select value={editing.difficulty || 'Moderate'} onChange={e => setEditing({ ...editing, difficulty: e.target.value as any })}>
@@ -740,15 +736,8 @@ const CuratedRoutesManager: React.FC = () => {
                             </span>
                           </>
                         )}
-                        {(editing.tourRoutes || []).length > 1 && (
-                          <span className="del" onClick={e => { e.stopPropagation(); deleteRoute(r.id); }}>
-                            <X size={9} />
-                          </span>
-                        )}
-                        <span style={{ fontSize: '0.62rem', opacity: 0.6 }}>({r.stops.length})</span>
                       </RouteTab>
                     ))}
-                    <AddRouteBtn onClick={addRoute}><Plus size={12} /> New Route</AddRouteBtn>
                   </RouteTabsBar>
 
                   {poolItems.length === 0 ? (

@@ -80,6 +80,11 @@ const GlobalStyles = createGlobalStyle`
   ::-webkit-scrollbar {
     width: 8px;
   }
+  
+  select option {
+    background-color: ${(props) => props.theme.colors.lightBg};
+    color: ${(props) => props.theme.colors.textDark};
+  }
   ::-webkit-scrollbar-track {
     background: #f8fafc;
   }
