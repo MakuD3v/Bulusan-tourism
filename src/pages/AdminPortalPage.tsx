@@ -104,7 +104,17 @@ const AdminPortalPage = () => {
                     <TabBtn $active={activeTab === 'attractions'} onClick={() => setActiveTab('attractions')}><MapPin size={18} /> Attractions</TabBtn>
                     <TabBtn $active={activeTab === 'enterprises'} onClick={() => setActiveTab('enterprises')}><MapPin size={18} /> Enterprises</TabBtn>
                     <TabBtn $active={activeTab === 'moderation'} onClick={() => setActiveTab('moderation')}><FileText size={18} /> Moderation</TabBtn>
-                    <TabBtn $active={activeTab === 'inbox'} onClick={() => setActiveTab('inbox')}><Mail size={18} /> Inbox</TabBtn>
+                    <TabBtn $active={activeTab === 'inbox'} onClick={() => setActiveTab('inbox')}>
+                        <div style={{ position: 'relative' }}>
+                            <Mail size={18} />
+                            {(inboxInquiries || []).filter(i => i.status === 'New').length > 0 && (
+                                <span style={{ position: 'absolute', top: -5, right: -5, background: '#ef4444', color: 'white', fontSize: '0.65rem', fontWeight: 'bold', width: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%' }}>
+                                    {(inboxInquiries || []).filter(i => i.status === 'New').length}
+                                </span>
+                            )}
+                        </div>
+                        Inbox
+                    </TabBtn>
                     <TabBtn $active={activeTab === 'tour_bookings'} onClick={() => setActiveTab('tour_bookings')}><Calendar size={18} /> Tour Bookings</TabBtn>
                     <TabBtn $active={activeTab === 'curated_routes'} onClick={() => setActiveTab('curated_routes')}><MapPin size={18} /> Curated Routes</TabBtn>
                     <TabBtn $active={activeTab === 'pending_approvals'} onClick={() => setActiveTab('pending_approvals')}><UserCheck size={18} /> Pending Appeals</TabBtn>

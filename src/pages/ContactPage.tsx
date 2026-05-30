@@ -134,13 +134,14 @@ const GlassForm = styled(motion.form)`
 
   .input-group {
     margin-bottom: 24px;
-    label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; color: #555; }
+    label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; color: var(--text-dark); opacity: 0.8; }
     input, textarea {
       width: 100%;
       padding: 16px;
-      border: 1px solid rgba(0,0,0,0.1);
+      border: 1px solid rgba(148, 163, 184, 0.2);
       border-radius: 12px;
-      background: rgba(255,255,255,0.9);
+      background: var(--surface-bg);
+      color: var(--text-dark);
       font-size: 1rem;
       font-family: inherit;
       outline: none;
