@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Calendar as CalIcon, Calendar, User, MapPin, Users, Mail, Phone, Clock, FileText, Check, AlertTriangle, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalIcon, Calendar, User, MapPin, Users, Mail, Phone, Clock, FileText, Check, AlertTriangle, Loader2, Map as MapIcon } from 'lucide-react';
 import { TourBooking } from '../../data/types';
 import { bookingService } from '../../utils/bookingService';
+import AdminRoutePreviewModal from './AdminRoutePreviewModal';
 
 const Container = styled.div`
   display: flex;
@@ -176,6 +177,7 @@ const BookingsCalendarPanel: React.FC = () => {
   const [calYear, setCalYear] = useState(today.getFullYear());
   const [calMonth, setCalMonth] = useState(today.getMonth());
   const [selectedBooking, setSelectedBooking] = useState<TourBooking | null>(null);
+  const [previewMapBooking, setPreviewMapBooking] = useState<TourBooking | null>(null);
 
   useEffect(() => {
     loadBookings();
@@ -330,9 +332,9 @@ const BookingsCalendarPanel: React.FC = () => {
                 </div>
               )}
 
-              {selectedBooking.isCustom && selectedBooking.customStops && (
+              {selectedBooking.customStops && (
                 <div className="block" style={{ marginTop: 8 }}>
-                  <div className="label"><MapPin size={12}/> Custom Itinerary Stops</div>
+                  <div className="label"><MapPin size={12}/> {selectedBooking.isCustom ? 'Custom' : 'Curated'} Itinerary Stops</div>
                   <div className="val" style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: '0.8rem' }}>
                     {selectedBooking.customStops.map((stop, i) => (
                        <div key={i} style={{ background: 'rgba(255,255,255,0.03)', padding: '6px 10px', borderRadius: 6 }}>
@@ -341,6 +343,15 @@ const BookingsCalendarPanel: React.FC = () => {
                        </div>
                     ))}
                   </div>
+                  <button
+                    onClick={() => setPreviewMapBooking(selectedBooking)}
+                    style={{
+                      marginTop: 12, padding: '10px', background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)',
+                      color: '#60a5fa', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: '0.8rem', fontWeight: 700
+                    }}
+                  >
+                    <MapIcon size={14} /> View Route on Map
+                  </button>
                 </div>
               )}
             </DetailBody>
@@ -365,6 +376,15 @@ const BookingsCalendarPanel: React.FC = () => {
           </EmptyDetails>
         )}
       </DetailsSide>
+
+      <AnimatePresence>
+        {previewMapBooking && (
+          <AdminRoutePreviewModal
+            booking={previewMapBooking}
+            onClose={() => setPreviewMapBooking(null)}
+          />
+        )}
+      </AnimatePresence>
     </Container>
   );
 };

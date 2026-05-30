@@ -169,6 +169,7 @@ export interface CuratedRouteStop {
     itemName: string;
     suggestedTime?: string; // e.g. "Morning", "Afternoon"
     durationHours?: number;
+    scheduledTime?: string; // e.g. "08:00", "14:30" (24hr format)
     notes?: string;
     dayIndex?: number; // Added to map specific stops to specific days in custom tours
 }

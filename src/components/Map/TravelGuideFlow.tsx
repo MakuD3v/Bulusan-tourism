@@ -11,6 +11,7 @@ import { useAuth } from '../../hooks/useAuth';
 import SharedCategoryScroller from '../Common/SharedCategoryScroller';
 import { getMediaUrl } from '../../utils/mediaUtils';
 import { ATTRACTION_CATEGORIES, ENTERPRISE_CATEGORIES, getMapIconUrl } from '../Admin/CategoryTagConfig';
+import SmartSchedulerStep from './SmartSchedulerStep';
 
 // ─── Styled Components ────────────────────────────────────────────────────────
 
@@ -250,6 +251,8 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
   const [transport, setTransport] = useState<'Walking' | 'Vehicle' | 'Both'>('Vehicle');
   const [timeRange, setTimeRange] = useState<'Morning' | 'Afternoon' | 'Full Day'>('Full Day');
   
+  const [pendingBooking, setPendingBooking] = useState<CuratedRoute | null>(null);
+  
   // Custom Tour Builder States
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -299,8 +302,8 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
 
   const handleSelectCurated = (r: CuratedRoute) => {
     if (!user) { alert("Please log in to book a tour."); return; }
-    // Pass directly to BookingModal
-    onProceedToBooking(r, selectedDates, 'manual', { pace, transport, timeRange });
+    setPendingBooking(r);
+    setStep(3);
   };
 
   const handleFinishCustom = () => {
@@ -320,7 +323,8 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
       isActive: true,
     };
 
-    onProceedToBooking(customRoute, selectedDates, 'manual', { pace, transport, timeRange });
+    setPendingBooking(customRoute);
+    setStep(3);
   };
 
   // Maps / Pins logic
@@ -367,6 +371,7 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
               {step === 0 && 'Pick your dates and let us know your style to calculate the perfect itinerary length.'}
               {step === 1 && `Based on your ${selectedDates.length} day trip, we recommend exploring ${recommendedStops} destinations.`}
               {step === 2 && 'Select destinations from the list. We will map out your route automatically.'}
+              {step === 3 && 'Review your hour-by-hour smart itinerary. Adjust times as you see fit.'}
             </p>
           </div>
           <CloseBtn onClick={onClose}><X size={16} /></CloseBtn>
@@ -569,6 +574,22 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
                 )}
               </motion.div>
             )}
+
+            {/* ── STEP 3: Smart Scheduler ── */}
+            {step === 3 && pendingBooking && (
+              <motion.div key="step3" style={{ height: '100%', overflow: 'hidden' }} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                <SmartSchedulerStep
+                  stops={pendingBooking.stops}
+                  pace={pace}
+                  transport={transport}
+                  dates={selectedDates.map(d => new Date(d))}
+                  isCustom={pendingBooking.id.startsWith('custom')}
+                  onScheduleReady={(finalStops) => {
+                    setPendingBooking({ ...pendingBooking, stops: finalStops });
+                  }}
+                />
+              </motion.div>
+            )}
           </AnimatePresence>
         </Body>
 
@@ -590,7 +611,15 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
 
           {step === 2 && (
             <NavBtn $primary disabled={customStops.length === 0} onClick={handleFinishCustom}>
-              Proceed to Booking <ChevronRight size={14} />
+              Generate Itinerary <ChevronRight size={14} />
+            </NavBtn>
+          )}
+
+          {step === 3 && pendingBooking && (
+            <NavBtn $primary onClick={() => {
+              onProceedToBooking(pendingBooking, selectedDates, 'auto', { pace, transport, timeRange });
+            }}>
+              Confirm & Book <ChevronRight size={14} />
             </NavBtn>
           )}
         </Footer>
