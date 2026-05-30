@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Edit2, Trash2, MapPin, Waves, TreePine, Save, X,
-  Loader2, ArrowUp, ArrowDown, ChevronLeft, Filter, Check, Map as MapIcon
+  Loader2, ArrowUp, ArrowDown, ChevronLeft, Check, Map as MapIcon
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -131,19 +131,33 @@ const DayTab = styled.button<{ $active: boolean }>`
   &:hover { color: white; background: ${p => p.$active ? '#3b82f6' : 'rgba(255,255,255,0.1)'}; }
 `;
 
-const CategoryRow = styled.div`
-  padding: 10px 16px; background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.04);
-  display: flex; align-items: center; gap: 8px; flex-shrink: 0; overflow-x: auto;
-  &::-webkit-scrollbar { height: 0; }
+const CategorySection = styled.div`
+  background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.04); flex-shrink: 0;
+`;
+
+const CategoryGrid = styled.div<{ $expanded: boolean }>`
+  display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 16px;
+  max-height: ${p => p.$expanded ? '200px' : '46px'};
+  overflow: hidden; transition: max-height 0.3s ease;
 `;
 
 const CatChip = styled.button<{ $active: boolean }>`
-  padding: 5px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; white-space: nowrap; cursor: pointer; border: 1px solid;
-  background: ${p => p.$active ? 'rgba(59,130,246,0.25)' : 'rgba(255,255,255,0.03)'};
+  padding: 5px 10px 5px 6px; border-radius: 30px; font-size: 0.72rem; font-weight: 700;
+  white-space: nowrap; cursor: pointer; border: 1px solid; flex-shrink: 0;
+  display: inline-flex; align-items: center; gap: 5px;
+  background: ${p => p.$active ? 'rgba(59,130,246,0.25)' : 'rgba(255,255,255,0.04)'};
   color: ${p => p.$active ? '#60a5fa' : '#5a7098'};
   border-color: ${p => p.$active ? '#3b82f6' : 'rgba(255,255,255,0.08)'};
   transition: all 0.15s;
-  &:hover { color: white; border-color: rgba(59,130,246,0.5); }
+  &:hover { color: white; border-color: rgba(59,130,246,0.4); }
+  img { width: 18px; height: 18px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3)); }
+`;
+
+const ExpandCatBtn = styled.button`
+  display: block; width: 100%; padding: 6px; font-size: 0.72rem; font-weight: 700; cursor: pointer;
+  background: rgba(255,255,255,0.03); border: none; border-top: 1px solid rgba(255,255,255,0.04);
+  color: #3b82f6; transition: background 0.2s;
+  &:hover { background: rgba(59,130,246,0.08); }
 `;
 
 const BuilderMain = styled.div`
@@ -237,6 +251,7 @@ const CuratedRoutesManager: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'settings' | 'builder'>('settings');
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [catFilterExpanded, setCatFilterExpanded] = useState(false);
 
   const { data: attractions } = useAttractions();
   const { data: enterprises } = useEnterprises();
@@ -456,22 +471,27 @@ const CuratedRoutesManager: React.FC = () => {
                     ))}
                   </DayRow>
 
-                  {/* Category filters */}
-                  <CategoryRow>
-                    <Filter size={12} color="#5a7098" style={{ flexShrink: 0 }} />
-                    {ALL_CATEGORIES.map(cat => (
-                      <CatChip key={cat.label} $active={selectedCategory === cat.label} onClick={() => setSelectedCategory(cat.label)}>
-                        {cat.label}
-                      </CatChip>
-                    ))}
-                  </CategoryRow>
+                  {/* Category filters – collapsible */}
+                  <CategorySection>
+                    <CategoryGrid $expanded={catFilterExpanded}>
+                      {ALL_CATEGORIES.map(cat => (
+                        <CatChip key={cat.label} $active={selectedCategory === cat.label} onClick={() => setSelectedCategory(cat.label)}>
+                          <img src={cat.label === 'All' ? '/map-icons/general.svg' : getMapIconUrl(cat.label)} alt={cat.label} />
+                          {cat.label}
+                        </CatChip>
+                      ))}
+                    </CategoryGrid>
+                    <ExpandCatBtn onClick={() => setCatFilterExpanded(e => !e)}>
+                      {catFilterExpanded ? '▲ Show Less' : '▼ Show More Categories'}
+                    </ExpandCatBtn>
+                  </CategorySection>
 
                   {/* Main: sidebar + map */}
                   <BuilderMain>
                     <ItemSidebar>
                       {filteredItems.map(item => {
                         const added = (editing.stops || []).some(s => s.itemId === item.id.toString() && s.dayIndex === selectedDayIndex);
-                        const img = (item as any).images?.[0] || (item as any).coverImage || '';
+                        const img = (item as any).img || '';
                         return (
                           <ItemCard key={item.id} $added={added} onClick={() => toggleStop(item)}>
                             {img && <CardImage $src={img} />}
