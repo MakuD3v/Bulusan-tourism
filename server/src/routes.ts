@@ -60,7 +60,6 @@ function formatPrismaPayload(body: any, isUpdate: boolean = false) {
       rating: Number(r.rating) || 0,
       comment: r.comment || '',
       avatar: r.avatar || '',
-      date: String(r.date || new Date().toLocaleDateString())
     }));
     data.reviews = isUpdate 
       ? { deleteMany: {}, create: formattedReviews }
@@ -81,6 +80,8 @@ function formatPrismaPayload(body: any, isUpdate: boolean = false) {
   delete data.firebaseId;
   delete data.id;
   delete data.recordId;
+  // Always strip frontend-sent date strings — DB @default(now()) handles creation timestamps
+  delete data.date;
 
   return data;
 }

@@ -129,14 +129,16 @@ export default function AttractionsManager({ attractions, ownerMode, onDataChang
 
   const handleOpenModal = (item?: any) => {
     if (item) {
+      // Parse opening/closing hours from metadata if present
+      const hoursParts = item.metadata?.hours ? item.metadata.hours.split(' - ') : [];
       setFormData({
         recordId: item.id,
         name: item.name || '',
         location: item.location || '',
         description: item.description || '',
         pricingType: item.isFreeAdmission ? 'Free' : 'Offers',
-        openingTime: item.openingTime || '',
-        closingTime: item.closingTime || '',
+        openingTime: item.openingTime || hoursParts[0] || '',
+        closingTime: item.closingTime || hoursParts[1] || '',
         contactInfo: item.contactInfo || item.metadata?.contact || '',
         website: item.metadata?.website || '',
         categories: Array.isArray(item.categories) ? item.categories : (item.categories ? [item.categories] : []),

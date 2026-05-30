@@ -429,7 +429,7 @@ const AttractionDetailsPage = ({ item: selectedItem, onClose }: { item: any, onC
 
                   <ActionButtonsGrid>
                     <ActionButton onClick={() => {
-                      navigate(`/explore?lat=${selectedItem.coordinates?.lat}&lng=${selectedItem.coordinates?.lng}&name=${encodeURIComponent(selectedItem.name)}&autoRoute=true`);
+                      navigate(`/explore?lat=${selectedItem.lat ?? selectedItem.coordinates?.lat}&lng=${selectedItem.lng ?? selectedItem.coordinates?.lng}&name=${encodeURIComponent(selectedItem.name)}&autoRoute=true`);
                     }}>
                       <MapPin size={18}/> View on Map
                     </ActionButton>
