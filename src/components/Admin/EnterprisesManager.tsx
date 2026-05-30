@@ -140,9 +140,9 @@ export default function EnterprisesManager({ enterprises, ownerMode, onDataChang
         website: item.metadata?.website || '',
         categories: Array.isArray(item.categories) ? item.categories : (item.categories ? [item.categories] : []),
         tags: item.tags || [],
-        coordinates: item.coordinates || null,
+        coordinates: (item.lat && item.lng) ? { lat: item.lat, lng: item.lng } : (item.coordinates || null),
       });
-      setPhotos(item.photos || [item.img].filter(Boolean));
+      setPhotos(item.photos && item.photos.length > 0 ? item.photos : [item.img].filter(Boolean));
       setVideoUrl(item.videoUrl || '');
       setOffers(item.offers || []);
     } else {

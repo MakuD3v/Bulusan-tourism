@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
@@ -9,6 +9,7 @@ import StarRating from '../components/Common/StarRating';
 import AuthGuardPopup from '../components/Common/AuthGuardPopup';
 import { useAuth } from '../hooks/useAuth';
 import { dbService } from '../api/db';
+import { apiClient } from '../api/client';
 import { getDynamicTags } from '../utils/tagUtils';
 
 const PageContainer = styled(motion.div)`
@@ -507,7 +508,9 @@ const AttractionDetailsPage = ({ item: selectedItem, onClose }: { item: any, onC
                             <img src={review.avatar} style={{ width: '32px', height: '32px', borderRadius: '50%' }} alt="Reviewer" />
                             <div>
                               <div style={{ fontWeight: 'bold', fontSize: '0.85rem', color: 'var(--text-dark)' }}>{review.author}</div>
-                              <div style={{ fontSize: '0.7rem', color: 'var(--text-light)' }}>{review.date}</div>
+                              <div style={{ fontSize: '0.7rem', color: 'var(--text-light)' }}>
+                                {review.date ? new Date(review.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                              </div>
                             </div>
                           </div>
                           <p style={{ fontSize: '0.85rem', opacity: 0.8, color: 'var(--text-dark)' }}>"{review.comment}"</p>
@@ -534,30 +537,20 @@ const AttractionDetailsPage = ({ item: selectedItem, onClose }: { item: any, onC
                         disabled={submitting}
                         onClick={async () => {
                           if (!user) { setAuthAction('post review'); setIsAuthPopupOpen(true); return; }
-                          if (newRating === 0) return alert('Select rating');
+                          if (newRating === 0) return alert('Please select a star rating first.');
                           setSubmitting(true);
                           try {
-                            const newReview: Review = {
-                              id: Date.now(),
+                            const reviewPayload = {
                               author: user.name,
                               avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`,
                               rating: newRating,
                               comment: newComment,
-                              date: new Date().toLocaleDateString()
                             };
-                            const updatedReviews = [...(selectedItem.reviews || []), newReview];
-                            const totalRating = updatedReviews.reduce((acc, rev) => acc + rev.rating, 0);
-                            const newAverage = Number((totalRating / updatedReviews.length).toFixed(1));
-
-                            await dbService.update('attractions', item.id || item.id, { 
-                              reviews: updatedReviews,
-                              rating: newAverage
-                            });
-
-                            // Optimistic update for current view
-                            setItem({ ...item, reviews: updatedReviews, rating: newAverage });
+                            const newReview = await apiClient.post(`/reviews/attraction/${item.id}`, reviewPayload);
+                            // Optimistic update for current view using fresh review from server
+                            setItem((prev: any) => ({ ...prev, reviews: [...(prev.reviews || []), newReview] }));
                             setNewComment(''); setNewRating(0);
-                          } catch (err) { alert('Failed to post review'); } finally { setSubmitting(false); }
+                          } catch (err) { alert('Failed to post review. Please try again.'); } finally { setSubmitting(false); }
                         }}
                         style={{ background: 'var(--cta-blue)', color: 'white', padding: '8px 16px', borderRadius: '12px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
                       >

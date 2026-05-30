@@ -80,6 +80,7 @@ function formatPrismaPayload(body: any, isUpdate: boolean = false) {
   delete data.website;
   delete data.firebaseId;
   delete data.id;
+  delete data.recordId;
 
   return data;
 }
@@ -126,13 +127,21 @@ const createCrudRoutes = (model: any, include?: any) => {
       const requesterRole = (req as any).user?.role;
       const requesterId = (req as any).user?.userId;
 
-      if (requesterRole === 'USER') {
-        return res.status(403).json({ error: 'Forbidden: Standard users cannot create data' });
-      }
-
       const modelName = (model as any).name || '';
-      if (!['Attraction', 'Enterprise'].includes(modelName) && requesterRole !== 'ADMIN') {
-        return res.status(403).json({ error: 'Forbidden: Access denied' });
+      
+      if (requesterRole === 'USER') {
+        // Standard users can only submit blog posts and contact inquiries
+        if (modelName !== 'BlogPost' && modelName !== 'Inquiry') {
+           return res.status(403).json({ error: 'Forbidden: Standard users cannot create data' });
+        }
+      } else if (requesterRole === 'OWNER') {
+        // Owners can only create their own Attractions and Enterprises
+        if (!['Attraction', 'Enterprise'].includes(modelName)) {
+          return res.status(403).json({ error: 'Forbidden: Owners can only publish Attractions or Enterprises' });
+        }
+      } else if (requesterRole !== 'ADMIN') {
+        // All other roles are rejected (unauthenticated users are blocked by authenticateToken middleware)
+        return res.status(403).json({ error: 'Forbidden: Insufficient permissions' });
       }
 
       const payload = formatPrismaPayload(req.body);
@@ -158,7 +167,11 @@ const createCrudRoutes = (model: any, include?: any) => {
       const requesterId = (req as any).user?.userId;
 
       if (requesterRole === 'USER') {
-        return res.status(403).json({ error: 'Forbidden: Standard users cannot edit data' });
+        const bodyKeys = Object.keys(req.body);
+        const isOnlyReviewUpdate = bodyKeys.every(k => ['reviews', 'rating'].includes(k));
+        if (!isOnlyReviewUpdate) {
+          return res.status(403).json({ error: 'Forbidden: Standard users cannot edit data' });
+        }
       }
 
       const modelName = (model as any).name || '';
@@ -263,8 +276,69 @@ router.use('/enterprises', createCrudRoutes(prisma.enterprise, { reviews: true, 
 router.use('/heritage', createCrudRoutes(prisma.heritage, { reviews: true }));
 router.use('/tours', createCrudRoutes(prisma.tour, { routes: true }));
 router.use('/blogs', createCrudRoutes(prisma.blogPost));
+// Public endpoint for submitting inquiries
+router.post('/inquiries', async (req, res) => {
+  try {
+    const payload = formatPrismaPayload(req.body);
+    const data = await prisma.inquiry.create({ data: payload });
+    res.json(data);
+  } catch (e: any) {
+    res.status(500).json({ error: 'Error creating inquiry', details: e.message });
+  }
+});
 router.use('/inquiries', createCrudRoutes(prisma.inquiry));
 router.use('/users', createCrudRoutes(prisma.user, { checkIns: true, customTours: true }));
+
+// ── Dedicated public review endpoints ───────────────────────────────────────
+// These allow any logged-in user to post a review without hitting the ADMIN-only PUT restriction.
+router.post('/reviews/attraction/:id', authenticateToken, async (req: any, res) => {
+  try {
+    const attractionId = Number(req.params.id);
+    const { author, avatar, rating, comment } = req.body;
+    const review = await prisma.review.create({
+      data: { author: author || 'Anonymous', avatar: avatar || '', rating: Number(rating) || 0, comment: comment || '', attractionId }
+    });
+    // Update the attraction's average rating
+    const allReviews = await prisma.review.findMany({ where: { attractionId } });
+    const avg = Number((allReviews.reduce((a, r) => a + r.rating, 0) / allReviews.length).toFixed(1));
+    await prisma.attraction.update({ where: { id: attractionId }, data: { rating: avg } });
+    res.json(review);
+  } catch (e: any) {
+    res.status(500).json({ error: 'Error posting review', details: e.message });
+  }
+});
+
+router.post('/reviews/enterprise/:id', authenticateToken, async (req: any, res) => {
+  try {
+    const enterpriseId = Number(req.params.id);
+    const { author, avatar, rating, comment } = req.body;
+    const review = await prisma.review.create({
+      data: { author: author || 'Anonymous', avatar: avatar || '', rating: Number(rating) || 0, comment: comment || '', enterpriseId }
+    });
+    const allReviews = await prisma.review.findMany({ where: { enterpriseId } });
+    const avg = Number((allReviews.reduce((a, r) => a + r.rating, 0) / allReviews.length).toFixed(1));
+    await prisma.enterprise.update({ where: { id: enterpriseId }, data: { rating: avg } });
+    res.json(review);
+  } catch (e: any) {
+    res.status(500).json({ error: 'Error posting review', details: e.message });
+  }
+});
+
+router.post('/reviews/heritage/:id', authenticateToken, async (req: any, res) => {
+  try {
+    const heritageId = Number(req.params.id);
+    const { author, avatar, rating, comment } = req.body;
+    const review = await prisma.review.create({
+      data: { author: author || 'Anonymous', avatar: avatar || '', rating: Number(rating) || 0, comment: comment || '', heritageId }
+    });
+    const allReviews = await prisma.review.findMany({ where: { heritageId } });
+    const avg = Number((allReviews.reduce((a, r) => a + r.rating, 0) / allReviews.length).toFixed(1));
+    await prisma.heritage.update({ where: { id: heritageId }, data: { rating: avg } });
+    res.json(review);
+  } catch (e: any) {
+    res.status(500).json({ error: 'Error posting review', details: e.message });
+  }
+});
 
 // Specific logic
 router.post('/interaction/:collection/:id', async (req, res) => {

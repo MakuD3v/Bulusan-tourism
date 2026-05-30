@@ -106,7 +106,7 @@ const CardWrapper = styled(motion.div)`
     h3 {
       font-size: 1.4rem;
       color: white;
-      font-family: ${(props) => props.theme.fonts.heading};
+      font-family: 'Outfit', sans-serif;
       margin-bottom: 8px;
       line-height: 1.25;
       font-weight: 800;
@@ -128,6 +128,17 @@ const CardWrapper = styled(motion.div)`
       gap: 12px;
       margin-bottom: 8px;
       flex-wrap: wrap;
+    }
+
+    p {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.75);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      line-height: 1.4;
+      margin-bottom: 12px;
     }
 
     .category-container {
@@ -338,6 +349,8 @@ const DiscoveryCard: React.FC<DiscoveryCardProps> = ({
             </div>
           )}
         </div>
+        
+        {description && <p>{description}</p>}
         
         <div className="card-footer">
           <div className="location">
