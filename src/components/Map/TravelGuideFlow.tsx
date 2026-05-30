@@ -344,7 +344,10 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
       .filter(s => s.dayIndex === selectedDayIndex)
       .map(stop => {
         const item = allItems.find(i => i.id.toString() === stop.itemId.toString());
-        return item && item.coordinates ? [item.coordinates.lat, item.coordinates.lng] as [number, number] : null;
+        if (!item) return null;
+        const lat = item.lat || item.coordinates?.lat;
+        const lng = item.lng || item.coordinates?.lng;
+        return lat && lng ? [lat, lng] as [number, number] : null;
       }).filter(Boolean) as [number, number][];
   }, [customStops, allItems, selectedDayIndex]);
 
@@ -511,7 +514,10 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
                       
                       {/* Unselected Items */}
                       {allItems.map(item => {
-                        if (!item.coordinates) return null;
+                        const lat = item.lat || item.coordinates?.lat;
+                        const lng = item.lng || item.coordinates?.lng;
+                        if (!lat || !lng) return null;
+                        
                         const isSelectedInCurrentDay = customStops.some(s => s.itemId.toString() === item.id.toString() && s.dayIndex === selectedDayIndex);
                         if (isSelectedInCurrentDay) return null;
                         
@@ -520,7 +526,7 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
                         const html = `<img src="${iconUrl}" style="width:32px;height:32px; opacity: 0.6; filter: grayscale(0.4);" />`;
                         const icon = L.divIcon({ html, className: '', iconSize: [32, 32], iconAnchor: [16, 32] });
                         
-                        return <Marker key={`base-${item.id}`} position={[item.coordinates.lat, item.coordinates.lng]} icon={icon} />;
+                        return <Marker key={`base-${item.id}`} position={[lat, lng]} icon={icon} />;
                       })}
 
                       {customPolyline.length > 0 && <Polyline positions={customPolyline} color="#3b82f6" weight={4} dashArray="8, 8" />}
@@ -528,7 +534,11 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
                       {/* Selected Items */}
                       {customStops.filter(s => s.dayIndex === selectedDayIndex).map((stop, idx) => {
                         const item = allItems.find(i => i.id.toString() === stop.itemId.toString());
-                        if (!item || !item.coordinates) return null;
+                        if (!item) return null;
+                        
+                        const lat = item.lat || item.coordinates?.lat;
+                        const lng = item.lng || item.coordinates?.lng;
+                        if (!lat || !lng) return null;
                         
                         const itemCats = (Array.isArray(item.categories) ? item.categories : [((item as any).category || (item as any).type || 'Others')]);
                         const iconUrl = getMapIconUrl(itemCats[0] || 'Others');
@@ -538,7 +548,7 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
                                       </div>`;
                         const icon = L.divIcon({ html, className: '', iconSize: [42, 42], iconAnchor: [21, 42] });
                         
-                        return <Marker key={`selected-${stop.itemId}`} position={[item.coordinates.lat, item.coordinates.lng]} icon={icon} />;
+                        return <Marker key={`selected-${stop.itemId}`} position={[lat, lng]} icon={icon} />;
                       })}
                       <MapAutoFitter coordinates={customPolyline} />
                     </MapContainer>
