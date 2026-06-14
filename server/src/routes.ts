@@ -93,12 +93,14 @@ const createCrudRoutes = (model: any, modelName: string, include?: any) => {
       // Determine default sorting field
       let orderBy: any = undefined;
       
-      if (['Attraction', 'Enterprise', 'Tour', 'BlogPost', 'CheckIn'].includes(modelName)) {
+      if (['Attraction', 'Enterprise', 'Tour'].includes(modelName)) {
         orderBy = { dateAdded: 'desc' };
       } else if (modelName === 'User') {
         orderBy = { joinedDate: 'desc' };
-      } else if (['Review', 'Inquiry'].includes(modelName)) {
+      } else if (['Review', 'Inquiry', 'BlogPost'].includes(modelName)) {
         orderBy = { date: 'desc' };
+      } else if (modelName === 'CheckIn') {
+        orderBy = { timestamp: 'desc' };
       } else {
         orderBy = { id: 'desc' };
       }
