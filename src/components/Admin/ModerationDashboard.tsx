@@ -248,7 +248,6 @@ const ModerationDashboard: React.FC<ModerationDashboardProps> = ({ attractions, 
                                           showConfirm('Delete Blog Post', `Delete blog post: ${blog.title}?`, async () => {
                                               try {
                                                   await dbService.delete('blogs', blog.id || blog.id);
-                                                  window.location.reload();
                                               } catch (e) {
                                                   console.error("Failed to delete blog", e);
                                                   showAlert('Error', "Failed to delete the blog post.", 'error');
