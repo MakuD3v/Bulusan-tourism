@@ -133,9 +133,9 @@ const createCrudRoutes = (model: any, modelName: string, include?: any) => {
            return res.status(403).json({ error: 'Forbidden: Standard users cannot create data' });
         }
       } else if (requesterRole === 'OWNER') {
-        // Owners can only create their own Attractions and Enterprises
-        if (!['Attraction', 'Enterprise'].includes(modelName)) {
-          return res.status(403).json({ error: 'Forbidden: Owners can only publish Attractions or Enterprises' });
+        // Owners can create their own Attractions, Enterprises, and also submit blogs/inquiries
+        if (!['Attraction', 'Enterprise', 'BlogPost', 'Inquiry'].includes(modelName)) {
+          return res.status(403).json({ error: 'Forbidden: Owners can only publish Attractions, Enterprises, Blogs, or Inquiries' });
         }
       } else if (requesterRole !== 'ADMIN') {
         // All other roles are rejected (unauthenticated users are blocked by authenticateToken middleware)
@@ -164,6 +164,9 @@ const createCrudRoutes = (model: any, modelName: string, include?: any) => {
       const requesterRole = (req as any).user?.role;
       const requesterId = (req as any).user?.userId;
 
+      const recordId = isNaN(Number(req.params.id)) ? req.params.id : Number(req.params.id);
+
+      // Standard users: only allowed to post reviews/ratings
       if (requesterRole === 'USER') {
         const bodyKeys = Object.keys(req.body);
         const isOnlyReviewUpdate = bodyKeys.every(k => ['reviews', 'rating'].includes(k));
@@ -172,17 +175,28 @@ const createCrudRoutes = (model: any, modelName: string, include?: any) => {
         }
       }
 
-      if (!['Attraction', 'Enterprise'].includes(modelName) && requesterRole !== 'ADMIN') {
-        return res.status(403).json({ error: 'Forbidden: Access denied' });
-      }
-
-      const recordId = isNaN(Number(req.params.id)) ? req.params.id : Number(req.params.id);
-
-      if (['Attraction', 'Enterprise'].includes(modelName) && requesterRole === 'OWNER') {
+      // OWNERs can edit their own Attraction or Enterprise
+      if (requesterRole === 'OWNER') {
+        if (!['Attraction', 'Enterprise'].includes(modelName)) {
+          return res.status(403).json({ error: 'Forbidden: Owners can only edit their own Attractions or Enterprises' });
+        }
         const record = await model.findUnique({ where: { id: recordId } });
         if (!record || record.ownerId !== requesterId) {
           return res.status(403).json({ error: 'Forbidden: You can only edit your own attraction/enterprise' });
         }
+      }
+
+      // Non-ADMIN, non-OWNER can only do review-only updates (handled above) or are blocked
+      if (requesterRole !== 'ADMIN' && requesterRole !== 'OWNER' && requesterRole !== 'USER') {
+        return res.status(403).json({ error: 'Forbidden: Access denied' });
+      }
+
+      // Admins editing BlogPosts or other records — allow
+      // But block non-ADMIN/OWNER from editing non-Attraction/Enterprise models (except review-only for USER)
+      if (requesterRole === 'USER') {
+        // Already validated as review-only update above — proceed
+      } else if (requesterRole !== 'ADMIN' && requesterRole !== 'OWNER') {
+        return res.status(403).json({ error: 'Forbidden: Access denied' });
       }
 
       const payload = formatPrismaPayload(req.body, true);

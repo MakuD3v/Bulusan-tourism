@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import { getMediaUrl } from '../../utils/mediaUtils';
 import { getDynamicTags } from '../../utils/tagUtils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../../hooks/useAuth';
 
 const SidebarContainer = styled.div`
   display: flex;
@@ -326,6 +327,7 @@ interface MapSidebarProps {
 const MapSidebar: React.FC<MapSidebarProps> = ({
   items, searchQuery, setSearchQuery, selectedCategories, setSelectedCategories, activeTab, onTabChange, loading, onItemClick, activeId, onOpenDashboard, onOpenTravelGuide
 }) => {
+  const { role } = useAuth();
 
   const displayItems = useMemo(() => {
     if (activeTab === 'All') return items;
@@ -356,9 +358,11 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
       </ClassicHeader>
 
       <SearchSection>
-        <TourButton onClick={onOpenTravelGuide} style={{ marginBottom: '8px', background: 'linear-gradient(135deg, rgba(59,130,246,0.1), rgba(29,78,216,0.1))', borderColor: 'rgba(59,130,246,0.3)', color: '#3b82f6' }}>
-           <MapPin size={16} /> Travel Guide & Planner
-        </TourButton>
+        {role === 'ADMIN' && (
+          <TourButton onClick={onOpenTravelGuide} style={{ marginBottom: '8px', background: 'linear-gradient(135deg, rgba(59,130,246,0.1), rgba(29,78,216,0.1))', borderColor: 'rgba(59,130,246,0.3)', color: '#3b82f6' }}>
+             <MapPin size={16} /> Travel Guide &amp; Planner
+          </TourButton>
+        )}
         
         <TabContainer>
           {(['All', 'Attraction', 'Enterprise'] as const).map(t => (

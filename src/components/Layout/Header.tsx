@@ -303,10 +303,10 @@ const Header = ({ isTransparent }: { isTransparent: boolean }) => {
           { path: '/discover', label: 'Discover', baybayin: 'ᜆᜓᜃ᜔ᜎᜐ᜔' },
           { path: '/attractions', label: 'Attractions', baybayin: 'ᜆᜈ᜔ᜌᜄ᜔' },
           { path: '/enterprises', label: 'Enterprises', baybayin: 'ᜆᜓᜎᜓᜌ᜔' },
-          { path: '/explore', label: 'Tours & Map', baybayin: 'ᜎᜌᜄ᜔', adminOnly: true },
+          { path: '/explore', label: 'Tours & Map', baybayin: 'ᜎᜌᜄ᜔' },
           { path: '/blog', label: 'Blog', baybayin: 'ᜃᜓᜏᜒᜈ᜔ᜆᜓ' },
           { path: '/contact', label: 'Contact', baybayin: 'ᜂᜐᜉ᜔' }
-        ].filter(item => !item.adminOnly || role === 'ADMIN').map(item => (
+        ].filter(item => !(item as any).adminOnly || role === 'ADMIN').map(item => (
           <NavItem
             key={item.path}
             to={item.path}
@@ -383,10 +383,10 @@ const Header = ({ isTransparent }: { isTransparent: boolean }) => {
                 { path: '/discover', label: 'Discover', baybayin: 'ᜆᜓᜃ᜔ᜎᜐ᜔' },
                 { path: '/attractions', label: 'Attractions', baybayin: 'ᜆᜈ᜔ᜌᜄ᜔' },
                 { path: '/enterprises', label: 'Enterprises', baybayin: 'ᜆᜓᜎᜓᜌ᜔' },
-                { path: '/explore', label: 'Tours & Map', baybayin: 'ᜎᜌᜄ᜔', adminOnly: true },
+                { path: '/explore', label: 'Tours & Map', baybayin: 'ᜎᜌᜄ᜔' },
                 { path: '/blog', label: 'Blog', baybayin: 'ᜃᜓᜏᜒᜈ᜔ᜆᜓ' },
                 { path: '/contact', label: 'Contact', baybayin: 'ᜂᜐᜉ᜔' }
-              ].filter(item => !item.adminOnly || role === 'ADMIN').map(item => (
+              ].filter(item => !(item as any).adminOnly || role === 'ADMIN').map(item => (
                 <MobileNavItem key={item.path} to={item.path} onClick={() => setIsMobileMenuOpen(false)}>
                   <span className="baybayin">{item.baybayin}</span>
                   {item.label}

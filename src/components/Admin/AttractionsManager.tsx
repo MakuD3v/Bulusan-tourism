@@ -299,7 +299,7 @@ export default function AttractionsManager({ attractions, ownerMode, onDataChang
       
       <Table>
         <thead>
-          <tr><th>Name</th><th>Location</th><th>Categories</th><th style={{ width: 100 }}>Actions</th></tr>
+          <tr><th>Name</th><th>Location</th><th>Categories</th><th>Author</th><th style={{ width: 100 }}>Actions</th></tr>
         </thead>
         <tbody>
           {filtered.map((item) => (
@@ -311,6 +311,19 @@ export default function AttractionsManager({ attractions, ownerMode, onDataChang
                   {(Array.isArray(item.categories) ? item.categories : [item.categories]).map(c => (
                     c && <span key={`${item.id}-${c}`} style={{ background: '#f0f4f8', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem', color: '#1d4ed8', fontWeight: 700 }}>{c}</span>
                   ))}
+                </div>
+              </td>
+              <td>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{item.ownerName || item.owner?.name || (item.ownerId ? `User #${item.ownerId}` : 'Admin')}</span>
+                  <span style={{
+                    display: 'inline-block', padding: '2px 8px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 800,
+                    background: item.ownerId ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+                    color: item.ownerId ? '#059669' : '#1d4ed8',
+                    textTransform: 'uppercase', letterSpacing: '0.5px'
+                  }}>
+                    {item.ownerId ? 'OWNER' : 'ADMIN'}
+                  </span>
                 </div>
               </td>
               <td>
