@@ -234,7 +234,7 @@ const FullPostModal = styled(motion.div)`
     width: 100%;
     position: relative;
     img { width: 100%; height: 100%; object-fit: cover; }
-    .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to top, white, transparent); }
+    .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to top, var(--surface-bg), transparent); }
     .close-btn { position: absolute; top: 24px; right: 24px; background: rgba(0,0,0,0.5); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; font-size: 1.5rem; }
   }
 
@@ -245,21 +245,21 @@ const FullPostModal = styled(motion.div)`
     z-index: 5;
     
     .tag { color: ${(props) => props.theme.colors.ctaBlue}; font-weight: bold; margin-bottom: 12px; display: block; }
-    h2 { font-size: 3rem; color: ${(props) => props.theme.colors.darkBlue}; margin-bottom: 24px; line-height: 1.1; }
-    .meta { display: flex; gap: 20px; color: #777; margin-bottom: 40px; font-size: 0.9rem; }
+    h2 { font-size: 3rem; color: var(--text-dark); margin-bottom: 24px; line-height: 1.1; }
+    .meta { display: flex; gap: 20px; color: var(--text-light); margin-bottom: 40px; font-size: 0.9rem; }
     .text { 
-      font-size: 1.15rem; color: #333; line-height: 1.8; 
+      font-size: 1.15rem; color: var(--text-dark); line-height: 1.8; 
       p { margin-bottom: 24px; }
-      h4 { font-size: 1.5rem; margin: 40px 0 20px 0; color: ${(props) => props.theme.colors.darkBlue}; }
+      h4 { font-size: 1.5rem; margin: 40px 0 20px 0; color: var(--text-dark); }
     }
   }
 
   .related {
-    background: #f9f9f9;
+    background: rgba(128, 128, 128, 0.05);
     padding: 64px 80px;
-    h4 { margin-bottom: 32px; font-size: 1.4rem; }
+    h4 { margin-bottom: 32px; font-size: 1.4rem; color: var(--text-dark); }
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-    .item { display: flex; gap: 16px; align-items: center; img { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; } h5 { font-size: 1rem; color: ${(props) => props.theme.colors.darkBlue}; } }
+    .item { display: flex; gap: 16px; align-items: center; img { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; } h5 { font-size: 1rem; color: var(--text-dark); } }
   }
 `;
 
