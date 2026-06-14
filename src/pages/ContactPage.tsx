@@ -244,15 +244,21 @@ const ContactPage = () => {
           <div className="info-blocks">
             <div className="info-item">
               <div className="icon-box"><MapPin /></div>
-              <div><h4>Tourism Sanctuary</h4><span>Municipal Hall, Bulusan, Sorsogon</span></div>
+              <div><h4>Office Address</h4><span>Office of the Municipal Tourism Officer (OMTO), LGU Bulusan, Brgy. Central, Bulusan, Sorsogon, 4704, Philippines</span></div>
             </div>
             <div className="info-item">
-              <div className="icon-box"><Phone /></div>
-              <div><h4>Direct Line</h4><span>+63 912 345 6789</span></div>
+              <div className="icon-box" style={{ background: 'rgba(46, 204, 113, 0.1)', color: '#2ecc71' }}><Phone /></div>
+              <div><h4>Direct Line</h4><span>+63-908-446-6527</span></div>
             </div>
             <div className="info-item">
-              <div className="icon-box"><Mail /></div>
-              <div><h4>Support Email</h4><span>info@bulusantourism.ph</span></div>
+              <div className="icon-box" style={{ background: 'rgba(155, 89, 182, 0.1)', color: '#9b59b6' }}><Mail /></div>
+              <div><h4>Support Email</h4><span>bulusantourism@gmail.com</span></div>
+            </div>
+            <div className="info-item">
+              <div className="icon-box" style={{ background: 'rgba(243, 156, 18, 0.1)', color: '#f39c12' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <div><h4>Office Hours</h4><span>Monday to Friday | 8:00 AM – 5:00 PM</span></div>
             </div>
           </div>
 

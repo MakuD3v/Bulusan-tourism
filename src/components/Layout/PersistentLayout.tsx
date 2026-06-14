@@ -1,7 +1,40 @@
 import styled from 'styled-components';
 import { Outlet, useLocation } from 'react-router-dom';
 import Header from './Header';
-import { Globe, Camera, MessageCircle, PlayCircle, MapPin, Mail, Phone, Music } from 'lucide-react';
+import { MapPin, Mail, Phone } from 'lucide-react';
+
+const TikTokIcon = ({ size = 18 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+  </svg>
+);
+
+const FacebookIcon = ({ size = 18 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+  </svg>
+);
+
+const InstagramIcon = ({ size = 18 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+  </svg>
+);
+
+const TwitterIcon = ({ size = 18 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/>
+  </svg>
+);
+
+const YoutubeIcon = ({ size = 18 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/>
+    <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/>
+  </svg>
+);
 
 const LayoutWrapper = styled.div`
   display: flex;
@@ -135,10 +168,6 @@ const PersistentLayout = () => {
           </div>
           
           <div className="footer-info">
-            <p><MapPin size={16} /> Office of the Municipal Tourism Officer (OMTO), LGU Bulusan, Brgy. Central, Bulusan, Sorsogon, 4704, Philippines</p>
-            <p style={{ gap: '16px' }}>
-              <span><strong>Office Hours:</strong> Monday to Friday | 8:00 AM – 5:00 PM</span>
-            </p>
             <p style={{ gap: '16px' }}>
               <span><Mail size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} /> bulusantourism@gmail.com</span>
               <span><Phone size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} /> +63-908-446-6527</span>
@@ -146,11 +175,11 @@ const PersistentLayout = () => {
           </div>
 
           <div className="social-icons">
-            <a href="https://www.facebook.com/bulusan.phl.tourism" target="_blank" rel="noreferrer" aria-label="Facebook"><Globe size={18} /></a>
-            <a href="https://www.instagram.com/bulusanphltourism/" target="_blank" rel="noreferrer" aria-label="Instagram"><Camera size={18} /></a>
-            <a href="https://www.tiktok.com/@bulusantourismphl" target="_blank" rel="noreferrer" aria-label="TikTok"><Music size={18} /></a>
-            <a href="https://x.com/bulusantourism" target="_blank" rel="noreferrer" aria-label="X (Twitter)"><MessageCircle size={18} /></a>
-            <a href="https://www.youtube.com/@BulusanPhlTourism" target="_blank" rel="noreferrer" aria-label="YouTube"><PlayCircle size={18} /></a>
+            <a href="https://www.facebook.com/bulusan.phl.tourism" target="_blank" rel="noreferrer" aria-label="Facebook"><FacebookIcon size={18} /></a>
+            <a href="https://www.instagram.com/bulusanphltourism/" target="_blank" rel="noreferrer" aria-label="Instagram"><InstagramIcon size={18} /></a>
+            <a href="https://www.tiktok.com/@bulusantourismphl" target="_blank" rel="noreferrer" aria-label="TikTok"><TikTokIcon size={18} /></a>
+            <a href="https://x.com/bulusantourism" target="_blank" rel="noreferrer" aria-label="X (Twitter)"><TwitterIcon size={18} /></a>
+            <a href="https://www.youtube.com/@BulusanPhlTourism" target="_blank" rel="noreferrer" aria-label="YouTube"><YoutubeIcon size={18} /></a>
           </div>
           <div className="copyright">
             &copy; {new Date().getFullYear()} Bulusan Tourism Development Office. High-Fidelity Platform by Blueprint.
