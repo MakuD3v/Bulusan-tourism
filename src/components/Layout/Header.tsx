@@ -6,7 +6,7 @@ import { useThemeMode } from '../../hooks/useTheme';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 
-const LogoImageSrc = '/bulusan_logo_black.png';
+const LogoImageSrc = '/real_bulusan_logo.png';
 
 const HeaderContainer = styled.header<{ $transparent: boolean; $scrolled: boolean }>`
   position: fixed;
@@ -39,11 +39,9 @@ const LogoWrapper = styled(Link)`
 `;
 
 const LogoImage = styled.img`
-  width: 48px;
   height: 48px;
-  border-radius: 50%;
-  object-fit: cover;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  width: auto;
+  object-fit: contain;
 `;
 
 const LogoTextContent = styled.div<{ $transparent: boolean, $scrolled: boolean }>`
@@ -291,7 +289,7 @@ const Header = ({ isTransparent }: { isTransparent: boolean }) => {
   return (
     <HeaderContainer $transparent={isTransparent} $scrolled={isScrolled}>
       <LogoWrapper to="/">
-        <LogoImage src={LogoImageSrc} alt="Logo" />
+        <LogoImage src={LogoImageSrc} alt="Bulusan Tourism Logo" />
         <LogoTextContent $transparent={isTransparent} $scrolled={isScrolled}>
           <span className="main-text">Bulusan</span>
           <span className="sub-text">Tourism</span>

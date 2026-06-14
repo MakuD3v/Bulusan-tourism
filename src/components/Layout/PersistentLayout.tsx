@@ -164,7 +164,7 @@ const PersistentLayout = () => {
       <Footer>
         <div className="footer-content">
           <div className="footer-logo">
-            <img src="/bulusan_logo_black.png" alt="Bulusan Tourism" />
+            <img src="/real_bulusan_logo.png" alt="Bulusan Tourism" />
           </div>
           
           <div className="footer-info">
