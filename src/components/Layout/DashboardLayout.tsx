@@ -303,10 +303,12 @@ const DashboardLayout = () => {
           
           {user && (
             <>
-              <NavItem to="/account" $active={location.pathname === '/account'}>
-                <User size={18} />
-                My Account
-              </NavItem>
+              {role !== 'OWNER' && (
+                <NavItem to="/account" $active={location.pathname === '/account'}>
+                  <User size={18} />
+                  My Account
+                </NavItem>
+              )}
               {role === 'OWNER' && (
                 <NavItem to="/owner-dashboard" $active={location.pathname === '/owner-dashboard'}>
                   <LayoutDashboard size={18} />
