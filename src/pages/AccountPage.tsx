@@ -204,8 +204,9 @@ export default function AccountPage() {
         const res = await apiClient.get('/appeals/me');
         if (res && res.id) {
           setAppealData(res);
+          const isDismissed = localStorage.getItem(`dismissed_appeal_${res.id}`) === 'true';
           // Show popup logic
-          if (!notificationDismissed && (res.status === 'APPROVED' || res.status === 'REJECTED')) {
+          if (!isDismissed && !notificationDismissed && (res.status === 'APPROVED' || res.status === 'REJECTED')) {
             setShowNotification(true);
           }
         }
@@ -340,6 +341,9 @@ export default function AccountPage() {
   const dismissNotification = () => {
     setShowNotification(false);
     setNotificationDismissed(true);
+    if (appealData && appealData.id) {
+      localStorage.setItem(`dismissed_appeal_${appealData.id}`, 'true');
+    }
   };
 
   return (
@@ -576,6 +580,20 @@ export default function AccountPage() {
                          <strong style={{ display: 'block', color: '#e2ecf7', marginBottom: '8px' }}>Admin Response:</strong>
                          <p style={{ color: '#94a3b8', margin: 0, lineHeight: 1.6 }}>{appealData.adminReply}</p>
                        </div>
+                     )}
+
+                     {appealData.status === 'REJECTED' && (
+                       <button 
+                         onClick={() => {
+                           setAppealData(null);
+                           setAppealMsg('');
+                           setAppealImage(null);
+                           setAppealPreview(null);
+                         }} 
+                         style={{ marginBottom: '24px', padding: '12px 24px', background: '#ef4444', color: 'white', borderRadius: '12px', border: 'none', fontWeight: 'bold', cursor: 'pointer', width: '100%' }}
+                       >
+                         Submit New Appeal
+                       </button>
                      )}
 
                      <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '24px' }}>
