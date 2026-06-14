@@ -296,7 +296,7 @@ export default function AccountPage() {
       const formData = new FormData();
       formData.append('file', appealImage);
       
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
       const uploadRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/upload`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },

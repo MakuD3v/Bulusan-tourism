@@ -19,7 +19,7 @@ async function handleResponse(res: Response) {
 
 export const apiClient = {
   get: async (endpoint: string) => {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
     const res = await fetch(`${BASE_URL}${endpoint}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -29,7 +29,7 @@ export const apiClient = {
     return handleResponse(res);
   },
   post: async (endpoint: string, data: any) => {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
     const res = await fetch(`${BASE_URL}${endpoint}`, {
       method: 'POST',
       headers: {
@@ -41,7 +41,7 @@ export const apiClient = {
     return handleResponse(res);
   },
   put: async (endpoint: string, data: any) => {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
     const res = await fetch(`${BASE_URL}${endpoint}`, {
       method: 'PUT',
       headers: {
@@ -53,7 +53,7 @@ export const apiClient = {
     return handleResponse(res);
   },
   delete: async (endpoint: string) => {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
     const res = await fetch(`${BASE_URL}${endpoint}`, {
       method: 'DELETE',
       headers: {
@@ -64,7 +64,7 @@ export const apiClient = {
     return handleResponse(res);
   },
   upload: async (file: File) => {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
     const formData = new FormData();
     formData.append('file', file);
     const res = await fetch(`${BASE_URL}/upload`, {
