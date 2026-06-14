@@ -245,12 +245,12 @@ const FullPostModal = styled(motion.div)`
     z-index: 5;
     
     .tag { color: ${(props) => props.theme.colors.ctaBlue}; font-weight: bold; margin-bottom: 12px; display: block; }
-    h2 { font-size: 3rem; color: var(--text-dark); margin-bottom: 24px; line-height: 1.1; }
-    .meta { display: flex; gap: 20px; color: var(--text-light); margin-bottom: 40px; font-size: 0.9rem; }
+    h2 { font-size: 3rem; color: ${(props) => props.theme.colors.textDark}; margin-bottom: 24px; line-height: 1.1; }
+    .meta { display: flex; gap: 20px; color: ${(props) => props.theme.colors.textDark}; margin-bottom: 40px; font-size: 0.9rem; opacity: 0.9; font-weight: 500; }
     .text { 
-      font-size: 1.15rem; color: var(--text-dark); line-height: 1.8; 
-      p { margin-bottom: 24px; }
-      h4 { font-size: 1.5rem; margin: 40px 0 20px 0; color: var(--text-dark); }
+      font-size: 1.15rem; color: ${(props) => props.theme.colors.textDark}; line-height: 1.8; 
+      p, div { margin-bottom: 24px; color: ${(props) => props.theme.colors.textDark}; }
+      h4 { font-size: 1.5rem; margin: 40px 0 20px 0; color: ${(props) => props.theme.colors.textDark}; }
     }
   }
 
@@ -575,10 +575,12 @@ const BlogPage = () => {
               </div>
 
               <div className="text">
-                <p>{selectedPost.excerpt} Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-                <h4>The Journey Begins</h4>
-                <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-                <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
+                <p style={{ fontWeight: 'bold', fontSize: '1.25rem', marginBottom: '32px', paddingBottom: '16px', borderBottom: '1px solid rgba(128,128,128,0.2)' }}>
+                  {selectedPost.excerpt}
+                </p>
+                <div style={{ whiteSpace: 'pre-wrap' }}>
+                  {selectedPost.content}
+                </div>
               </div>
             </div>
 
