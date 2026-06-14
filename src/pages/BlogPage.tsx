@@ -352,7 +352,7 @@ const BlogPage = () => {
         authorAvatar: user.avatar || `https://i.pravatar.cc/150?u=${user.email}`,
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         readTime: '5 min read',
-        status: 'Under Review'
+        status: 'Published'
       };
 
       await dbService.add('blogs', post);
@@ -360,7 +360,7 @@ const BlogPage = () => {
       setShowCreateModal(false);
       setNewPost({ title: '', category: 'Travel Guide', excerpt: '', content: '' });
       setPostImage(null);
-      showAlert('Success', 'Story submitted for review!', 'success');
+      showAlert('Success', 'Story published successfully!', 'success');
     } catch (error) {
       showAlert('Error', 'Failed to share your story. Please try again.', 'error');
     } finally {
