@@ -5,7 +5,9 @@ import { useAuth } from '../../hooks/useAuth';
 import { useThemeMode } from '../../hooks/useTheme';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import LogoImageSrc from '../../../assets/Logo_rev copy.png';
+
+const LogoImageSrc = '/bulusan_logo_black.png';
+
 const HeaderContainer = styled.header<{ $transparent: boolean; $scrolled: boolean }>`
   position: fixed;
   top: 0;
@@ -301,10 +303,10 @@ const Header = ({ isTransparent }: { isTransparent: boolean }) => {
           { path: '/discover', label: 'Discover', baybayin: 'ᜆᜓᜃ᜔ᜎᜐ᜔' },
           { path: '/attractions', label: 'Attractions', baybayin: 'ᜆᜈ᜔ᜌᜄ᜔' },
           { path: '/enterprises', label: 'Enterprises', baybayin: 'ᜆᜓᜎᜓᜌ᜔' },
-          { path: '/explore', label: 'Tours & Map', baybayin: 'ᜎᜌᜄ᜔' },
+          { path: '/explore', label: 'Tours & Map', baybayin: 'ᜎᜌᜄ᜔', adminOnly: true },
           { path: '/blog', label: 'Blog', baybayin: 'ᜃᜓᜏᜒᜈ᜔ᜆᜓ' },
           { path: '/contact', label: 'Contact', baybayin: 'ᜂᜐᜉ᜔' }
-        ].map(item => (
+        ].filter(item => !item.adminOnly || role === 'ADMIN').map(item => (
           <NavItem
             key={item.path}
             to={item.path}
@@ -381,10 +383,10 @@ const Header = ({ isTransparent }: { isTransparent: boolean }) => {
                 { path: '/discover', label: 'Discover', baybayin: 'ᜆᜓᜃ᜔ᜎᜐ᜔' },
                 { path: '/attractions', label: 'Attractions', baybayin: 'ᜆᜈ᜔ᜌᜄ᜔' },
                 { path: '/enterprises', label: 'Enterprises', baybayin: 'ᜆᜓᜎᜓᜌ᜔' },
-                { path: '/explore', label: 'Tours & Map', baybayin: 'ᜎᜌᜄ᜔' },
+                { path: '/explore', label: 'Tours & Map', baybayin: 'ᜎᜌᜄ᜔', adminOnly: true },
                 { path: '/blog', label: 'Blog', baybayin: 'ᜃᜓᜏᜒᜈ᜔ᜆᜓ' },
                 { path: '/contact', label: 'Contact', baybayin: 'ᜂᜐᜉ᜔' }
-              ].map(item => (
+              ].filter(item => !item.adminOnly || role === 'ADMIN').map(item => (
                 <MobileNavItem key={item.path} to={item.path} onClick={() => setIsMobileMenuOpen(false)}>
                   <span className="baybayin">{item.baybayin}</span>
                   {item.label}

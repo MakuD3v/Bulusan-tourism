@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { Clock, MapPin, Navigation, Calendar, Settings2 } from 'lucide-react';
 import { CuratedRouteStop } from '../../data/types';
+import TimePicker from '../Common/TimePicker';
 
 const Container = styled(motion.div)`
   display: flex; flex-direction: column; gap: 24px; padding: 24px;
@@ -45,15 +46,8 @@ const StopRow = styled.div`
   display: flex; align-items: flex-start; gap: 16px;
   
   .time-col {
-    display: flex; flex-direction: column; align-items: flex-end; width: 100px; flex-shrink: 0;
-    input {
-      background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
-      color: #60a5fa; font-family: monospace; font-size: 0.9rem; font-weight: 700;
-      padding: 6px 8px; outline: none; width: 100%; text-align: center;
-      &:focus { border-color: #3b82f6; }
-      &::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
-    }
-    .duration { font-size: 0.65rem; color: #5a7098; margin-top: 4px; font-weight: 600; text-transform: uppercase; }
+    display: flex; flex-direction: column; align-items: flex-end; width: 120px; flex-shrink: 0;
+    .duration { font-size: 0.65rem; color: #5a7098; margin-top: 4px; font-weight: 600; text-transform: uppercase; text-align: right; }
   }
   
   .line-col {
@@ -182,7 +176,7 @@ const SmartSchedulerStep: React.FC<SmartSchedulerStepProps> = ({ stops, pace, tr
                 return (
                   <StopRow key={sIdx}>
                     <div className="time-col">
-                      <input type="time" value={stop.scheduledTime || ''} onChange={e => handleTimeChange(globalIdx, e.target.value)} />
+                      <TimePicker value={stop.scheduledTime || ''} onChange={val => handleTimeChange(globalIdx, val)} />
                       <div className="duration">{stop.durationHours} hrs</div>
                     </div>
                     <div className="line-col">

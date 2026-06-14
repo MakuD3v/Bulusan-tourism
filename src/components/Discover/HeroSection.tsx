@@ -266,7 +266,27 @@ const FloatingNav = styled(motion.div)`
       }
     }
 
-    div { line-height: 1.2; }
+    .text-content {
+      line-height: 1.2;
+    }
+
+    .description {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      font-size: 0.8rem;
+      color: var(--text-light);
+      transition: all 0.3s ease;
+      margin-top: 0;
+      line-height: 1.4;
+      max-width: 200px;
+    }
+
+    &:hover .description {
+      max-height: 80px;
+      opacity: 1;
+      margin-top: 8px;
+    }
 
     strong {
       display: block;
@@ -300,7 +320,7 @@ const HeroSection = () => {
       <HeroContainer>
         <VideoBgWrapper>
           <SmartMedia
-            src="https://youtu.be/sBFeTzfXeu8"
+            src="https://www.youtube.com/watch?v=sBFeTzfXeu8&vq=hd1080"
             type="video"
             className="video-bg"
             autoPlay
@@ -322,7 +342,7 @@ const HeroSection = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8, duration: 1.0 }}
           >
-            <Sparkles size={16} /> Welcome to the heart of Sorsogon
+            <Sparkles size={16} /> Welcome to the Heart and Soul of Sorsogon
           </motion.div>
 
           <h1>
@@ -362,19 +382,31 @@ const HeroSection = () => {
       >
         <div className="nav-item">
           <div className="icon-box"><Mountain size={24} /></div>
-          <div><strong>1,565m Peak</strong><span>Sorsogon's Highest</span></div>
+          <div className="text-content">
+            <strong>4th Most Active Volcano</strong><span>In the Philippines</span>
+            <div className="description">Mount Bulusan is a spectacular natural wonder and the home of the 4th most active volcano in the country.</div>
+          </div>
         </div>
         <div className="nav-item">
-          <div className="icon-box"><Waves size={24} /></div>
-          <div><strong>Alpine Vistas</strong><span>'Switzerland of Orient'</span></div>
+          <div className="icon-box"><Mountain size={24} /></div>
+          <div className="text-content">
+            <strong>3 Peaks and 3 Lakes</strong><span>In a Single Climb</span>
+            <div className="description">Experience an epic adventure conquering three peaks and witnessing three beautiful lakes in one journey.</div>
+          </div>
         </div>
         <div className="nav-item">
           <div className="icon-box"><Trees size={24} /></div>
-          <div><strong>3,672 Hectares</strong><span>Protected Natural Park</span></div>
+          <div className="text-content">
+            <strong>Ecotourism Destination</strong><span>Nature's Sanctuary</span>
+            <div className="description">A vast expanse of protected rainforests, lakes, and hot springs teeming with biodiversity.</div>
+          </div>
         </div>
         <div className="nav-item">
           <div className="icon-box"><Droplets size={24} /></div>
-          <div><strong>'Bulus' Flow</strong><span>Land of Waterfalls</span></div>
+          <div className="text-content">
+            <strong>'Bulus' Flow</strong><span>Land of Waterfalls</span>
+            <div className="description">The town's name originated from the local word 'bulus', meaning where water flows.</div>
+          </div>
         </div>
       </FloatingNav>
     </>

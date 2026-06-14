@@ -185,6 +185,7 @@ export interface RouteDay {
 export interface TourRoute {
     id: string;
     name: string;
+    coverImage?: string;       // Custom cover photo for this specific route
     stops: CuratedRouteStop[]; // legacy flat stops (union of all days) kept for backward compat
     days?: RouteDay[];         // per-day breakdown of stops
 }

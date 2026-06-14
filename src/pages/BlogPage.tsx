@@ -308,7 +308,7 @@ const CreateModalContent = styled(motion.div)`
 
 const BlogPage = () => {
   const { data: blogPosts, loading, refresh } = useBlogs();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const { showAlert } = useAlert();
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -320,10 +320,11 @@ const BlogPage = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   const filteredPosts = blogPosts.filter((post: any) => {
+    const isPublished = post.status === 'Published' || role === 'ADMIN' || (user && user.name === post.authorName);
     const categoryMatch = selectedCategories.length === 0 || selectedCategories.every(sc => post.category === sc);
     const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
-    return categoryMatch && matchesSearch;
+    return isPublished && categoryMatch && matchesSearch;
   });
 
   // Replaced local categories 

@@ -667,16 +667,67 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
             {/* ── STEP 4: Smart Scheduler ── */}
             {step === 4 && pendingBooking && (
               <motion.div key="step4" style={{ height: '100%', overflow: 'hidden' }} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                <SmartSchedulerStep
-                  stops={pendingBooking.stops}
-                  pace={pace}
-                  transport={transport}
-                  dates={selectedDates.map(d => new Date(d))}
-                  isCustom={pendingBooking.id.startsWith('custom')}
-                  onScheduleReady={(finalStops) => {
-                    setPendingBooking({ ...pendingBooking, stops: finalStops });
-                  }}
-                />
+                <BuilderLayout>
+                  <BuilderSidebar style={{ width: '400px' }}>
+                    <SmartSchedulerStep
+                      stops={pendingBooking.stops}
+                      pace={pace}
+                      transport={transport}
+                      dates={selectedDates.map(d => new Date(d))}
+                      isCustom={pendingBooking.id.startsWith('custom')}
+                      onScheduleReady={(finalStops) => {
+                        setPendingBooking({ ...pendingBooking, stops: finalStops });
+                      }}
+                    />
+                  </BuilderSidebar>
+                  
+                  <BuilderMap>
+                    <MapContainer center={[12.7533, 124.0933]} zoom={12} zoomControl={false} style={{ width: '100%', height: '100%' }}>
+                      <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+                      
+                      {/* Active Stops on Map */}
+                      {pendingBooking.stops.length > 1 && (
+                        <Polyline 
+                          positions={pendingBooking.stops.map(stop => {
+                            const item = allItems.find(i => i.id.toString() === stop.itemId.toString());
+                            if (!item) return null;
+                            const lat = item.lat || item.coordinates?.lat;
+                            const lng = item.lng || item.coordinates?.lng;
+                            return lat && lng ? [lat, lng] as [number, number] : null;
+                          }).filter(Boolean) as [number, number][]} 
+                          color="#3b82f6" weight={4} dashArray="8, 8" 
+                        />
+                      )}
+                      
+                      {pendingBooking.stops.map((stop, idx) => {
+                        const item = allItems.find(i => i.id.toString() === stop.itemId.toString());
+                        if (!item) return null;
+                        
+                        const lat = item.lat || item.coordinates?.lat;
+                        const lng = item.lng || item.coordinates?.lng;
+                        if (!lat || !lng) return null;
+                        
+                        const itemCats = (Array.isArray(item.categories) ? item.categories : [((item as any).category || (item as any).type || 'Others')]);
+                        const iconUrl = getMapIconUrl(itemCats[0] || 'Others');
+                        const html = `<div style="position:relative;">
+                                        <img src="${iconUrl}" style="width:42px;height:42px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));" />
+                                        <div style="position:absolute;top:-5px;right:-5px;background:#3b82f6;color:white;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:11px;border:2px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3);">${idx + 1}</div>
+                                      </div>`;
+                        const icon = L.divIcon({ html, className: '', iconSize: [42, 42], iconAnchor: [21, 42] });
+                        
+                        return <Marker key={`sched-${stop.itemId}-${idx}`} position={[lat, lng]} icon={icon} />;
+                      })}
+                      
+                      <MapAutoFitter coordinates={pendingBooking.stops.map(stop => {
+                        const item = allItems.find(i => i.id.toString() === stop.itemId.toString());
+                        if (!item) return null;
+                        const lat = item.lat || item.coordinates?.lat;
+                        const lng = item.lng || item.coordinates?.lng;
+                        return lat && lng ? [lat, lng] as [number, number] : null;
+                      }).filter(Boolean) as [number, number][]} />
+                    </MapContainer>
+                  </BuilderMap>
+                </BuilderLayout>
               </motion.div>
             )}
           </AnimatePresence>

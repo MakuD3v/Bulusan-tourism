@@ -86,13 +86,12 @@ function formatPrismaPayload(body: any, isUpdate: boolean = false) {
   return data;
 }
 
-const createCrudRoutes = (model: any, include?: any) => {
+const createCrudRoutes = (model: any, modelName: string, include?: any) => {
   const r = Router();
   r.get('/', async (req, res) => {
     try {
       // Determine default sorting field
       let orderBy: any = undefined;
-      const modelName = (model as any).name || '';
       
       if (['Attraction', 'Enterprise', 'Tour', 'BlogPost', 'CheckIn'].includes(modelName)) {
         orderBy = { dateAdded: 'desc' };
@@ -127,8 +126,6 @@ const createCrudRoutes = (model: any, include?: any) => {
     try {
       const requesterRole = (req as any).user?.role;
       const requesterId = (req as any).user?.userId;
-
-      const modelName = (model as any).name || '';
       
       if (requesterRole === 'USER') {
         // Standard users can only submit blog posts and contact inquiries
@@ -175,7 +172,6 @@ const createCrudRoutes = (model: any, include?: any) => {
         }
       }
 
-      const modelName = (model as any).name || '';
       if (!['Attraction', 'Enterprise'].includes(modelName) && requesterRole !== 'ADMIN') {
         return res.status(403).json({ error: 'Forbidden: Access denied' });
       }
@@ -214,7 +210,6 @@ const createCrudRoutes = (model: any, include?: any) => {
         return res.status(403).json({ error: 'Forbidden: Standard users cannot delete data' });
       }
 
-      const modelName = (model as any).name || '';
       if (!['Attraction', 'Enterprise'].includes(modelName) && requesterRole !== 'ADMIN') {
         return res.status(403).json({ error: 'Forbidden: Access denied' });
       }
@@ -272,11 +267,11 @@ router.get('/enterprises/mine', authenticateToken, async (req: any, res: any) =>
 });
 
 // Apply generic routes
-router.use('/attractions', createCrudRoutes(prisma.attraction, { reviews: true, offers: true }));
-router.use('/enterprises', createCrudRoutes(prisma.enterprise, { reviews: true, offers: true }));
-router.use('/heritage', createCrudRoutes(prisma.heritage, { reviews: true }));
-router.use('/tours', createCrudRoutes(prisma.tour, { routes: true }));
-router.use('/blogs', createCrudRoutes(prisma.blogPost));
+router.use('/attractions', createCrudRoutes(prisma.attraction, 'Attraction', { reviews: true, offers: true }));
+router.use('/enterprises', createCrudRoutes(prisma.enterprise, 'Enterprise', { reviews: true, offers: true }));
+router.use('/heritage', createCrudRoutes(prisma.heritage, 'Heritage', { reviews: true }));
+router.use('/tours', createCrudRoutes(prisma.tour, 'Tour', { routes: true }));
+router.use('/blogs', createCrudRoutes(prisma.blogPost, 'BlogPost'));
 // Public endpoint for submitting inquiries
 router.post('/inquiries', async (req, res) => {
   try {
@@ -287,8 +282,8 @@ router.post('/inquiries', async (req, res) => {
     res.status(500).json({ error: 'Error creating inquiry', details: e.message });
   }
 });
-router.use('/inquiries', createCrudRoutes(prisma.inquiry));
-router.use('/users', createCrudRoutes(prisma.user, { checkIns: true, customTours: true }));
+router.use('/inquiries', createCrudRoutes(prisma.inquiry, 'Inquiry'));
+router.use('/users', createCrudRoutes(prisma.user, 'User', { checkIns: true, customTours: true }));
 
 // ── Dedicated public review endpoints ───────────────────────────────────────
 // These allow any logged-in user to post a review without hitting the ADMIN-only PUT restriction.

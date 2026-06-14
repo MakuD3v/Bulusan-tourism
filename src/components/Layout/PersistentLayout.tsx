@@ -18,7 +18,7 @@ const MainContent = styled.main<{ $isHeroPage: boolean }>`
   }
 `;
 
-import { Globe, Camera, MessageCircle, PlayCircle } from 'lucide-react';
+import { Globe, Camera, MessageCircle, PlayCircle, Facebook, Instagram, Twitter, Youtube, MapPin, Mail, Phone, Music } from 'lucide-react';
 
 const Footer = styled.footer`
   background: #0B2147;
@@ -52,26 +52,37 @@ const Footer = styled.footer`
   }
 
   .footer-logo {
-    font-family: ${(props) => props.theme.fonts.heading};
-    font-size: 1.6rem;
-    font-weight: 800;
-    letter-spacing: 0.5px;
-    text-align: center;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 8px;
     
-    span { 
-      font-size: 0.7rem; 
-      letter-spacing: 5px; 
-      opacity: 0.6; 
-      display: block; 
-      margin-top: 6px; 
-      font-family: ${(props) => props.theme.fonts.body};
-      font-weight: 600;
+    img {
+      height: 80px;
+      object-fit: contain;
+    }
+  }
+
+  .footer-info {
+    text-align: center;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1.6;
+    margin-bottom: 8px;
+    
+    p {
+      margin: 4px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
   }
 
   .social-icons {
     display: flex;
-    gap: 20px;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
     
     a {
       display: flex;
@@ -121,13 +132,26 @@ const PersistentLayout = () => {
       <Footer>
         <div className="footer-content">
           <div className="footer-logo">
-            Bulusan <span>TOURISM</span>
+            <img src="/bulusan_logo_black.png" alt="Bulusan Tourism" />
           </div>
+          
+          <div className="footer-info">
+            <p><MapPin size={16} /> Office of the Municipal Tourism Officer (OMTO), LGU Bulusan, Brgy. Central, Bulusan, Sorsogon, 4704, Philippines</p>
+            <p style={{ gap: '16px' }}>
+              <span><strong>Office Hours:</strong> Monday to Friday | 8:00 AM – 5:00 PM</span>
+            </p>
+            <p style={{ gap: '16px' }}>
+              <span><Mail size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} /> bulusantourism@gmail.com</span>
+              <span><Phone size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} /> +63-908-446-6527</span>
+            </p>
+          </div>
+
           <div className="social-icons">
-            <a href="#" aria-label="Website"><Globe size={18} /></a>
-            <a href="#" aria-label="Instagram"><Camera size={18} /></a>
-            <a href="#" aria-label="Messenger"><MessageCircle size={18} /></a>
-            <a href="#" aria-label="YouTube"><PlayCircle size={18} /></a>
+            <a href="https://www.facebook.com/bulusan.phl.tourism" target="_blank" rel="noreferrer" aria-label="Facebook"><Facebook size={18} /></a>
+            <a href="https://www.instagram.com/bulusanphltourism/" target="_blank" rel="noreferrer" aria-label="Instagram"><Instagram size={18} /></a>
+            <a href="https://www.tiktok.com/@bulusantourismphl" target="_blank" rel="noreferrer" aria-label="TikTok"><Music size={18} /></a>
+            <a href="https://x.com/bulusantourism" target="_blank" rel="noreferrer" aria-label="X (Twitter)"><Twitter size={18} /></a>
+            <a href="https://www.youtube.com/@BulusanPhlTourism" target="_blank" rel="noreferrer" aria-label="YouTube"><Youtube size={18} /></a>
           </div>
           <div className="copyright">
             &copy; {new Date().getFullYear()} Bulusan Tourism Development Office. High-Fidelity Platform by Blueprint.

@@ -3,13 +3,18 @@ import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Edit2, Trash2, MapPin, Waves, TreePine, Save, X,
-  Loader2, ChevronLeft, Check, Map as MapIcon, ArrowUp, ArrowDown, Pencil
+  Loader2, ChevronLeft, Check, Map as MapIcon, ArrowUp, ArrowDown, Pencil, UploadCloud
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { CuratedRoute, TourTheme, CuratedRouteStop, TourRoute } from '../../data/types';
 import { curatedRouteService } from '../../utils/bookingService';
 import { useAttractions, useEnterprises, useHeritage } from '../../hooks/useData';
+import { useAuth } from '../../hooks/useAuth';
+import TimePicker from '../Common/TimePicker';
+import FileUploader from '../Common/FileUploader';
+import { uploadFile } from '../../api/storage';
+import { compressImage } from '../../utils/imageUtils';
 import { getMediaUrl } from '../../utils/mediaUtils';
 import { ATTRACTION_CATEGORIES, ENTERPRISE_CATEGORIES, getMapIconUrl } from './CategoryTagConfig';
 import { useAlert } from '../Common/AlertProvider';
@@ -341,6 +346,22 @@ const CuratedRoutesManager: React.FC = () => {
 
   // Tab state
   const [activeTab, setActiveTab] = useState<'tours' | 'routes'>('tours');
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const { showAlert } = useAlert();
+
+  const processTourCover = async (file: File | null) => {
+    if (!file) return;
+    setIsUploadingCover(true);
+    try {
+      const compressed = await compressImage(file);
+      const url = await uploadFile(compressed, `tours/cover/${Date.now()}_${compressed.name}`);
+      setEditing(prev => prev ? { ...prev, coverImage: url } : prev);
+    } catch (e: any) {
+      showAlert("Upload Error", e.message, "error");
+    } finally {
+      setIsUploadingCover(false);
+    }
+  };
 
   // Tours tab
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -351,6 +372,27 @@ const CuratedRoutesManager: React.FC = () => {
   const [activeDayIndex, setActiveDayIndex] = useState<number>(1); // 1-based
   const [editingRouteName, setEditingRouteName] = useState<string | null>(null);
   const [routeNameDraft, setRouteNameDraft] = useState('');
+  const [isUploadingRouteCover, setIsUploadingRouteCover] = useState(false);
+
+  const processRouteCover = async (file: File | null) => {
+    if (!file || !activeRouteId) return;
+    setIsUploadingRouteCover(true);
+    try {
+      const compressed = await compressImage(file);
+      const url = await uploadFile(compressed, `tours/routes/${Date.now()}_${compressed.name}`);
+      setEditing(prev => {
+        if (!prev) return prev;
+        const updatedRoutes = (prev.tourRoutes || []).map(r =>
+          r.id === activeRouteId ? { ...r, coverImage: url } : r
+        );
+        return { ...prev, tourRoutes: updatedRoutes };
+      });
+    } catch (e: any) {
+      showAlert("Upload Error", e.message, "error");
+    } finally {
+      setIsUploadingRouteCover(false);
+    }
+  };
 
   const { data: attractions } = useAttractions();
   const { data: enterprises } = useEnterprises();
@@ -648,10 +690,27 @@ const CuratedRoutesManager: React.FC = () => {
                     <SectionTitle>Tour Details</SectionTitle>
                     <div><label>Tour Name</label><input value={editing.name || ''} onChange={e => setEditing({ ...editing, name: e.target.value })} placeholder="e.g. Bulusan Seascape" /></div>
                     <div><label>Description</label><textarea rows={3} value={editing.description || ''} onChange={e => setEditing({ ...editing, description: e.target.value })} /></div>
-                    <div>
-                      <label>Cover Image URL</label>
-                      <input placeholder="https://..." value={editing.coverImage || ''} onChange={e => setEditing({ ...editing, coverImage: e.target.value })} />
-                      {editing.coverImage && <CoverPreview $src={editing.coverImage} style={{ marginTop: 8 }} />}
+                    <div style={{ position: 'relative' }}>
+                      <label>Tour Cover Image</label>
+                      <div style={{ position: 'relative' }}>
+                        <FileUploader 
+                          multiple={false} 
+                          onFileSelect={processTourCover} 
+                          accept="image/*"
+                          label="Drag & Drop Cover Image"
+                        />
+                        {isUploadingCover && (
+                          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 16 }}>
+                            <Loader2 size={32} className="animate-spin" color="#3b82f6" />
+                          </div>
+                        )}
+                        {!isUploadingCover && editing.coverImage && (
+                          <div style={{ marginTop: 8 }}>
+                            <label style={{ fontSize: '0.6rem', color: '#90aecb' }}>Current Cover</label>
+                            <CoverPreview $src={editing.coverImage} />
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                       <div><label>Theme</label>
@@ -838,6 +897,62 @@ const CuratedRoutesManager: React.FC = () => {
                           <span className="title">{activeRoute?.name}{(editing.estimatedDays || 1) > 1 ? ` · Day ${activeDayIndex}` : ' — Stops'}</span>
                           <span className="hint">{activeDayStops.length} stops</span>
                         </StopsSidebarHeader>
+                        
+                        {/* Route Cover Image */}
+                        <div style={{ padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.1)', flexShrink: 0 }}>
+                          <div style={{ fontSize: '0.62rem', fontWeight: 800, color: '#5a7098', textTransform: 'uppercase', marginBottom: 6 }}>
+                            Route Cover Photo
+                          </div>
+                          <div style={{ position: 'relative' }}>
+                            {activeRoute?.coverImage && !isUploadingRouteCover ? (
+                              <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', height: 80 }}>
+                                <img
+                                  src={getMediaUrl(activeRoute.coverImage)}
+                                  alt="Route Cover"
+                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                                <div
+                                  style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.2s', cursor: 'pointer' }}
+                                  onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+                                  onMouseLeave={e => (e.currentTarget.style.opacity = '0')}
+                                  onClick={() => {
+                                    const inp = document.createElement('input');
+                                    inp.type = 'file'; inp.accept = 'image/*';
+                                    inp.onchange = e => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) processRouteCover(f); };
+                                    inp.click();
+                                  }}
+                                >
+                                  <span style={{ color: 'white', fontSize: '0.7rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                    <UploadCloud size={14} /> Change
+                                  </span>
+                                </div>
+                              </div>
+                            ) : isUploadingRouteCover ? (
+                              <div style={{ height: 80, borderRadius: 10, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Loader2 size={24} className="animate-spin" color="#3b82f6" />
+                              </div>
+                            ) : (
+                              <div
+                                style={{ height: 80, borderRadius: 10, border: '2px dashed rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, cursor: 'pointer', transition: 'all 0.2s' }}
+                                onMouseEnter={e => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.background = 'rgba(59,130,246,0.06)'; }}
+                                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.background = 'transparent'; }}
+                                onClick={() => {
+                                  const inp = document.createElement('input');
+                                  inp.type = 'file'; inp.accept = 'image/*';
+                                  inp.onchange = e => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) processRouteCover(f); };
+                                  inp.click();
+                                }}
+                                onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.background = 'rgba(59,130,246,0.06)'; }}
+                                onDragLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.background = 'transparent'; }}
+                                onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f?.type.startsWith('image/')) processRouteCover(f); }}
+                              >
+                                <UploadCloud size={20} color="#5a7098" />
+                                <span style={{ fontSize: '0.65rem', color: '#5a7098' }}>Drag & drop or click</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
                         <StopsScrollArea>
                           {activeDayStops.map((stop, idx) => (
                             <RouteStopCard key={`${stop.itemId}-${idx}`}>
@@ -848,9 +963,9 @@ const CuratedRoutesManager: React.FC = () => {
                               </div>
                               <div className="time-wrap">
                                 <div className="time-range">
-                                  <input type="time" value={stop.scheduledTime || ''} onChange={e => updateStopRange(idx, 'scheduledTime', e.target.value)} />
+                                  <TimePicker value={stop.scheduledTime || ''} onChange={val => updateStopRange(idx, 'scheduledTime', val)} />
                                   <span className="sep">→</span>
-                                  <input type="time" value={stop.endTime || ''} onChange={e => updateStopRange(idx, 'endTime', e.target.value)} />
+                                  <TimePicker value={stop.endTime || ''} onChange={val => updateStopRange(idx, 'endTime', val)} />
                                 </div>
                                 <div className="dur-label">
                                   {stop.scheduledTime && stop.endTime && (stop.durationHours || 0) > 0
