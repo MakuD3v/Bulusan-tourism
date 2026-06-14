@@ -1,6 +1,7 @@
 import styled from 'styled-components';
-import { Outlet, useLocation, Link } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import Header from './Header';
+import { Globe, Camera, MessageCircle, PlayCircle, MapPin, Mail, Phone, Music } from 'lucide-react';
 
 const LayoutWrapper = styled.div`
   display: flex;
@@ -17,8 +18,6 @@ const MainContent = styled.main<{ $isHeroPage: boolean }>`
     padding-top: ${(props) => (props.$isHeroPage ? '0' : '64px')};
   }
 `;
-
-import { Globe, Camera, MessageCircle, PlayCircle, Facebook, Instagram, Twitter, Youtube, MapPin, Mail, Phone, Music } from 'lucide-react';
 
 const Footer = styled.footer`
   background: #0B2147;
@@ -147,11 +146,11 @@ const PersistentLayout = () => {
           </div>
 
           <div className="social-icons">
-            <a href="https://www.facebook.com/bulusan.phl.tourism" target="_blank" rel="noreferrer" aria-label="Facebook"><Facebook size={18} /></a>
-            <a href="https://www.instagram.com/bulusanphltourism/" target="_blank" rel="noreferrer" aria-label="Instagram"><Instagram size={18} /></a>
+            <a href="https://www.facebook.com/bulusan.phl.tourism" target="_blank" rel="noreferrer" aria-label="Facebook"><Globe size={18} /></a>
+            <a href="https://www.instagram.com/bulusanphltourism/" target="_blank" rel="noreferrer" aria-label="Instagram"><Camera size={18} /></a>
             <a href="https://www.tiktok.com/@bulusantourismphl" target="_blank" rel="noreferrer" aria-label="TikTok"><Music size={18} /></a>
-            <a href="https://x.com/bulusantourism" target="_blank" rel="noreferrer" aria-label="X (Twitter)"><Twitter size={18} /></a>
-            <a href="https://www.youtube.com/@BulusanPhlTourism" target="_blank" rel="noreferrer" aria-label="YouTube"><Youtube size={18} /></a>
+            <a href="https://x.com/bulusantourism" target="_blank" rel="noreferrer" aria-label="X (Twitter)"><MessageCircle size={18} /></a>
+            <a href="https://www.youtube.com/@BulusanPhlTourism" target="_blank" rel="noreferrer" aria-label="YouTube"><PlayCircle size={18} /></a>
           </div>
           <div className="copyright">
             &copy; {new Date().getFullYear()} Bulusan Tourism Development Office. High-Fidelity Platform by Blueprint.
