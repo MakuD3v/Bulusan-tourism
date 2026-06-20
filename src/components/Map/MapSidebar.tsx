@@ -185,7 +185,7 @@ const ResultsContainer = styled(motion.div)`
 
 const ResultCard = styled(motion.div)<{ $active: boolean }>`
   background: ${props => props.$active ? 'var(--soft-blue)' : 'var(--surface-bg)'};
-  border-radius: 50px;
+  border-radius: 16px;
   display: flex;
   position: relative;
   overflow: hidden;
@@ -209,27 +209,22 @@ const ResultCard = styled(motion.div)<{ $active: boolean }>`
 `;
 
 const CardImage = styled.div<{ $src: string }>`
-  position: absolute;
-  top: 0; left: 0;
   width: 120px;
-  height: 100%;
+  flex-shrink: 0;
   background-image: url(${props => getMediaUrl(props.$src)});
   background-size: cover;
   background-position: center;
   z-index: 0;
-  -webkit-mask-image: linear-gradient(to right, black 20%, transparent 100%);
-  mask-image: linear-gradient(to right, black 20%, transparent 100%);
 `;
 
 const CardContent = styled.div`
   position: relative;
   z-index: 1;
   width: 100%;
-  height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 12px 30px 12px 105px;
+  padding: 12px 16px;
   text-shadow: none;
 
   .meta {
@@ -238,7 +233,10 @@ const CardContent = styled.div`
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: var(--cta-blue);
-    margin-bottom: 2px;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
   h4 {
@@ -258,13 +256,13 @@ const CardContent = styled.div`
     color: var(--text-light);
     font-weight: 600;
     line-height: 1.2;
-    margin-bottom: 4px;
+    margin-bottom: 8px;
   }
   
   .tags-row {
     display: flex;
     gap: 4px;
-    margin-top: 2px;
+    margin-bottom: 6px;
     flex-wrap: wrap;
     
     .sm-tag {
@@ -272,7 +270,7 @@ const CardContent = styled.div`
       font-weight: 800;
       text-transform: uppercase;
       padding: 1.5px 5px;
-      border-radius: 12px;
+      border-radius: 4px;
       color: white;
       text-shadow: none;
       letter-spacing: 0.5px;
@@ -284,24 +282,23 @@ const CardContent = styled.div`
 `;
 
 const DetailsBtn = styled.div<{ $active: boolean }>`
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 2;
+  align-self: flex-start;
+  margin-top: auto;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
   color: ${props => props.$active ? 'var(--cta-blue)' : '#94a3b8'};
-  background: ${props => props.$active ? 'var(--soft-blue)' : 'rgba(255,255,255,0.05)'};
-  padding: 6px;
-  border-radius: 50%;
+  background: ${props => props.$active ? 'rgba(46, 117, 182, 0.1)' : 'rgba(0,0,0,0.05)'};
+  padding: 4px 12px;
+  border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: ${props => props.$active ? 1 : 0};
+  gap: 4px;
   transition: all 0.2s;
   ${ResultCard}:hover & {
-    opacity: 1;
     color: var(--cta-blue);
-    background: var(--soft-blue);
+    background: rgba(46, 117, 182, 0.1);
   }
 `;
 
@@ -427,8 +424,6 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
                   <CardImage $src={item.photos?.[0] || item.img || ''} />
                   <CardContent>
                     <div className="meta">{categoryLabel} • {item.entityType}</div>
-                    <h4>{item.name}</h4>
-                    <div className="loc">{item.location}</div>
                     {getDynamicTags(item, items).length > 0 && (
                       <div className="tags-row">
                          {getDynamicTags(item, items).slice(0, 3).map(tag => {
@@ -449,10 +444,12 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
                          })}
                       </div>
                     )}
+                    <h4>{item.name}</h4>
+                    <div className="loc">{item.location}</div>
+                    <DetailsBtn $active={isActive}>
+                      Explore <ChevronRight size={10} strokeWidth={3} />
+                    </DetailsBtn>
                   </CardContent>
-                  <DetailsBtn $active={isActive}>
-                    <ChevronRight size={14} strokeWidth={3} />
-                  </DetailsBtn>
                 </ResultCard>
               );
             })}
