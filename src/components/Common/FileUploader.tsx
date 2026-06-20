@@ -88,6 +88,7 @@ interface FileUploaderProps {
     onFilesSelect?: (files: File[]) => void;
     multiple?: boolean;
     maxFiles?: number;
+    maxSize?: number;
     accept?: string;
     label?: string;
 }
@@ -97,6 +98,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     onFilesSelect, 
     multiple = false, 
     maxFiles = 5, 
+    maxSize = 10 * 1024 * 1024,
     accept = "image/*,video/*", 
     label 
 }) => {
@@ -106,13 +108,24 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     const { showAlert } = useAlert();
 
     const handleFiles = (incomingFiles: FileList | File[]) => {
-        let validFiles = Array.from(incomingFiles);
+        let rawFiles = Array.from(incomingFiles);
+        
+        let validFiles = rawFiles.filter(file => {
+            if (file.size > maxSize) {
+                showAlert('File too large', `The file "${file.name}" exceeds the limit of ${Math.round(maxSize / 1024 / 1024)}MB.`, 'error');
+                return false;
+            }
+            return true;
+        });
+
+        if (validFiles.length === 0) {
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            return;
+        }
+
         if (!multiple) {
             validFiles = [validFiles[0]];
         }
-
-        let newFilesData: FileData[] = [];
-        let processing = validFiles.length;
 
         if (multiple && filesData.length >= maxFiles) {
              showAlert('File Limit', `Maximum of ${maxFiles} files allowed.`, 'error');
@@ -123,6 +136,11 @@ const FileUploader: React.FC<FileUploaderProps> = ({
             const spacesLeft = maxFiles - filesData.length;
             validFiles = validFiles.slice(0, spacesLeft);
         }
+
+        if (validFiles.length === 0) return;
+
+        let newFilesData: FileData[] = [];
+        let processing = validFiles.length;
 
         validFiles.forEach(file => {
             const isImage = file.type.startsWith('image/');
