@@ -89,7 +89,6 @@ const HeroContainer = styled.div`
 `;
 
 import FeaturedCarouselCard from '../components/Common/FeaturedCarouselCard';
-import ReviewBubble from '../components/Common/ReviewBubble';
 import React, { useState as useStateLocal } from 'react';
 
 const ControlsContainer = styled.div`
@@ -657,25 +656,14 @@ const AttractionsPage = () => {
                  let displayCat = item.category || 'Nature';
                  if (Array.isArray(item.categories)) displayCat = item.categories[0];
 
-                 const activeItem = featuredItems[featuredCarouselIndex];
-                 const thisIsTopRated = isActive && activeItem && (activeItem.featured || activeItem.rating >= 4.5);
-                 const thisReviews = isActive ? (activeItem?.reviews || []).filter((r: any) => r && (r.comment || r.text)) : [];
-
                  return (
-                   <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'visible' }}>
-                     <FeaturedCarouselCard 
-                       item={item}
-                       badge={badge}
-                       badges={getDynamicTags(item, attractions)}
-                       categoryName={displayCat}
-                       onClick={() => handleOpenModal(item)}
-                     />
-                     {thisIsTopRated && thisReviews.length > 0 && (
-                        <div style={{ position: 'absolute', top: '20px', left: 'calc(100% + 10px)', zIndex: 50 }}>
-                          <ReviewBubble reviews={thisReviews} isTopRated={thisIsTopRated} />
-                        </div>
-                     )}
-                   </div>
+                   <FeaturedCarouselCard 
+                     item={item}
+                     badge={badge}
+                     badges={getDynamicTags(item, attractions)}
+                     categoryName={displayCat}
+                     onClick={() => handleOpenModal(item)}
+                   />
                  );
               }}
             />
