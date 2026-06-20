@@ -85,7 +85,7 @@ const BlogModerator: React.FC<BlogModeratorProps> = ({ blogPosts }) => {
         <table>
           <thead><tr><th>Title</th><th>Author</th><th>Status</th><th style={{ textAlign: 'right' }}>Actions</th></tr></thead>
           <tbody>
-            {blogPosts.map(post => (
+            {[...blogPosts].reverse().map(post => (
               <tr key={post.id || post.id}>
                 <td style={{ fontWeight: 700 }}>{post.title}</td>
                 <td>{post.authorName}</td>

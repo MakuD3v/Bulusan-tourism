@@ -319,7 +319,7 @@ const BlogPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
-  const filteredPosts = blogPosts.filter((post: any) => {
+  const filteredPosts = [...blogPosts].reverse().filter((post: any) => {
     const isPublished = post.status === 'Published' || role === 'ADMIN' || (user && user.name === post.authorName);
     const categoryMatch = selectedCategories.length === 0 || selectedCategories.every(sc => post.category === sc);
     const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -345,7 +345,7 @@ const BlogPage = () => {
       }
 
       const post = {
-        id: Date.now(),
+        id: Date.now().toString(),
         ...newPost,
         image: finalImageUrl,
         authorName: user.name,

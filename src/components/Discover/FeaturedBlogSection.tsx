@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -218,7 +218,7 @@ const FeaturedBlogSection = () => {
     );
   }
 
-  const featuredBlog = blogs && blogs.length > 0 ? blogs[0] : null;
+  const featuredBlog = blogs && blogs.length > 0 ? blogs[blogs.length - 1] : null;
 
   if (!featuredBlog) {
     return null;
