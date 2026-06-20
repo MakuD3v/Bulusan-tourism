@@ -12,7 +12,7 @@ const BubbleOuter = styled(motion.div)`
 
 const Bubble = styled(motion.div)`
   background: white;
-  border-radius: 20px 20px 20px 4px;
+  border-radius: 20px 20px 4px 20px;
   padding: 14px 16px;
   box-shadow: 0 12px 32px rgba(11, 33, 71, 0.16), 0 2px 8px rgba(0,0,0,0.08);
   display: flex;
@@ -21,16 +21,16 @@ const Bubble = styled(motion.div)`
   position: relative;
   border: 1px solid rgba(0,0,0,0.06);
 
-  /* Speech bubble tail — bottom-left pointing down */
+  /* Speech bubble tail — bottom-right pointing down */
   &::after {
     content: '';
     position: absolute;
     bottom: -10px;
-    left: 20px;
+    right: 20px;
     width: 0;
     height: 0;
-    border-right: 10px solid transparent;
-    border-left: 0px solid transparent;
+    border-left: 10px solid transparent;
+    border-right: 0px solid transparent;
     border-top: 10px solid white;
     filter: drop-shadow(0 2px 2px rgba(0,0,0,0.05));
   }
