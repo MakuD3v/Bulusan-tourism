@@ -371,9 +371,21 @@ router.post('/reviews/blog/:id', authenticateToken, async (req: any, res) => {
 // Specific logic
 router.post('/interaction/:collection/:id', async (req, res) => {
   const { collection, id } = req.params;
+  
+  // Map plural frontend collection names to singular Prisma models
+  const modelMap: Record<string, string> = {
+    'attractions': 'attraction',
+    'enterprises': 'enterprise',
+    'heritage': 'heritage',
+    'tours': 'tour',
+    'blogs': 'blogPost'
+  };
+  
+  const prismaModelName = modelMap[collection] || collection;
+
   try {
-    const targetModel = (prisma as any)[collection];
-    if (!targetModel) return res.status(404).json({ error: 'Invalid collection' });
+    const targetModel = (prisma as any)[prismaModelName];
+    if (!targetModel) return res.status(404).json({ error: `Invalid collection: ${collection}` });
     
     await targetModel.update({
       where: { id: isNaN(Number(id)) ? id : Number(id) },
