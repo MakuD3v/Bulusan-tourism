@@ -240,9 +240,11 @@ const FeaturedSplitCard: React.FC<FeaturedSplitCardProps> = ({ post, onClick }) 
           <div className="img-summary">
             {post.excerpt || 'Discover the untold stories of Bulusan.'}
           </div>
-          <div className="img-rating">
-            <Star size={14} fill="currentColor" /> {post.rating || '5.0'}
-          </div>
+          {post.rating != null && post.reviews?.length > 0 && (
+            <div className="img-rating">
+              <Star size={14} fill="currentColor" /> {typeof post.rating === 'number' ? post.rating.toFixed(1) : post.rating}
+            </div>
+          )}
         </ImageOverlay>
       </ImageWrapper>
 

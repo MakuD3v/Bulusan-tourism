@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, Sparkles, Filter, Plus, BookOpen, ArrowRight, Clock, MapPin } from 'lucide-react';
+import { Search, X, Sparkles, Filter, Plus, BookOpen, ArrowRight, Clock, MapPin, Star, MessageSquare, Send } from 'lucide-react';
+import { apiClient } from '../api/client';
+import StarRating from '../components/Common/StarRating';
 import { useBlogs } from '../hooks/useData';
 import { useAuth } from '../hooks/useAuth';
 import { dbService } from '../api/db';
@@ -260,6 +262,37 @@ const BlogPage = () => {
   const [isAuthPopupOpen, setIsAuthPopupOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  // Review state for blog post modal
+  const [newReviewRating, setNewReviewRating] = useState(0);
+  const [newReviewComment, setNewReviewComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+
+  const handleSubmitReview = async () => {
+    if (!user) { setIsAuthPopupOpen(true); return; }
+    if (newReviewRating === 0) { showAlert('Validation', 'Please select a star rating.', 'error'); return; }
+    if (!selectedPost) return;
+    setSubmittingReview(true);
+    try {
+      const payload = {
+        author: user.name,
+        avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`,
+        rating: newReviewRating,
+        comment: newReviewComment,
+        date: new Date().toISOString(),
+      };
+      const newReview = await apiClient.post(`/reviews/blog/${selectedPost.id}`, payload);
+      const updatedReviews = [...(selectedPost.reviews || []), newReview];
+      const avgRating = updatedReviews.reduce((s: number, r: any) => s + (r.rating || 0), 0) / updatedReviews.length;
+      setSelectedPost((prev: any) => ({ ...prev, reviews: updatedReviews, rating: Math.round(avgRating * 10) / 10 }));
+      setNewReviewComment('');
+      setNewReviewRating(0);
+      showAlert('Success', 'Review posted!', 'success');
+    } catch (err) {
+      showAlert('Error', 'Failed to post review. Please try again.', 'error');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
 
   const filteredPosts = [...blogPosts].reverse().filter((post: any) => {
     const isPublished = post.status === 'Published' || role === 'ADMIN' || (user && user.name === post.authorName);
@@ -384,7 +417,7 @@ const BlogPage = () => {
           {(() => {
             const featured = filteredPosts[0];
             if (!featured) return null;
-            return <FeaturedSplitCard post={featured} onClick={() => setSelectedPost(featured)} />;
+            return <FeaturedSplitCard post={featured} onClick={() => { setSelectedPost(featured); setNewReviewRating(0); setNewReviewComment(''); }} />;
           })()}
         </div>
       )}
@@ -412,7 +445,7 @@ const BlogPage = () => {
               description={post.excerpt}
               location={post.authorName || 'Anonymous'}
               rating={undefined}
-              onClick={() => setSelectedPost(post)}
+              onClick={() => { setSelectedPost(post); setNewReviewRating(0); setNewReviewComment(''); }}
             />
           ))
         ) : (
@@ -512,6 +545,77 @@ const BlogPage = () => {
                 <div style={{ whiteSpace: 'pre-wrap' }}>
                   {selectedPost.content}
                 </div>
+              </div>
+            </div>
+
+            {/* Reviews Section */}
+            <div style={{ padding: '0 80px 48px' }}>
+              <div style={{ borderTop: '1px solid rgba(128,128,128,0.12)', paddingTop: '40px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                <MessageSquare size={22} color="var(--cta-blue)" />
+                <h3 style={{ fontSize: '1.4rem', color: 'var(--text-dark)', margin: 0 }}>
+                  Community Reviews
+                </h3>
+                {selectedPost.reviews?.length > 0 && (
+                  <span style={{ fontSize: '1rem', color: '#f59e0b', fontWeight: 700, marginLeft: '8px' }}>
+                    ★ {(selectedPost.reviews.reduce((s: number, r: any) => s + (r.rating || 0), 0) / selectedPost.reviews.length).toFixed(1)}
+                    <span style={{ fontSize: '0.85rem', color: '#888', fontWeight: 500 }}> ({selectedPost.reviews.length} {selectedPost.reviews.length === 1 ? 'review' : 'reviews'})</span>
+                  </span>
+                )}
+              </div>
+
+              {/* Existing reviews */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+                {selectedPost.reviews?.length > 0 ? (
+                  selectedPost.reviews.map((review: any, idx: number) => (
+                    <div key={review.id || idx} style={{ background: 'rgba(128,128,128,0.05)', borderRadius: '16px', padding: '16px', border: '1px solid rgba(128,128,128,0.1)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+                        <img
+                          src={review.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.author || 'U')}`}
+                          alt={review.author}
+                          style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                        />
+                        <div>
+                          <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-dark)' }}>{review.author || 'Anonymous'}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginTop: '3px' }}>
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star key={i} size={12} fill={i < (review.rating || 0) ? '#f59e0b' : 'transparent'} color={i < (review.rating || 0) ? '#f59e0b' : '#cbd5e1'} />
+                            ))}
+                            {review.date && (
+                              <span style={{ fontSize: '0.7rem', color: '#888', marginLeft: '6px' }}>
+                                {new Date(review.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      {review.comment && (
+                        <p style={{ fontSize: '0.9rem', color: 'var(--text-dark)', opacity: 0.8, margin: 0, fontStyle: 'italic', lineHeight: 1.6 }}>"{review.comment}"</p>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <p style={{ fontSize: '0.95rem', color: '#888', fontStyle: 'italic', margin: 0 }}>No reviews yet. Be the first to share your thoughts!</p>
+                )}
+              </div>
+
+              {/* Write a review */}
+              <div style={{ background: 'rgba(46,117,182,0.04)', borderRadius: '20px', padding: '24px', border: '1px solid rgba(46,117,182,0.12)' }}>
+                <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-dark)', marginBottom: '14px' }}>Leave a Review</div>
+                <StarRating rating={newReviewRating} editable onChange={setNewReviewRating} size={28} />
+                <textarea
+                  placeholder="Share your thoughts about this story..."
+                  value={newReviewComment}
+                  onChange={(e) => setNewReviewComment(e.target.value)}
+                  rows={3}
+                  style={{ width: '100%', marginTop: '16px', padding: '12px 16px', borderRadius: '12px', border: '1px solid rgba(148,163,184,0.25)', fontFamily: 'inherit', fontSize: '0.95rem', background: 'var(--surface-bg)', color: 'var(--text-dark)', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
+                />
+                <button
+                  onClick={handleSubmitReview}
+                  disabled={submittingReview}
+                  style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--cta-blue)', color: 'white', border: 'none', padding: '12px 28px', borderRadius: '12px', fontWeight: 700, fontSize: '0.95rem', cursor: submittingReview ? 'not-allowed' : 'pointer', opacity: submittingReview ? 0.6 : 1, transition: 'opacity 0.2s' }}
+                >
+                  <Send size={16} /> {submittingReview ? 'Posting...' : 'Post Review'}
+                </button>
               </div>
             </div>
 
