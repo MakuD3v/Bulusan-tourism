@@ -2,27 +2,20 @@ import React from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, ArrowRight } from 'lucide-react';
+import { BookOpen, ArrowRight, Clock, User } from 'lucide-react';
 import { useBlogs } from '../../hooks/useData';
 import { getMediaUrl } from '../../utils/mediaUtils';
 
 const SectionWrapper = styled.section`
-  padding: 60px 24px;
+  padding: 60px clamp(20px, 5vw, 80px);
   background: var(--surface-bg);
   position: relative;
   overflow: hidden;
-
-  @media (max-width: 768px) {
-    padding: 40px 20px;
-  }
 `;
 
 const SectionHeader = styled(motion.div)`
   text-align: center;
-  margin-bottom: 40px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  margin-bottom: 48px;
 
   .subtitle {
     display: inline-block;
@@ -35,56 +28,80 @@ const SectionHeader = styled(motion.div)`
   }
 
   h2 {
-    font-size: clamp(2rem, 3.5vw, 2.8rem);
+    font-size: clamp(2rem, 5vw, 3.5rem);
     font-family: 'Outfit', sans-serif;
+    font-weight: 900;
     color: var(--dark-blue);
     line-height: 1.1;
+    text-transform: uppercase;
+    letter-spacing: -1px;
+
+    span {
+      color: var(--cta-blue);
+    }
   }
 `;
 
-const ContentContainer = styled.div`
-  max-width: 1000px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 0.9fr 1.1fr;
-  gap: 50px;
-  align-items: center;
-
-  @media (max-width: 1024px) {
-    grid-template-columns: 1fr;
-    gap: 40px;
-  }
-`;
-
-const ImageWrapper = styled(motion.div)`
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  border-radius: 24px;
-  overflow: hidden;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+const HeroCard = styled(motion.div)`
   position: relative;
+  max-width: 1300px;
+  margin: 0 auto;
+  border-radius: 32px;
+  overflow: hidden;
+  cursor: pointer;
+  min-height: 520px;
+  display: flex;
+  align-items: flex-end;
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.3);
 
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.5s ease;
+  &:hover .bg-img {
+    transform: scale(1.04);
   }
 
-  &:hover img {
-    transform: scale(1.05);
-  }
-
-  @media (max-width: 1024px) {
-    aspect-ratio: 16/9;
-    border-radius: 20px;
+  @media (max-width: 768px) {
+    min-height: 420px;
+    border-radius: 24px;
   }
 `;
 
-const TextContent = styled(motion.div)`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+const BgImage = styled.img`
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+`;
+
+const Overlay = styled.div`
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(3, 10, 28, 0.95) 0%,
+    rgba(3, 10, 28, 0.6) 45%,
+    rgba(3, 10, 28, 0.1) 100%
+  );
+`;
+
+const CardContent = styled.div`
+  position: relative;
+  z-index: 2;
+  padding: clamp(28px, 5vw, 56px);
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: flex-end;
+  gap: 32px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+`;
+
+const TextBlock = styled.div`
+  max-width: 720px;
 `;
 
 const CategoryBadge = styled.div`
@@ -95,112 +112,87 @@ const CategoryBadge = styled.div`
   color: white;
   padding: 6px 16px;
   border-radius: 30px;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  align-self: flex-start;
-  margin-bottom: 24px;
+  letter-spacing: 1.5px;
+  margin-bottom: 20px;
 `;
 
 const Title = styled.h3`
-  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  font-size: clamp(1.6rem, 3.5vw, 2.8rem);
   font-family: 'Outfit', sans-serif;
-  color: var(--dark-blue);
+  color: white;
   margin-bottom: 16px;
-  line-height: 1.2;
+  line-height: 1.15;
   font-weight: 800;
 `;
 
 const Excerpt = styled.p`
-  color: #475569;
-  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: clamp(0.9rem, 1.5vw, 1rem);
   line-height: 1.7;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-`;
 
-const Footer = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-top: 1px solid rgba(0,0,0,0.08);
-  padding-top: 24px;
-
-  @media (max-width: 480px) {
-    flex-direction: column;
-    gap: 24px;
-    align-items: flex-start;
+  @media (max-width: 768px) {
+    -webkit-line-clamp: 3;
   }
 `;
 
-const AuthorInfo = styled.div`
+const Meta = styled.div`
   display: flex;
   align-items: center;
-  gap: 16px;
-
-  img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  }
-
-  .details {
-    display: flex;
-    flex-direction: column;
-
-    .name {
-      font-weight: 800;
-      color: var(--dark-blue);
-      font-size: 0.9rem;
-    }
-
-    .date {
-      color: var(--text-light);
-      font-size: 0.8rem;
-      font-weight: 600;
-    }
-  }
+  gap: 20px;
+  flex-wrap: wrap;
 `;
 
-const ReadButton = styled.button`
-  background: var(--dark-blue);
-  color: white;
-  border: none;
-  font-weight: 700;
-  font-size: 0.85rem;
+const MetaItem = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  cursor: pointer;
-  padding: 10px 20px;
-  border-radius: 20px;
-  transition: all 0.3s ease;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  font-weight: 600;
 
-  &:hover {
-    gap: 16px;
-    background: var(--cta-blue);
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(46, 117, 182, 0.2);
+  img {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255,255,255,0.3);
   }
 `;
 
-const Skeleton = styled.div`
-  width: 100%;
-  height: 600px;
-  background: #f1f5f9;
-  border-radius: 40px;
-  animation: pulse 1.5s infinite ease-in-out;
+const ReadButton = styled(motion.button)`
+  background: white;
+  color: #0f172a;
+  border: none;
+  font-weight: 800;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 14px 28px;
+  border-radius: 50px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
 
-  @keyframes pulse {
-    0% { opacity: 0.6; }
-    50% { opacity: 1; }
-    100% { opacity: 0.6; }
+  &:hover {
+    background: var(--cta-blue);
+    color: white;
+    gap: 16px;
+    box-shadow: 0 12px 30px rgba(46, 117, 182, 0.4);
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: center;
   }
 `;
 
@@ -208,21 +200,12 @@ const FeaturedBlogSection = () => {
   const { data: blogs, loading } = useBlogs();
   const navigate = useNavigate();
 
-  if (loading) {
-    return (
-      <SectionWrapper>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <Skeleton />
-        </div>
-      </SectionWrapper>
-    );
-  }
+  if (loading || !blogs || blogs.length === 0) return null;
 
-  const featuredBlog = blogs && blogs.length > 0 ? blogs[blogs.length - 1] : null;
+  const publishedBlogs = [...blogs].reverse().filter((b: any) => b.status === 'Published' || !b.status);
+  const featured = publishedBlogs[0] || blogs[blogs.length - 1];
 
-  if (!featuredBlog) {
-    return null;
-  }
+  if (!featured) return null;
 
   return (
     <SectionWrapper>
@@ -233,48 +216,60 @@ const FeaturedBlogSection = () => {
         transition={{ duration: 0.6 }}
       >
         <span className="subtitle">Community Stories</span>
-        <h2>Featured Blog</h2>
+        <h2>Featured <span>Stories</span></h2>
       </SectionHeader>
 
-      <ContentContainer>
-        <ImageWrapper
-          initial={{ opacity: 0, x: -50 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <img src={getMediaUrl(featuredBlog.image) || '/default-placeholder.jpg'} alt={featuredBlog.title} />
-        </ImageWrapper>
+      <HeroCard
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-100px' }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        onClick={() => navigate('/blog')}
+      >
+        <BgImage
+          className="bg-img"
+          src={getMediaUrl(featured.image) || '/default-placeholder.jpg'}
+          alt={featured.title}
+        />
+        <Overlay />
 
-        <TextContent
-          initial={{ opacity: 0, x: 50 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <CategoryBadge>
-            <BookOpen size={14} />
-            {featuredBlog.category}
-          </CategoryBadge>
+        <CardContent>
+          <TextBlock>
+            <CategoryBadge>
+              <BookOpen size={13} />
+              {featured.category || 'Travel Guide'}
+            </CategoryBadge>
+            <Title>{featured.title}</Title>
+            <Excerpt>{featured.excerpt || 'Discover the untold stories of Bulusan in this exciting community post.'}</Excerpt>
+            <Meta>
+              <MetaItem>
+                {featured.authorAvatar
+                  ? <img src={getMediaUrl(featured.authorAvatar)} alt={featured.authorName} />
+                  : <User size={16} />
+                }
+                {featured.authorName || 'Local Explorer'}
+              </MetaItem>
+              {featured.readTime && (
+                <MetaItem>
+                  <Clock size={14} />
+                  {featured.readTime}
+                </MetaItem>
+              )}
+              {featured.date && (
+                <MetaItem>• {featured.date}</MetaItem>
+              )}
+            </Meta>
+          </TextBlock>
 
-          <Title>{featuredBlog.title}</Title>
-          <Excerpt>{featuredBlog.excerpt || 'Discover the untold stories of Bulusan in this exciting community post.'}</Excerpt>
-
-          <Footer>
-            <AuthorInfo>
-              <img src={getMediaUrl(featuredBlog.authorAvatar) || `https://i.pravatar.cc/150?u=${featuredBlog.authorName}`} alt={featuredBlog.authorName} />
-              <div className="details">
-                <span className="name">{featuredBlog.authorName || 'Local Explorer'}</span>
-                <span className="date">{featuredBlog.date || 'Recently'} â€¢ {featuredBlog.readTime || '5 min read'}</span>
-              </div>
-            </AuthorInfo>
-
-            <ReadButton onClick={() => navigate('/blog')}>
-              Read Story <ArrowRight size={18} />
-            </ReadButton>
-          </Footer>
-        </TextContent>
-      </ContentContainer>
+          <ReadButton
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={(e) => { e.stopPropagation(); navigate('/blog'); }}
+          >
+            Read Story <ArrowRight size={18} />
+          </ReadButton>
+        </CardContent>
+      </HeroCard>
     </SectionWrapper>
   );
 };
