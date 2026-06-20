@@ -671,7 +671,7 @@ const AttractionsPage = () => {
                        onClick={() => handleOpenModal(item)}
                      />
                      {thisIsTopRated && thisReviews.length > 0 && (
-                        <div style={{ position: 'absolute', top: '-15px', right: '-15px', zIndex: 50 }}>
+                        <div style={{ position: 'absolute', bottom: 'calc(100% + 5px)', right: '-20px', zIndex: 50 }}>
                           <ReviewBubble reviews={thisReviews} isTopRated={thisIsTopRated} />
                         </div>
                      )}

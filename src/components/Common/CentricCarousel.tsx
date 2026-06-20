@@ -6,8 +6,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 const CarouselContainer = styled.div`
   position: relative;
   width: 100%;
-  padding: 4px 0;
-  overflow: hidden;
+  padding: 60px 0 4px 0; /* Huge padding top for the bubble to fly into */
+  overflow: visible; /* Let the bubble escape vertically if needed */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -15,14 +15,14 @@ const CarouselContainer = styled.div`
 
 const ItemsStage = styled.div`
   display: flex;
-  align-items: center;
+  align-items: flex-end; /* Align cards to the bottom */
   justify-content: center;
   width: 100%;
-  height: 460px; /* Reduced from 600px */
+  height: 400px; /* Exact height of the card, plus container padding handles the top space */
   position: relative;
 
   @media (max-width: 768px) {
-    height: 380px;
+    height: 360px;
   }
 `;
 

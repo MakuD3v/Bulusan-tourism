@@ -88,9 +88,9 @@ const Carousel = ({ items, type, basePath }: { items: any[], type: string, baseP
                  categoryName={displayCat}
                  onClick={() => navigate(`/${basePath}?openId=${item.id || item.id}`)}
                />
-               {/* Bubble positioned outside the card's clipping bounds */}
+               {/* Bubble positioned completely above the card so it doesn't overlap content */}
                {thisIsTopRated && thisReviews.length > 0 && (
-                  <div style={{ position: 'absolute', top: '-15px', right: '-15px', zIndex: 50 }}>
+                  <div style={{ position: 'absolute', bottom: 'calc(100% + 5px)', right: '-20px', zIndex: 50 }}>
                     <ReviewBubble reviews={thisReviews} isTopRated={thisIsTopRated} />
                   </div>
                )}
