@@ -5,10 +5,10 @@ import { BookOpen, ArrowRight, Star } from 'lucide-react';
 import { getMediaUrl } from '../../utils/mediaUtils';
 
 const ContentContainer = styled.div`
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 0.9fr 1.1fr;
+  grid-template-columns: 0.7fr 1.3fr;
   gap: 50px;
   align-items: center;
 
