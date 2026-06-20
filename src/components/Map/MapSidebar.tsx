@@ -189,7 +189,7 @@ const ResultCard = styled(motion.div)<{ $active: boolean }>`
   display: flex;
   position: relative;
   overflow: hidden;
-  min-height: 90px;
+  min-height: 64px;
   height: auto;
   flex-shrink: 0;
   width: 100%;
@@ -228,78 +228,86 @@ const CardContent = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 10px 24px 10px 110px;
+  padding: 8px 16px 8px 100px;
   text-shadow: none;
 
-  .meta {
-    font-size: 0.45rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--cta-blue);
-    margin-bottom: 4px;
+  .meta-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 2px;
+    
+    .category-text {
+      font-size: 0.45rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--cta-blue);
+    }
+    
+    .tags-row {
+      display: flex;
+      gap: 4px;
+      
+      .sm-tag {
+        font-size: 0.4rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        padding: 1px 4px;
+        border-radius: 4px;
+        color: white;
+        letter-spacing: 0.5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+      }
+    }
   }
 
   h4 {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 800;
     color: var(--dark-blue);
-    line-height: 1.3;
-    margin-bottom: 4px;
+    line-height: 1.2;
+    margin-bottom: 2px;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
 
-  .loc {
-    font-size: 0.65rem;
-    color: var(--text-light);
-    font-weight: 600;
-    line-height: 1.2;
-    margin-bottom: 4px;
-  }
-  
-  .tags-row {
+  .loc-row {
     display: flex;
-    gap: 4px;
-    margin-bottom: 4px;
-    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
     
-    .sm-tag {
-      font-size: 0.45rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      padding: 1.5px 5px;
-      border-radius: 4px;
-      color: white;
-      text-shadow: none;
-      letter-spacing: 0.5px;
-      display: inline-flex;
-      align-items: center;
-      gap: 2px;
+    .loc {
+      font-size: 0.6rem;
+      color: var(--text-light);
+      font-weight: 600;
+      line-height: 1.2;
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
   }
 `;
 
 const DetailsBtn = styled.div<{ $active: boolean }>`
-  align-self: flex-start;
-  margin-top: auto;
-  font-size: 0.65rem;
+  font-size: 0.55rem;
   font-weight: 800;
   text-transform: uppercase;
   color: ${props => props.$active ? 'var(--cta-blue)' : '#94a3b8'};
   background: ${props => props.$active ? 'rgba(46, 117, 182, 0.1)' : 'rgba(0,0,0,0.05)'};
-  padding: 4px 12px;
+  padding: 3px 8px;
   border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 2px;
   transition: all 0.2s;
+  flex-shrink: 0;
   ${ResultCard}:hover & {
     color: var(--cta-blue);
     background: rgba(46, 117, 182, 0.1);
@@ -427,32 +435,34 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
                 >
                   <CardImage $src={item.photos?.[0] || item.img || ''} />
                   <CardContent>
-                    <div className="meta">{categoryLabel} • {item.entityType}</div>
-                    {getDynamicTags(item, items).length > 0 && (
-                      <div className="tags-row">
-                         {getDynamicTags(item, items).slice(0, 3).map(tag => {
-                            let Icon = Star;
-                            let bgGradient = 'rgba(255, 215, 0, 0.3)';
-                            
-                            if (tag === 'New') { Icon = Zap; bgGradient = 'linear-gradient(135deg, #10b981, #059669)'; }
-                            else if (tag === 'Top Rated') { Icon = Star; bgGradient = 'linear-gradient(135deg, #f59e0b, #d97706)'; }
-                            else if (tag === 'Trending') { Icon = TrendingUp; bgGradient = 'linear-gradient(135deg, #ef4444, #dc2626)'; }
-                            else if (tag === 'Featured') { Icon = Award; bgGradient = 'linear-gradient(135deg, #3b82f6, #1d4ed8)'; }
-                            else if (tag === 'Most Visited') { Icon = Users; bgGradient = 'linear-gradient(135deg, #8b5cf6, #6d28d9)'; }
-
-                            return (
-                               <span key={tag} className="sm-tag" style={{ background: bgGradient }}>
-                                  <Icon size={8} fill={tag === 'Top Rated' || tag === 'New' ? 'white' : 'currentColor'} strokeWidth={3} /> {tag}
-                               </span>
-                            );
-                         })}
-                      </div>
-                    )}
+                    <div className="meta-row">
+                      <span className="category-text">{categoryLabel} • {item.entityType}</span>
+                      {getDynamicTags(item, items).length > 0 && (
+                        <div className="tags-row">
+                           {getDynamicTags(item, items).slice(0, 2).map(tag => {
+                              let Icon = Star;
+                              let bgGradient = 'rgba(255, 215, 0, 0.3)';
+                              if (tag === 'New') { Icon = Zap; bgGradient = 'linear-gradient(135deg, #10b981, #059669)'; }
+                              else if (tag === 'Top Rated') { Icon = Star; bgGradient = 'linear-gradient(135deg, #f59e0b, #d97706)'; }
+                              else if (tag === 'Trending') { Icon = TrendingUp; bgGradient = 'linear-gradient(135deg, #ef4444, #dc2626)'; }
+                              else if (tag === 'Featured') { Icon = Award; bgGradient = 'linear-gradient(135deg, #3b82f6, #1d4ed8)'; }
+                              else if (tag === 'Most Visited') { Icon = Users; bgGradient = 'linear-gradient(135deg, #8b5cf6, #6d28d9)'; }
+                              return (
+                                 <span key={tag} className="sm-tag" style={{ background: bgGradient }}>
+                                    <Icon size={8} fill={tag === 'Top Rated' || tag === 'New' ? 'white' : 'currentColor'} strokeWidth={3} /> {tag}
+                                 </span>
+                              );
+                           })}
+                        </div>
+                      )}
+                    </div>
                     <h4>{item.name}</h4>
-                    <div className="loc">{item.location}</div>
-                    <DetailsBtn $active={isActive}>
-                      Explore <ChevronRight size={10} strokeWidth={3} />
-                    </DetailsBtn>
+                    <div className="loc-row">
+                      <span className="loc">{item.location}</span>
+                      <DetailsBtn $active={isActive}>
+                        Explore <ChevronRight size={10} strokeWidth={3} />
+                      </DetailsBtn>
+                    </div>
                   </CardContent>
                 </ResultCard>
               );
