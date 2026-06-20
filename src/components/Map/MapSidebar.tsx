@@ -170,18 +170,13 @@ const SearchBar = styled.div`
 `;
 
 const ResultsContainer = styled(motion.div)`
-  /* Mobile: no internal scroll â€” SidebarContent scrolls the whole drawer */
   padding: 16px 16px 24px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   background: var(--light-bg);
-
-  /* Desktop: take remaining sidebar height, scroll internally */
-  @media (min-width: 1024px) {
-    flex: 1;
-    overflow-y: auto;
-  }
+  flex: 1;
+  overflow-y: auto;
 
   &::-webkit-scrollbar { width: 4px; }
   &::-webkit-scrollbar-track { background: transparent; }
@@ -195,6 +190,7 @@ const ResultCard = styled(motion.div)<{ $active: boolean }>`
   position: relative;
   overflow: hidden;
   height: 80px;
+  flex-shrink: 0;
   width: 100%;
   max-width: 340px;
   margin: 0 auto;
@@ -428,7 +424,7 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
                 >
                   <CardImage $src={item.photos?.[0] || item.img || ''} />
                   <CardContent>
-                    <div className="meta">{categoryLabel} â€¢ {item.entityType}</div>
+                    <div className="meta">{categoryLabel} • {item.entityType}</div>
                     <h4>{item.name}</h4>
                     <div className="loc">{item.location}</div>
                     {getDynamicTags(item, items).length > 0 && (

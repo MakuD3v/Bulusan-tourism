@@ -30,6 +30,10 @@ const GlobalStyles = createGlobalStyle`
     box-sizing: border-box;
   }
 
+  html {
+    zoom: 80%; /* Force 80% zoom as requested */
+  }
+
   body {
     font-family: ${(props) => props.theme.fonts.body};
     font-size: ${(props) => props.theme.fontSizes.body};
