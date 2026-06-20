@@ -4,6 +4,7 @@ import { useAttractions, useEnterprises } from '../../hooks/useData';
 import { useNavigate } from 'react-router-dom';
 import CentricCarousel from '../Common/CentricCarousel';
 import FeaturedCarouselCard from '../Common/FeaturedCarouselCard';
+import ReviewBubble from '../Common/ReviewBubble';
 import { getDynamicTags } from '../../utils/tagUtils';
 
 const SlideshowContainer = styled.div`
@@ -79,15 +80,21 @@ const Carousel = ({ items, type, basePath }: { items: any[], type: string, baseP
            const thisReviews = isActive ? activeReviews : [];
 
            return (
-             <FeaturedCarouselCard 
-               item={item}
-               badge={badge}
-               badges={getDynamicTags(item, items)}
-               categoryName={displayCat}
-               onClick={() => navigate(`/${basePath}?openId=${item.id || item.id}`)}
-               isTopRated={thisIsTopRated}
-               reviews={thisReviews}
-             />
+             <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+               <FeaturedCarouselCard 
+                 item={item}
+                 badge={badge}
+                 badges={getDynamicTags(item, items)}
+                 categoryName={displayCat}
+                 onClick={() => navigate(`/${basePath}?openId=${item.id || item.id}`)}
+               />
+               {/* Bubble positioned outside the card's clipping bounds */}
+               {thisIsTopRated && thisReviews.length > 0 && (
+                  <div style={{ position: 'absolute', top: '-15px', right: '-15px', zIndex: 50 }}>
+                    <ReviewBubble reviews={thisReviews} isTopRated={thisIsTopRated} />
+                  </div>
+               )}
+             </div>
            );
         }}
       />

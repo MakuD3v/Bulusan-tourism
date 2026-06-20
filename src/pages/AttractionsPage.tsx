@@ -89,6 +89,7 @@ const HeroContainer = styled.div`
 `;
 
 import FeaturedCarouselCard from '../components/Common/FeaturedCarouselCard';
+import ReviewBubble from '../components/Common/ReviewBubble';
 import React, { useState as useStateLocal } from 'react';
 
 const ControlsContainer = styled.div`
@@ -661,15 +662,20 @@ const AttractionsPage = () => {
                  const thisReviews = isActive ? (activeItem?.reviews || []).filter((r: any) => r && (r.comment || r.text)) : [];
 
                  return (
-                   <FeaturedCarouselCard 
-                     item={item}
-                     badge={badge}
-                     badges={getDynamicTags(item, attractions)}
-                     categoryName={displayCat}
-                     onClick={() => handleOpenModal(item)}
-                     isTopRated={thisIsTopRated}
-                     reviews={thisReviews}
-                   />
+                   <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                     <FeaturedCarouselCard 
+                       item={item}
+                       badge={badge}
+                       badges={getDynamicTags(item, attractions)}
+                       categoryName={displayCat}
+                       onClick={() => handleOpenModal(item)}
+                     />
+                     {thisIsTopRated && thisReviews.length > 0 && (
+                        <div style={{ position: 'absolute', top: '-15px', right: '-15px', zIndex: 50 }}>
+                          <ReviewBubble reviews={thisReviews} isTopRated={thisIsTopRated} />
+                        </div>
+                     )}
+                   </div>
                  );
               }}
             />
