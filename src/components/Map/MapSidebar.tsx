@@ -185,11 +185,11 @@ const ResultsContainer = styled(motion.div)`
 
 const ResultCard = styled(motion.div)<{ $active: boolean }>`
   background: ${props => props.$active ? 'var(--soft-blue)' : 'var(--surface-bg)'};
-  border-radius: 16px;
+  border-radius: 50px;
   display: flex;
   position: relative;
   overflow: hidden;
-  min-height: 110px;
+  min-height: 90px;
   height: auto;
   flex-shrink: 0;
   width: 100%;
@@ -228,7 +228,7 @@ const CardContent = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 12px 16px 12px 110px;
+  padding: 10px 24px 10px 110px;
   text-shadow: none;
 
   .meta {
@@ -260,13 +260,13 @@ const CardContent = styled.div`
     color: var(--text-light);
     font-weight: 600;
     line-height: 1.2;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
   }
   
   .tags-row {
     display: flex;
     gap: 4px;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     flex-wrap: wrap;
     
     .sm-tag {
