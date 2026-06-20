@@ -189,7 +189,8 @@ const ResultCard = styled(motion.div)<{ $active: boolean }>`
   display: flex;
   position: relative;
   overflow: hidden;
-  height: 80px;
+  min-height: 110px;
+  height: auto;
   flex-shrink: 0;
   width: 100%;
   max-width: 340px;
@@ -228,7 +229,7 @@ const CardContent = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 8px 30px 8px 105px;
+  padding: 12px 30px 12px 105px;
   text-shadow: none;
 
   .meta {
@@ -241,22 +242,23 @@ const CardContent = styled.div`
   }
 
   h4 {
-    font-size: 0.75rem;
+    font-size: 0.85rem;
     font-weight: 800;
     color: var(--dark-blue);
-    white-space: nowrap;
+    line-height: 1.3;
+    margin-bottom: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis;
-    margin-bottom: 2px;
   }
 
   .loc {
-    font-size: 0.55rem;
+    font-size: 0.65rem;
     color: var(--text-light);
     font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.2;
+    margin-bottom: 4px;
   }
   
   .tags-row {
