@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, ArrowRight, Clock, User } from 'lucide-react';
+import { BookOpen, ArrowRight, Clock, MapPin } from 'lucide-react';
 import { useBlogs } from '../../hooks/useData';
 import { getMediaUrl } from '../../utils/mediaUtils';
 
@@ -42,157 +42,184 @@ const SectionHeader = styled(motion.div)`
   }
 `;
 
-const HeroCard = styled(motion.div)`
+/* Matches exactly the FeaturedCarouselCard design */
+const HeroCard = styled(motion.div)<{ $bg: string }>`
   position: relative;
   max-width: 1300px;
   margin: 0 auto;
-  border-radius: 32px;
+  border-radius: 20px;
+  background-image: url(${props => props.$bg});
+  background-size: cover;
+  background-position: center;
+  min-height: 480px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 32px;
+  color: white;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
   overflow: hidden;
   cursor: pointer;
-  min-height: 520px;
+
+  /* EXACT same gradient as FeaturedCarouselCard */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(11, 33, 71, 0.95) 0%, rgba(11, 33, 71, 0.4) 60%, transparent 100%);
+    z-index: 1;
+    transition: opacity 0.4s ease;
+  }
+
+  &:hover::before {
+    opacity: 0.85;
+  }
+
+  /* Subtle zoom on bg image */
+  background-size: cover;
+  transition: background-size 0.6s ease;
+
+  .content-z {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* NEW badge top-right */
+  .badges-wrapper {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    z-index: 2;
+  }
+
+  .badge-pill {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  /* Category pill — same frosted glass style */
+  .cat-pill {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 6px 14px;
+    border-radius: 30px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+
+  .row-items {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  h3 {
+    font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    margin-bottom: 10px;
+    line-height: 1.1;
+    color: white !important;
+  }
+
+  .location {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+
+  p {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 768px) {
+    min-height: 380px;
+    border-radius: 16px;
+    padding: 24px;
+  }
+`;
+
+const BottomRow = styled.div`
   display: flex;
-  align-items: flex-end;
-  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.3);
-
-  &:hover .bg-img {
-    transform: scale(1.04);
-  }
-
-  @media (max-width: 768px) {
-    min-height: 420px;
-    border-radius: 24px;
-  }
-`;
-
-const BgImage = styled.img`
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-`;
-
-const Overlay = styled.div`
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to top,
-    rgba(3, 10, 28, 0.95) 0%,
-    rgba(3, 10, 28, 0.6) 45%,
-    rgba(3, 10, 28, 0.1) 100%
-  );
-`;
-
-const CardContent = styled.div`
-  position: relative;
-  z-index: 2;
-  padding: clamp(28px, 5vw, 56px);
-  width: 100%;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: flex-end;
-  gap: 32px;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
-`;
-
-const TextBlock = styled.div`
-  max-width: 720px;
-`;
-
-const CategoryBadge = styled.div`
-  display: inline-flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px;
-  background: var(--cta-blue);
-  color: white;
-  padding: 6px 16px;
-  border-radius: 30px;
-  font-size: 0.72rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  margin-bottom: 20px;
-`;
-
-const Title = styled.h3`
-  font-size: clamp(1.6rem, 3.5vw, 2.8rem);
-  font-family: 'Outfit', sans-serif;
-  color: white;
-  margin-bottom: 16px;
-  line-height: 1.15;
-  font-weight: 800;
-`;
-
-const Excerpt = styled.p`
-  color: rgba(255, 255, 255, 0.75);
-  font-size: clamp(0.9rem, 1.5vw, 1rem);
-  line-height: 1.7;
-  margin-bottom: 28px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-
-  @media (max-width: 768px) {
-    -webkit-line-clamp: 3;
-  }
-`;
-
-const Meta = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 20px;
+  margin-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 20px;
   flex-wrap: wrap;
+  gap: 16px;
 `;
 
-const MetaItem = styled.div`
+const AuthorMeta = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: rgba(255, 255, 255, 0.6);
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.7);
   font-size: 0.85rem;
   font-weight: 600;
 
   img {
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid rgba(255,255,255,0.3);
   }
+
+  .dot {
+    opacity: 0.4;
+  }
 `;
 
-const ReadButton = styled(motion.button)`
+const ReadButton = styled.button`
   background: white;
-  color: #0f172a;
+  color: #0b2147;
   border: none;
   font-weight: 800;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   cursor: pointer;
-  padding: 14px 28px;
-  border-radius: 50px;
+  padding: 10px 22px;
+  border-radius: 30px;
   white-space: nowrap;
-  flex-shrink: 0;
   transition: all 0.3s ease;
+  flex-shrink: 0;
 
   &:hover {
     background: var(--cta-blue);
     color: white;
-    gap: 16px;
-    box-shadow: 0 12px 30px rgba(46, 117, 182, 0.4);
-  }
-
-  @media (max-width: 768px) {
-    width: 100%;
-    justify-content: center;
+    gap: 14px;
+    box-shadow: 0 8px 24px rgba(46, 117, 182, 0.4);
   }
 `;
 
@@ -220,55 +247,56 @@ const FeaturedBlogSection = () => {
       </SectionHeader>
 
       <HeroCard
+        $bg={getMediaUrl(featured.image) || '/default-placeholder.jpg'}
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-100px' }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         onClick={() => navigate('/blog')}
       >
-        <BgImage
-          className="bg-img"
-          src={getMediaUrl(featured.image) || '/default-placeholder.jpg'}
-          alt={featured.title}
-        />
-        <Overlay />
+        {/* NEW badge top-right */}
+        <div className="badges-wrapper">
+          <div className="badge-pill">
+            <BookOpen size={11} /> Latest
+          </div>
+        </div>
 
-        <CardContent>
-          <TextBlock>
-            <CategoryBadge>
+        <div className="content-z">
+          <div className="row-items">
+            <div className="cat-pill">
               <BookOpen size={13} />
               {featured.category || 'Travel Guide'}
-            </CategoryBadge>
-            <Title>{featured.title}</Title>
-            <Excerpt>{featured.excerpt || 'Discover the untold stories of Bulusan in this exciting community post.'}</Excerpt>
-            <Meta>
-              <MetaItem>
-                {featured.authorAvatar
-                  ? <img src={getMediaUrl(featured.authorAvatar)} alt={featured.authorName} />
-                  : <User size={16} />
-                }
-                {featured.authorName || 'Local Explorer'}
-              </MetaItem>
-              {featured.readTime && (
-                <MetaItem>
-                  <Clock size={14} />
-                  {featured.readTime}
-                </MetaItem>
-              )}
-              {featured.date && (
-                <MetaItem>• {featured.date}</MetaItem>
-              )}
-            </Meta>
-          </TextBlock>
+            </div>
+            {featured.readTime && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', fontWeight: 700 }}>
+                <Clock size={14} /> {featured.readTime}
+              </div>
+            )}
+          </div>
 
-          <ReadButton
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={(e) => { e.stopPropagation(); navigate('/blog'); }}
-          >
-            Read Story <ArrowRight size={18} />
-          </ReadButton>
-        </CardContent>
+          <h3>{featured.title}</h3>
+
+          <div className="location">
+            <MapPin size={14} /> By {featured.authorName || 'Local Explorer'}
+          </div>
+
+          <p>{featured.excerpt || 'Discover the untold stories of Bulusan in this exciting community post.'}</p>
+
+          <BottomRow>
+            <AuthorMeta>
+              {featured.authorAvatar
+                ? <img src={getMediaUrl(featured.authorAvatar)} alt={featured.authorName} />
+                : null
+              }
+              <span>{featured.authorName || 'Local Explorer'}</span>
+              {featured.date && <><span className="dot">•</span><span>{featured.date}</span></>}
+            </AuthorMeta>
+
+            <ReadButton onClick={(e) => { e.stopPropagation(); navigate('/blog'); }}>
+              Read Story <ArrowRight size={16} />
+            </ReadButton>
+          </BottomRow>
+        </div>
       </HeroCard>
     </SectionWrapper>
   );
