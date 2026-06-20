@@ -37,6 +37,7 @@ const MapStyleWrapper = styled.div`
     border-radius: 16px;
     overflow: hidden;
     box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    background: var(--surface-bg);
   }
   .glass-popup .leaflet-popup-content {
     margin: 0;
@@ -44,6 +45,7 @@ const MapStyleWrapper = styled.div`
   }
   .glass-popup .leaflet-popup-tip {
     box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    background: var(--surface-bg);
   }
   .glass-popup .leaflet-popup-close-button {
     display: none;
@@ -202,7 +204,7 @@ const PopupContent = styled.div`
     button, a {
       flex: 1; text-align: center; background: var(--cta-blue); color: white !important; padding: 10px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 0.8rem; border: none; cursor: pointer; transition: all 0.2s;
       &:hover { background: var(--dark-blue); transform: translateY(-2px); }
-      &.secondary { background: #f1f5f9; color: var(--dark-blue) !important; }
+      &.secondary { background: var(--light-bg); color: var(--text-dark) !important; border: 1px solid rgba(0,0,0,0.05); }
     }
   }
 `;
