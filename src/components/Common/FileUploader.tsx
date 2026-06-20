@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import styled from 'styled-components';
 import { Upload, X, FileVideo, Plus } from 'lucide-react';
 import { useAlert } from './AlertProvider';
+import { compressImage } from '../../utils/imageUtils';
 
 const UploaderContainer = styled.div<{ $isDragOver: boolean, $hasFiles: boolean }>`
   border: 2px dashed ${(props) => props.$isDragOver ? props.theme.colors.ctaBlue : '#ddd'};
@@ -107,10 +108,18 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { showAlert } = useAlert();
 
-    const handleFiles = (incomingFiles: FileList | File[]) => {
+    const handleFiles = async (incomingFiles: FileList | File[]) => {
         let rawFiles = Array.from(incomingFiles);
+        if (!multiple) rawFiles = [rawFiles[0]];
+
+        const processedFiles = await Promise.all(rawFiles.map(async (file) => {
+            if (file.type.startsWith('image/')) {
+                return await compressImage(file);
+            }
+            return file;
+        }));
         
-        let validFiles = rawFiles.filter(file => {
+        let validFiles = processedFiles.filter(file => {
             if (file.size > maxSize) {
                 showAlert('File too large', `The file "${file.name}" exceeds the limit of ${Math.round(maxSize / 1024 / 1024)}MB.`, 'error');
                 return false;
@@ -121,10 +130,6 @@ const FileUploader: React.FC<FileUploaderProps> = ({
         if (validFiles.length === 0) {
             if (fileInputRef.current) fileInputRef.current.value = '';
             return;
-        }
-
-        if (!multiple) {
-            validFiles = [validFiles[0]];
         }
 
         if (multiple && filesData.length >= maxFiles) {
