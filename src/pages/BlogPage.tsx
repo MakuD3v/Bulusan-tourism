@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, Sparkles, Filter, Plus } from 'lucide-react';
+import { Search, X, Sparkles, Filter, Plus, BookOpen, ArrowRight, Clock, MapPin } from 'lucide-react';
 import { useBlogs } from '../hooks/useData';
 import { useAuth } from '../hooks/useAuth';
 import { dbService } from '../api/db';
 import { uploadFile } from '../api/storage';
 import { blogPosts as staticBlogs } from '../data/blog';
+import { getMediaUrl } from '../utils/mediaUtils';
 import FileUploader from '../components/Common/FileUploader';
 import AuthGuardPopup from '../components/Common/AuthGuardPopup';
 import StandardPageHeader from '../components/Common/StandardPageHeader';
@@ -135,44 +136,76 @@ const FilterAreaContainer = styled.div`
   }
 `;
 
-const FeaturedPost = styled(motion.div)`
-  width: 100%;
-  height: 450px;
-  border-radius: 20px;
-  overflow: hidden;
+const HeroCard = styled(motion.div)<{ $bg: string }>`
   position: relative;
-  margin-bottom: 64px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  max-width: 1300px;
+  margin: 0 auto 40px;
+  border-radius: 20px;
+  background-image: url(${props => props.$bg});
+  background-size: cover;
+  background-position: center;
+  min-height: 480px;
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 32px;
+  color: white;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
   cursor: pointer;
 
-  .bg-image {
+  &::before {
+    content: '';
     position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    object-fit: cover;
+    inset: 0;
+    background: linear-gradient(to top, rgba(11, 33, 71, 0.95) 0%, rgba(11, 33, 71, 0.4) 60%, transparent 100%);
     z-index: 1;
+    transition: opacity 0.4s ease;
   }
 
-  .overlay {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-    z-index: 2;
-  }
+  &:hover::before { opacity: 0.85; }
+  transition: background-size 0.6s ease;
 
-  .content {
-    position: relative;
-    z-index: 3;
-    padding: 48px;
-    color: white;
-    max-width: 800px;
-
-    .tag { background: var(--cta-blue); padding: 4px 12px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; margin-bottom: 16px; display: inline-block; }
-    h2 { font-size: 2.8rem; font-family: ${(props) => props.theme.fonts.heading}; margin-bottom: 16px; line-height: 1.2; }
-    p { font-size: 1.1rem; opacity: 0.9; margin-bottom: 24px; }
-    .author { display: flex; align-items: center; gap: 12px; font-size: 0.9rem; img { width: 32px; height: 32px; border-radius: 50%; } }
+  .content-z { position: relative; z-index: 2; }
+  .badges-wrapper { position: absolute; top: 24px; right: 24px; z-index: 2; }
+  .badge-pill {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white; padding: 6px 14px; border-radius: 30px;
+    font-size: 0.75rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 1px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    display: flex; align-items: center; gap: 5px;
   }
+  .cat-pill {
+    background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.3); padding: 6px 14px;
+    border-radius: 30px; display: inline-flex; align-items: center; gap: 8px;
+    font-size: 0.75rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 12px;
+  }
+  .row-items { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  h3 { font-size: clamp(1.5rem, 3.5vw, 2.2rem); font-family: 'Outfit', sans-serif; font-weight: 800; margin-bottom: 10px; line-height: 1.1; color: white !important; }
+  .location { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: rgba(255, 255, 255, 0.9); margin-bottom: 10px; font-weight: 500; }
+  p { font-size: 0.9rem; color: rgba(255, 255, 255, 0.7); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5; }
+  @media (max-width: 768px) { min-height: 380px; border-radius: 16px; padding: 24px; }
+`;
+
+const BottomRow = styled.div`
+  display: flex; justify-content: space-between; align-items: center; margin-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 20px; flex-wrap: wrap; gap: 16px;
+`;
+
+const AuthorMeta = styled.div`
+  display: flex; align-items: center; gap: 10px; color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem; font-weight: 600;
+  img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.3); }
+  .dot { opacity: 0.4; }
+`;
+
+const ReadButton = styled.button`
+  background: white; color: #0b2147; border: none; font-weight: 800; font-size: 0.85rem;
+  display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 10px 22px;
+  border-radius: 30px; white-space: nowrap; transition: all 0.3s ease; flex-shrink: 0;
+  &:hover { background: var(--cta-blue); color: white; gap: 14px; box-shadow: 0 8px 24px rgba(46, 117, 182, 0.4); }
 `;
 
 const BlogGrid = styled.div`
@@ -183,26 +216,6 @@ const BlogGrid = styled.div`
   @media (max-width: 640px) {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
-  }
-`;
-
-const BlogCard = styled(motion.div)`
-  background: ${(props) => props.theme.glass.background};
-  backdrop-filter: ${(props) => props.theme.glass.filter};
-  border: ${(props) => props.theme.glass.border};
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: ${(props) => props.theme.glass.shadow};
-  cursor: pointer;
-  transition: all 0.3s ease;
-  
-  .image { height: 200px; img { width: 100%; height: 100%; object-fit: cover; } }
-  .content {
-    padding: 24px;
-    .tag { color: ${(props) => props.theme.colors.ctaBlue}; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; margin-bottom: 8px; }
-    h3 { font-size: 1.4rem; color: ${(props) => props.theme.colors.darkBlue}; margin-bottom: 12px; line-height: 1.3;}
-    p { color: #666; font-size: 0.95rem; line-height: 1.5; margin-bottom: 24px; }
-    .footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; padding-top: 16px; font-size: 0.85rem; color: #888; }
   }
 `;
 
@@ -262,8 +275,6 @@ const FullPostModal = styled(motion.div)`
     .item { display: flex; gap: 16px; align-items: center; img { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; } h5 { font-size: 1rem; color: var(--text-dark); } }
   }
 `;
-
-// Local mockPosts removed
 
 const CreateModalContent = styled(motion.div)`
   background: var(--surface-bg);
@@ -326,8 +337,6 @@ const BlogPage = () => {
       post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
     return isPublished && categoryMatch && matchesSearch;
   });
-
-  // Replaced local categories 
 
   const handleCreatePost = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -441,20 +450,59 @@ const BlogPage = () => {
             subtitle="Editor's Choice"
             title={<>Featured <span style={{ color: 'var(--cta-blue)' }}>Stories</span></>}
           />
-          <CentricCarousel
-            items={filteredPosts.slice(0, 5)}
-            renderItem={(post) => (
-              <DiscoveryCard
-                image={post.image}
-                category={post.category}
-                title={post.title}
-                description={post.excerpt}
-                location={`By ${post.authorName || 'Anonymous'}`}
-                $noAnimate
-                onClick={() => setSelectedPost(post)}
-              />
-            )}
-          />
+          {(() => {
+            const featured = filteredPosts[0];
+            if (!featured) return null;
+            return (
+              <HeroCard
+                $bg={getMediaUrl(featured.image) || '/default-placeholder.jpg'}
+                onClick={() => setSelectedPost(featured)}
+              >
+                <div className="badges-wrapper">
+                  <div className="badge-pill">
+                    <BookOpen size={11} /> Latest
+                  </div>
+                </div>
+
+                <div className="content-z">
+                  <div className="row-items">
+                    <div className="cat-pill">
+                      <BookOpen size={13} />
+                      {featured.category || 'Travel Guide'}
+                    </div>
+                    {featured.readTime && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', fontWeight: 700 }}>
+                        <Clock size={14} /> {featured.readTime}
+                      </div>
+                    )}
+                  </div>
+
+                  <h3>{featured.title}</h3>
+
+                  <div className="location">
+                    <MapPin size={14} /> By {featured.authorName || 'Local Explorer'}
+                  </div>
+
+                  <p>{featured.excerpt || 'Discover the untold stories of Bulusan in this exciting community post.'}</p>
+
+                  <BottomRow>
+                    <AuthorMeta>
+                      {featured.authorAvatar
+                        ? <img src={getMediaUrl(featured.authorAvatar)} alt={featured.authorName} />
+                        : null
+                      }
+                      <span>{featured.authorName || 'Local Explorer'}</span>
+                      {featured.date && <><span className="dot">•</span><span>{featured.date}</span></>}
+                    </AuthorMeta>
+
+                    <ReadButton onClick={(e) => { e.stopPropagation(); setSelectedPost(featured); }}>
+                      Read Story <ArrowRight size={16} />
+                    </ReadButton>
+                  </BottomRow>
+                </div>
+              </HeroCard>
+            );
+          })()}
         </div>
       )}
 
