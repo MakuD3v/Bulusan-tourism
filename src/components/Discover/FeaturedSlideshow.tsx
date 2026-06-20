@@ -80,7 +80,7 @@ const Carousel = ({ items, type, basePath }: { items: any[], type: string, baseP
            const thisReviews = isActive ? activeReviews : [];
 
            return (
-             <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+             <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'visible' }}>
                <FeaturedCarouselCard 
                  item={item}
                  badge={badge}
