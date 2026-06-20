@@ -1,4 +1,4 @@
-﻿import styled from 'styled-components';
+import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, MapPin, Heart, Star, X, Clock, DollarSign, Info, Sparkles, Award, TrendingUp, Users, Zap } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -89,6 +89,7 @@ const HeroContainer = styled.div`
 `;
 
 import FeaturedCarouselCard from '../components/Common/FeaturedCarouselCard';
+import React, { useState as useStateLocal } from 'react';
 
 const ControlsContainer = styled.div`
   display: flex;
@@ -436,6 +437,7 @@ const AttractionsPage = () => {
   const [newRating, setNewRating] = useState(0);
   const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [featuredCarouselIndex, setFeaturedCarouselIndex] = useState(0);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -641,8 +643,9 @@ const AttractionsPage = () => {
               subtitle="Must-See"
               title={<>Featured <span style={{ color: 'var(--cta-blue)' }}>Attractions</span></>}
             />
-            <CentricCarousel
+             <CentricCarousel
               items={featuredItems}
+              onActiveIndexChange={setFeaturedCarouselIndex}
               renderItem={(item: any, isActive: boolean) => {
                  let badge: 'new' | 'top' | 'trending' | 'featured' | 'most-visited' | undefined = undefined;
                  if (item.featured) badge = 'featured';
@@ -653,6 +656,10 @@ const AttractionsPage = () => {
                  let displayCat = item.category || 'Nature';
                  if (Array.isArray(item.categories)) displayCat = item.categories[0];
 
+                 const activeItem = featuredItems[featuredCarouselIndex];
+                 const thisIsTopRated = isActive && activeItem && (activeItem.featured || activeItem.rating >= 4.5);
+                 const thisReviews = isActive ? (activeItem?.reviews || []).filter((r: any) => r && (r.comment || r.text)) : [];
+
                  return (
                    <FeaturedCarouselCard 
                      item={item}
@@ -660,6 +667,8 @@ const AttractionsPage = () => {
                      badges={getDynamicTags(item, attractions)}
                      categoryName={displayCat}
                      onClick={() => handleOpenModal(item)}
+                     isTopRated={thisIsTopRated}
+                     reviews={thisReviews}
                    />
                  );
               }}

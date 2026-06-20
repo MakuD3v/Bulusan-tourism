@@ -127,16 +127,23 @@ interface CentricCarouselProps {
   items: any[];
   renderItem: (item: any, isActive: boolean) => React.ReactNode;
   autoPlayInterval?: number;
+  onActiveIndexChange?: (index: number) => void;
 }
 
 const CentricCarousel: React.FC<CentricCarouselProps> = ({
   items,
   renderItem,
-  autoPlayInterval = 5000
+  autoPlayInterval = 5000,
+  onActiveIndexChange
 }) => {
   const [centerIndex, setCenterIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const timerRef = useRef<any>(null);
+
+  // Notify parent of active item changes
+  useEffect(() => {
+    onActiveIndexChange?.(centerIndex);
+  }, [centerIndex, onActiveIndexChange]);
 
   const handleNext = useCallback(() => {
     setCenterIndex(prev => (prev + 1) % items.length);

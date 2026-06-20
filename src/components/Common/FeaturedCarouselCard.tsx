@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Star, MapPin, Zap, TrendingUp, Award, Users } from 'lucide-react';
 import { getMapIconUrl } from '../Admin/CategoryTagConfig';
 import { getMediaUrl } from '../../utils/mediaUtils';
+import ReviewBubble from './ReviewBubble';
 
 const CardContainer = styled(motion.div)<{ $bg: string }>`
   width: 100%;
@@ -138,14 +139,18 @@ interface FeaturedCarouselCardProps {
   badges?: string[];
   categoryName: string;
   onClick: () => void;
+  reviews?: any[];
+  isTopRated?: boolean;
 }
 
-const FeaturedCarouselCard: React.FC<FeaturedCarouselCardProps> = ({ item, badge, badges = [], categoryName, onClick }) => {
+const FeaturedCarouselCard: React.FC<FeaturedCarouselCardProps> = ({ item, badge, badges = [], categoryName, onClick, reviews = [], isTopRated = false }) => {
   return (
     <CardContainer 
       $bg={getMediaUrl(item.photos?.[0] || item.img)}
       onClick={onClick}
     >
+      {/* Floating review bubble — only for top rated */}
+      <ReviewBubble reviews={reviews} isTopRated={isTopRated} />
       <div className="badges-wrapper">
         {(!badges || badges.length === 0) && (
           <>

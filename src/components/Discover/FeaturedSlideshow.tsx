@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import styled from 'styled-components';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useAttractions, useEnterprises } from '../../hooks/useData';
 import { useNavigate } from 'react-router-dom';
 import CentricCarousel from '../Common/CentricCarousel';
@@ -41,16 +40,29 @@ const SectionTitle = styled.h2`
   }
 `;
 
+// An item is "top rated" if it has badge 'top' or 'featured', or rating >= 4.5
+const isItemTopRated = (item: any): boolean => {
+  if (item.featured) return true;
+  if (item.rating >= 4.5) return true;
+  return false;
+};
+
 const Carousel = ({ items, type, basePath }: { items: any[], type: string, basePath: string }) => {
   const navigate = useNavigate();
+  const [activeIndex, setActiveIndex] = useState(0);
 
   if (!items || items.length === 0) return null;
+
+  const activeItem = items[activeIndex];
+  const activeIsTopRated = activeItem ? isItemTopRated(activeItem) : false;
+  const activeReviews: any[] = (activeItem?.reviews || []).filter((r: any) => r && (r.comment || r.text));
 
   return (
     <CarouselSection>
       <SectionTitle>Top <span>{type}</span></SectionTitle>
       <CentricCarousel
         items={items}
+        onActiveIndexChange={setActiveIndex}
         renderItem={(item: any, isActive: boolean) => {
            let badge: 'new' | 'top' | 'trending' | 'featured' | 'most-visited' | undefined = undefined;
            const isNew = (Date.now() - new Date(item.dateAdded || 0).getTime()) <= 30 * 24 * 3600 * 1000;
@@ -63,6 +75,9 @@ const Carousel = ({ items, type, basePath }: { items: any[], type: string, baseP
            let displayCat = item.category || item.type || 'Stay';
            if (Array.isArray(item.categories)) displayCat = item.categories[0];
 
+           const thisIsTopRated = isActive && activeIsTopRated;
+           const thisReviews = isActive ? activeReviews : [];
+
            return (
              <FeaturedCarouselCard 
                item={item}
@@ -70,6 +85,8 @@ const Carousel = ({ items, type, basePath }: { items: any[], type: string, baseP
                badges={getDynamicTags(item, items)}
                categoryName={displayCat}
                onClick={() => navigate(`/${basePath}?openId=${item.id || item.id}`)}
+               isTopRated={thisIsTopRated}
+               reviews={thisReviews}
              />
            );
         }}
