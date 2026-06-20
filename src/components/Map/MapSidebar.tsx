@@ -195,26 +195,30 @@ const ResultCard = styled(motion.div)<{ $active: boolean }>`
   width: 100%;
   max-width: 340px;
   margin: 0 auto;
-  border: 1px solid rgba(0,0,0,0.06);
-  box-shadow: ${props => props.$active ? '0 15px 40px rgba(11, 33, 71, 0.12)' : '0 10px 30px rgba(0,0,0,0.03)'};
+  border: none;
+  box-shadow: ${props => props.$active ? '0 10px 30px rgba(11, 33, 71, 0.1)' : '0 4px 15px rgba(0,0,0,0.02)'};
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
   z-index: ${props => props.$active ? '2' : '1'};
 
   &:hover {
-    transform: ${props => props.$active ? 'none' : 'translateY(-3px)'};
-    box-shadow: 0 20px 50px rgba(0,0,0,0.08);
-    background: var(--soft-blue);
+    transform: ${props => props.$active ? 'none' : 'translateY(-2px)'};
+    box-shadow: 0 15px 35px rgba(0,0,0,0.06);
+    background: ${props => props.$active ? 'var(--soft-blue)' : 'var(--surface-bg)'};
   }
 `;
 
 const CardImage = styled.div<{ $src: string }>`
-  width: 120px;
-  flex-shrink: 0;
+  position: absolute;
+  top: 0; left: 0;
+  width: 140px;
+  height: 100%;
   background-image: url(${props => getMediaUrl(props.$src)});
   background-size: cover;
   background-position: center;
   z-index: 0;
+  -webkit-mask-image: linear-gradient(to right, black 50%, transparent 100%);
+  mask-image: linear-gradient(to right, black 50%, transparent 100%);
 `;
 
 const CardContent = styled.div`
@@ -224,7 +228,7 @@ const CardContent = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 12px 16px;
+  padding: 12px 16px 12px 110px;
   text-shadow: none;
 
   .meta {
