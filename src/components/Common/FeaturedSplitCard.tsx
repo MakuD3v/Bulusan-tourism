@@ -1,11 +1,11 @@
 import React from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
-import { BookOpen, ArrowRight } from 'lucide-react';
+import { BookOpen, ArrowRight, Star } from 'lucide-react';
 import { getMediaUrl } from '../../utils/mediaUtils';
 
 const ContentContainer = styled.div`
-  max-width: 1000px;
+  max-width: 800px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: 0.9fr 1.1fr;
@@ -41,6 +41,62 @@ const ImageWrapper = styled(motion.div)`
   @media (max-width: 1024px) {
     aspect-ratio: 16/9;
     border-radius: 20px;
+  }
+`;
+
+const ImageOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(11, 33, 71, 0.95) 0%, rgba(11, 33, 71, 0.4) 50%, transparent 100%);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 24px;
+  color: white;
+  opacity: 0.95;
+  transition: opacity 0.3s ease;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  .img-category {
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 4px 10px;
+    border-radius: 20px;
+    align-self: flex-start;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: 1px;
+  }
+
+  .img-summary {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.9);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+
+  .img-rating {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #fbbf24;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
   }
 `;
 
@@ -177,6 +233,17 @@ const FeaturedSplitCard: React.FC<FeaturedSplitCardProps> = ({ post, onClick }) 
         onClick={onClick}
       >
         <img src={getMediaUrl(post.image) || '/default-placeholder.jpg'} alt={post.title} />
+        <ImageOverlay>
+          <div className="img-category">
+            <BookOpen size={10} /> {post.category || 'Travel Guide'}
+          </div>
+          <div className="img-summary">
+            {post.excerpt || 'Discover the untold stories of Bulusan.'}
+          </div>
+          <div className="img-rating">
+            <Star size={14} fill="currentColor" /> {post.rating || '5.0'}
+          </div>
+        </ImageOverlay>
       </ImageWrapper>
 
       <TextContent
