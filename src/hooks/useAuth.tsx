@@ -32,9 +32,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           storage.setItem('bulusan_user', JSON.stringify(res.user));
         } catch (err: any) {
           console.error('Session verification failed:', err);
-          const isAuthError = err.message?.includes('401') || err.message?.includes('403');
+          const msg = err.message?.toLowerCase() || '';
+          const isAuthError = msg.includes('401') || msg.includes('403') || msg.includes('forbidden') || msg.includes('unauthorized') || msg.includes('invalid');
           if (isAuthError) {
             setUser(null);
+            localStorage.removeItem('bulusan_user');
+            localStorage.removeItem('auth_token');
             sessionStorage.removeItem('bulusan_user');
             sessionStorage.removeItem('auth_token');
           } else if (stored) {
