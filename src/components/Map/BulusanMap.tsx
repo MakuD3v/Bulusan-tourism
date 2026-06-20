@@ -95,16 +95,8 @@ const PopupContent = styled.div`
       width: 100%;
       height: 100%;
       object-fit: cover;
-    }
-
-    .gradient-overlay {
-      position: absolute;
-      bottom: -2px; /* Overlap browser rounding lines */
-      left: 0;
-      right: 0;
-      height: 70px;
-      /* Seamlessly fade the image straight into the white bottom base! */
-      background: linear-gradient(to top, white 0%, rgba(255,255,255,0) 100%);
+      -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+      mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
     }
 
     .close-btn {
@@ -204,13 +196,13 @@ const PopupContent = styled.div`
        font-size: 0.75rem; color: var(--text-light); font-weight: 600; display: flex; align-items: center; gap: 4px; margin-bottom: 12px;
     }
     
-    p { font-size: 0.85rem; color: #475569; margin-bottom: 16px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    p { font-size: 0.85rem; color: var(--text-light); margin-bottom: 16px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     
     .btn-group { display: flex; gap: 8px; }
     button, a {
       flex: 1; text-align: center; background: var(--cta-blue); color: white !important; padding: 10px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 0.8rem; border: none; cursor: pointer; transition: all 0.2s;
       &:hover { background: var(--dark-blue); transform: translateY(-2px); }
-      &.secondary { background: #f1f5f9; color: #475569 !important; }
+      &.secondary { background: #f1f5f9; color: var(--dark-blue) !important; }
     }
   }
 `;
@@ -486,7 +478,6 @@ const BulusanMarker = ({ item, priorityCategory, onHandleSelect, isMobile, setMo
           <div className="image-container">
             <PopupCloseButton />
             <img src={item.photos?.[0] || item.img || '/default-placeholder.jpg'} alt={item.name} />
-            <div className="gradient-overlay" />
             <div className="badges-wrapper">
               {(!badges || badges.length === 0) && badge && (
                 <div className={`badge-pill ${badge === 'New' ? 'badge-new' : badge === 'Top Rated' ? 'badge-top' : badge === 'Trending' ? 'badge-trending' : badge === 'Featured' ? 'badge-featured' : ''}`}>
