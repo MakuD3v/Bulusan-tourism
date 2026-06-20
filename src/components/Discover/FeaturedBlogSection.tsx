@@ -34,16 +34,28 @@ const SectionHeader = styled(motion.div)`
   }
 
   h2 {
-    font-size: clamp(2rem, 3.5vw, 2.8rem);
-    font-family: 'Outfit', sans-serif;
+    font-size: clamp(2rem, 5vw, 4rem);
+    font-family: 'Barabara', sans-serif;
     color: var(--dark-blue);
     line-height: 1.1;
+    text-transform: uppercase;
+    letter-spacing: 2px;
   }
 `;
 
+const Skeleton = styled.div`
+  width: 100%;
+  height: 600px;
+  background: #f1f5f9;
+  border-radius: 40px;
+  animation: pulse 1.5s infinite ease-in-out;
 
-
-const FeaturedBlogSection = () => {
+  @keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+  }
+`;const FeaturedBlogSection = () => {
   const { data: blogs, loading } = useBlogs();
   const navigate = useNavigate();
 
@@ -72,7 +84,7 @@ const FeaturedBlogSection = () => {
         transition={{ duration: 0.6 }}
       >
         <span className="subtitle">Community Stories</span>
-        <h2>Featured Blog</h2>
+        <h2>FEATURED STORIES</h2>
       </SectionHeader>
       <FeaturedSplitCard post={featuredBlog} onClick={() => navigate('/blog')} />
     </SectionWrapper>

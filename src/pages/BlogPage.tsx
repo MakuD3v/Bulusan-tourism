@@ -379,7 +379,7 @@ const BlogPage = () => {
         <div style={{ marginBottom: '8px' }}>
           <SectionHeader
             subtitle="Editor's Choice"
-            title={<>Featured <span style={{ color: 'var(--cta-blue)' }}>Stories</span></>}
+            title={<>FEATURED <span style={{ color: 'var(--cta-blue)' }}>STORIES</span></>}
           />
           {(() => {
             const featured = filteredPosts[0];
