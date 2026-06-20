@@ -182,7 +182,7 @@ const PersistentLayout = () => {
             <a href="https://www.youtube.com/@BulusanPhlTourism" target="_blank" rel="noreferrer" aria-label="YouTube"><YoutubeIcon size={18} /></a>
           </div>
           <div className="copyright">
-            &copy; {new Date().getFullYear()} Bulusan Tourism Development Office. High-Fidelity Platform by Blueprint.
+            &copy; {new Date().getFullYear()} Bulusan Tourism Office Explore Bulusan Project
           </div>
         </div>
       </Footer>
