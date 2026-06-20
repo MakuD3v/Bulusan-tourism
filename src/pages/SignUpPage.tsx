@@ -3,7 +3,9 @@ import styled, { keyframes } from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { User, Mail, Lock, UserPlus, Loader2, CheckCircle2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Lock, UserPlus, Loader2, CheckCircle2, ArrowLeft, Eye, EyeOff, ChevronRight } from 'lucide-react';
+import FileUploader from '../components/Common/FileUploader';
+import { uploadFile } from '../api/storage';
 
 const SplitContainer = styled.div`
   min-height: 100vh;
@@ -293,6 +295,8 @@ const ErrorMsg = styled(motion.div)`
 `;
 
 const SignUpPage = () => {
+  const [step, setStep] = useState(1);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -304,13 +308,35 @@ const SignUpPage = () => {
   const { signup } = useAuth();
   const navigate = useNavigate();
 
+  const handleNext = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !email || !password) {
+      setError("Please fill out all fields.");
+      return;
+    }
+    setStep(2);
+    setError('');
+  };
+
+  const handleBack = () => {
+    setStep(1);
+    setError('');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!avatarFile) {
+      setError("A profile picture is required to complete registration.");
+      return;
+    }
+
     setLoading(true);
     setError('');
 
     try {
-      const result = await signup(name, email, password);
+      const avatarUrl = await uploadFile(avatarFile, `avatars/${Date.now()}_${avatarFile.name}`);
+      const result = await signup(name, email, password, { avatar: avatarUrl });
+      
       if (result.success) {
         setSuccess(true);
         setTimeout(() => navigate('/discover'), 2000);
@@ -371,7 +397,7 @@ const SignUpPage = () => {
               <Title>Create an account</Title>
               <Subtitle>Join the digital adventure companion of Bulusan.</Subtitle>
 
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={step === 1 ? handleNext : handleSubmit}>
                 {error && (
                   <ErrorMsg
                     initial={{ opacity: 0, y: -8 }}
@@ -381,66 +407,96 @@ const SignUpPage = () => {
                   </ErrorMsg>
                 )}
 
-                <InputGroup>
-                  <label>Full Name</label>
-                  <div className="input-wrapper">
-                    <User size={18} />
-                    <input
-                      type="text"
-                      placeholder="e.g. Maria Clara"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                    />
-                  </div>
-                </InputGroup>
+                <AnimatePresence mode="wait">
+                  {step === 1 ? (
+                    <motion.div key="step1" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }}>
+                      <InputGroup>
+                        <label>Full Name</label>
+                        <div className="input-wrapper">
+                          <User size={18} />
+                          <input
+                            type="text"
+                            placeholder="e.g. Maria Clara"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                          />
+                        </div>
+                      </InputGroup>
 
-                <FormGrid>
-                  <InputGroup>
-                    <label>E-mail</label>
-                    <div className="input-wrapper">
-                      <Mail size={18} />
-                      <input
-                        type="email"
-                        placeholder="explorer@bulusan.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </InputGroup>
+                      <FormGrid>
+                        <InputGroup>
+                          <label>E-mail</label>
+                          <div className="input-wrapper">
+                            <Mail size={18} />
+                            <input
+                              type="email"
+                              placeholder="explorer@bulusan.com"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              required
+                            />
+                          </div>
+                        </InputGroup>
 
-                  <InputGroup>
-                    <label>Password</label>
-                    <div className="input-wrapper">
-                      <Lock size={18} />
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        style={{ paddingRight: '48px' }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="password-toggle"
-                        tabIndex={-1}
-                      >
-                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
-                  </InputGroup>
-                </FormGrid>
+                        <InputGroup>
+                          <label>Password</label>
+                          <div className="input-wrapper">
+                            <Lock size={18} />
+                            <input
+                              type={showPassword ? 'text' : 'password'}
+                              placeholder="••••••••"
+                              value={password}
+                              onChange={(e) => setPassword(e.target.value)}
+                              required
+                              style={{ paddingRight: '48px' }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="password-toggle"
+                              tabIndex={-1}
+                            >
+                              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                          </div>
+                        </InputGroup>
+                      </FormGrid>
 
-                <ActionButton type="submit" disabled={loading}>
-                  {loading ? (
-                    <Loader2 className="animate-spin" size={18} />
+                      <ActionButton type="submit">
+                        Continue to Next Step <ChevronRight size={18} />
+                      </ActionButton>
+                    </motion.div>
                   ) : (
-                    <>Start Exploring <UserPlus size={18} /></>
+                    <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
+                      <p style={{ color: '#9faed4', marginBottom: '24px', fontSize: '0.9rem', textAlign: 'left', lineHeight: 1.5 }}>
+                        Upload a profile picture. This is required to help verify our community members and personalize your experience.
+                      </p>
+                      
+                      <div style={{ marginBottom: '24px' }}>
+                        <FileUploader 
+                          label="Upload Profile Picture"
+                          accept="image/*"
+                          multiple={false}
+                          onFileSelect={(file) => setAvatarFile(file)}
+                        />
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '12px' }}>
+                        <ActionButton type="button" onClick={handleBack} style={{ background: 'rgba(255,255,255,0.05)', color: '#e2ecf7', border: '1px solid rgba(255,255,255,0.1)', boxShadow: 'none' }}>
+                           Back
+                        </ActionButton>
+                        <ActionButton type="submit" disabled={loading || !avatarFile} style={{ flex: 2 }}>
+                          {loading ? (
+                            <Loader2 className="animate-spin" size={18} />
+                          ) : (
+                            <>Complete Sign Up <UserPlus size={18} /></>
+                          )}
+                        </ActionButton>
+                      </div>
+                    </motion.div>
                   )}
-                </ActionButton>
+                </AnimatePresence>
               </form>
 
               <p style={{ marginTop: '28px', color: '#7b8cbe', fontSize: '0.9rem' }}>

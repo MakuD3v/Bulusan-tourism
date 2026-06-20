@@ -18,6 +18,8 @@ import { MainHeader, ContentArea } from '../components/Layout/DashboardLayout';
 import { TourBooking } from '../data/types';
 import { bookingService } from '../utils/bookingService';
 import { useAlert } from '../components/Common/AlertProvider';
+import FileUploader from '../components/Common/FileUploader';
+import { uploadFile } from '../api/storage';
 const TabNav = styled.div`
   display: flex;
   gap: 12px;
@@ -171,6 +173,8 @@ export default function AccountPage() {
   const { data: heritage } = useHeritage([]);
   
   const [userName, setUserName] = useState(user?.name || '');
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [savingProfile, setSavingProfile] = useState(false);
 
   // Appeal states
   const [appealData, setAppealData] = useState<any>(null);
@@ -260,11 +264,21 @@ export default function AccountPage() {
   const explorerPoints = (itineraryItems.length * 10) + (myReviews.length * 50);
   const rank = explorerPoints > 200 ? 'Bulusan Master' : explorerPoints > 50 ? 'Pathfinder' : 'Novice Explorer';
 
-  const handleUpdateName = async () => {
+  const handleUpdateProfile = async () => {
+    setSavingProfile(true);
     try {
-        await dbService.update('users', (user as any).id, { name: userName });
-        showAlert('Success', 'Profile updated!', 'success');
-    } catch (err) { showAlert('Error', 'Update failed.', 'error'); }
+        let newAvatarUrl = user.avatar;
+        if (avatarFile) {
+           newAvatarUrl = await uploadFile(avatarFile, `avatars/${Date.now()}_${avatarFile.name}`);
+        }
+        await updateUser({ name: userName, avatar: newAvatarUrl });
+        showAlert('Success', 'Profile updated successfully!', 'success');
+        setAvatarFile(null);
+    } catch (err) { 
+        showAlert('Error', 'Update failed.', 'error'); 
+    } finally {
+        setSavingProfile(false);
+    }
   };
 
   const removeItem = async (baseId: number, entityType: string) => {
@@ -389,8 +403,8 @@ export default function AccountPage() {
             <div style={{ fontWeight: 700, color: '#e2ecf7' }}>{user.name}</div>
             <ExplorerRank $points={explorerPoints}>{rank}</ExplorerRank>
           </div>
-          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-            <UserIcon size={24} />
+          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', overflow: 'hidden' }}>
+            {user.avatar ? <img src={user.avatar} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <UserIcon size={24} />}
           </div>
         </div>
       </MainHeader>
@@ -737,23 +751,43 @@ export default function AccountPage() {
               
               <div style={{ background: 'rgba(255,255,255,0.03)', padding: '32px', borderRadius: '24px', maxWidth: '500px', border: '1px solid rgba(255,255,255,0.05)' }}>
                 <div style={{ marginBottom: '24px' }}>
-                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: '#94a3b8', marginBottom: '8px' }}>Display Name</label>
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <input 
-                      type="text" 
-                      value={userName} 
-                      onChange={(e) => setUserName(e.target.value)} 
-                      style={{ flex: 1, padding: '12px 16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: '1rem', outline: 'none' }}
+                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: '#94a3b8', marginBottom: '16px' }}>Profile Picture</label>
+                  <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                    <img 
+                      src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=3b82f6&color=fff`} 
+                      alt="Avatar" 
+                      style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)' }}
                     />
-                    <button onClick={handleUpdateName} style={{ padding: '0 24px', borderRadius: '12px', background: '#3b82f6', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer' }}>Update</button>
+                    <div style={{ flex: 1, height: '140px' }}>
+                       <FileUploader 
+                          label="Change Picture"
+                          accept="image/*"
+                          multiple={false}
+                          onFileSelect={(file) => setAvatarFile(file)}
+                        />
+                    </div>
                   </div>
                 </div>
 
                 <div style={{ marginBottom: '24px' }}>
+                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: '#94a3b8', marginBottom: '8px' }}>Display Name</label>
+                  <input 
+                    type="text" 
+                    value={userName} 
+                    onChange={(e) => setUserName(e.target.value)} 
+                    style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: '1rem', outline: 'none' }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '32px' }}>
                   <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: '#94a3b8', marginBottom: '8px' }}>Email Address</label>
                   <input type="text" value={user.email} disabled style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent', color: '#64748b', fontSize: '1rem' }} />
                   <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '8px' }}>Email address cannot be changed currently.</p>
                 </div>
+
+                <button onClick={handleUpdateProfile} disabled={savingProfile} style={{ width: '100%', padding: '14px', borderRadius: '12px', background: '#3b82f6', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+                   {savingProfile ? <Loader2 className="animate-spin" size={18} /> : 'Save Profile Changes'}
+                </button>
               </div>
             </motion.div>
           )}
