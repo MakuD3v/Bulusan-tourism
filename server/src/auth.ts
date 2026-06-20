@@ -159,7 +159,7 @@ router.get('/me', authenticateToken, async (req: any, res: any) => {
 router.get('/users', authenticateToken, async (req: any, res: any) => {
   try {
     const requester = await prisma.user.findUnique({ where: { id: req.user.userId } });
-    if (requester?.role !== 'ADMIN') {
+    if (requester?.role?.toUpperCase() !== 'ADMIN') {
       return res.status(403).json({ error: 'Forbidden: Admin access required' });
     }
     const users = await prisma.user.findMany({
@@ -284,7 +284,7 @@ router.get('/recovery/status/:email', async (req: any, res: any) => {
 router.get('/recovery/pending', authenticateToken, async (req: any, res: any) => {
   try {
     const requester = await prisma.user.findUnique({ where: { id: req.user.userId } });
-    if (requester?.role !== 'ADMIN') return res.status(403).json({ error: 'Forbidden' });
+    if (requester?.role?.toUpperCase() !== 'ADMIN') return res.status(403).json({ error: 'Forbidden' });
 
     const pending = await prisma.passwordRecovery.findMany({
       where: { status: 'PENDING' },
@@ -309,7 +309,7 @@ router.put('/recovery/approve', authenticateToken, async (req: any, res: any) =>
 
   try {
     const requester = await prisma.user.findUnique({ where: { id: req.user.userId } });
-    if (requester?.role !== 'ADMIN') return res.status(403).json({ error: 'Forbidden' });
+    if (requester?.role?.toUpperCase() !== 'ADMIN') return res.status(403).json({ error: 'Forbidden' });
 
     const targetUser = await prisma.user.findUnique({ where: { email } });
     if (!targetUser) return res.status(404).json({ error: 'User not found' });
@@ -338,7 +338,7 @@ router.put('/recovery/reject', authenticateToken, async (req: any, res: any) => 
 
   try {
     const requester = await prisma.user.findUnique({ where: { id: req.user.userId } });
-    if (requester?.role !== 'ADMIN') return res.status(403).json({ error: 'Forbidden' });
+    if (requester?.role?.toUpperCase() !== 'ADMIN') return res.status(403).json({ error: 'Forbidden' });
 
     await prisma.passwordRecovery.update({
       where: { email },

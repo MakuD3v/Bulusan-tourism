@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { UserPlus, ShieldAlert, CheckCircle2, UserMinus, Search, AlertTriangle } from 'lucide-react';
 import { apiClient } from '../../api/client';
@@ -172,10 +172,22 @@ const AdminManagementPanel = () => {
 
   const fetchUsers = async () => {
     try {
+      setLoading(true);
       const data = await apiClient.get('/auth/users');
-      setUsers(data);
-    } catch (e) {
+      if (Array.isArray(data)) {
+        setUsers(data);
+      } else if (data && Array.isArray(data.users)) {
+        setUsers(data.users);
+      } else if (data && Array.isArray(data.data)) {
+        setUsers(data.data);
+      } else {
+        setStatus({ type: 'error', msg: 'Invalid user data received from server.' });
+      }
+    } catch (e: any) {
       console.error('Failed to fetch users', e);
+      setStatus({ type: 'error', msg: e.message || 'Failed to fetch users.' });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -224,8 +236,8 @@ const AdminManagementPanel = () => {
     u.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  const regularUsers = filteredUsers.filter(u => u.role !== 'ADMIN');
-  const adminUsers = users.filter(u => u.role === 'ADMIN');
+  const regularUsers = filteredUsers.filter(u => u.role?.toUpperCase() !== 'ADMIN');
+  const adminUsers = users.filter(u => u.role?.toUpperCase() === 'ADMIN');
 
   return (
     <>
@@ -278,6 +290,11 @@ const AdminManagementPanel = () => {
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '32px' }}>
           <h3 style={{ marginBottom: '16px', color: 'var(--text-dark)', fontWeight: 700 }}>Current Administrators</h3>
           <UserList>
+            {adminUsers.length === 0 && !loading && (
+              <div style={{ padding: '16px', textAlign: 'center', color: '#94a3b8' }}>
+                No administrators found.
+              </div>
+            )}
             {adminUsers.map(u => (
               <UserItem key={u.id}>
                 <div className="info">
