@@ -194,8 +194,8 @@ const AuthorInfo = styled.div`
 `;
 
 const ReadButton = styled.button`
-  background: var(--dark-blue);
-  color: white;
+  background: #0b2147;
+  color: #ffffff;
   border: none;
   font-weight: 700;
   font-size: 0.85rem;
@@ -203,15 +203,16 @@ const ReadButton = styled.button`
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  padding: 10px 20px;
+  padding: 10px 24px;
   border-radius: 20px;
   transition: all 0.3s ease;
+  white-space: nowrap;
 
   &:hover {
     gap: 16px;
-    background: var(--cta-blue);
+    background: #2e75b6;
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(46, 117, 182, 0.2);
+    box-shadow: 0 10px 20px rgba(46, 117, 182, 0.3);
   }
 `;
 

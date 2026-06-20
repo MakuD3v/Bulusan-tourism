@@ -135,9 +135,11 @@ model Review {
   attractionId Int?
   enterpriseId Int?
   heritageId   Int?
+  blogPostId   Int?
   attraction   Attraction? @relation(fields: [attractionId], references: [id], onDelete: Cascade)
   enterprise   Enterprise? @relation(fields: [enterpriseId], references: [id], onDelete: Cascade)
   heritage     Heritage?   @relation(fields: [heritageId], references: [id], onDelete: Cascade)
+  blogPost     BlogPost?   @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
 
   @@index([date])
 }
@@ -185,6 +187,8 @@ model BlogPost {
   image        String
   readTime     String
   status       String   @default("Published")
+  rating       Float    @default(0)
+  reviews      Review[]
 
   @@index([date])
 }

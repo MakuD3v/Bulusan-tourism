@@ -287,7 +287,7 @@ router.use('/attractions', createCrudRoutes(prisma.attraction, 'Attraction', { r
 router.use('/enterprises', createCrudRoutes(prisma.enterprise, 'Enterprise', { reviews: true, offers: true }));
 router.use('/heritage', createCrudRoutes(prisma.heritage, 'Heritage', { reviews: true }));
 router.use('/tours', createCrudRoutes(prisma.tour, 'Tour', { routes: true }));
-router.use('/blogs', createCrudRoutes(prisma.blogPost, 'BlogPost'));
+router.use('/blogs', createCrudRoutes(prisma.blogPost, 'BlogPost', { reviews: true }));
 // Public endpoint for submitting inquiries
 router.post('/inquiries', async (req, res) => {
   try {
@@ -349,6 +349,22 @@ router.post('/reviews/heritage/:id', authenticateToken, async (req: any, res) =>
     res.json(review);
   } catch (e: any) {
     res.status(500).json({ error: 'Error posting review', details: e.message });
+  }
+});
+
+router.post('/reviews/blog/:id', authenticateToken, async (req: any, res) => {
+  try {
+    const blogPostId = Number(req.params.id);
+    const { author, avatar, rating, comment } = req.body;
+    const review = await prisma.review.create({
+      data: { author: author || 'Anonymous', avatar: avatar || '', rating: Number(rating) || 0, comment: comment || '', blogPostId }
+    });
+    const allReviews = await prisma.review.findMany({ where: { blogPostId } });
+    const avg = Number((allReviews.reduce((a, r) => a + r.rating, 0) / allReviews.length).toFixed(1));
+    await prisma.blogPost.update({ where: { id: blogPostId }, data: { rating: avg } });
+    res.json(review);
+  } catch (e: any) {
+    res.status(500).json({ error: 'Error posting blog review', details: e.message });
   }
 });
 
