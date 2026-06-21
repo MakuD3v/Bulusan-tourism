@@ -332,7 +332,7 @@ const DashboardLayout = () => {
           <>
             <UserCard>
               <div className="avatar">
-                {user?.avatar ? <img src={user.avatar} alt="" /> : initials}
+                {user?.avatar ? <img loading="lazy" src={user.avatar} alt="" /> : initials}
               </div>
               <div className="info">
                 <div className="name">{user.name}</div>

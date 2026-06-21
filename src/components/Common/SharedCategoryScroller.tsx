@@ -118,7 +118,7 @@ const SharedCategoryScroller: React.FC<Props> = ({ categories, activeCategories,
           $active={activeCategories.length === 0}
           onClick={() => handleToggle('All')}
         >
-          <img src="/map-icons/general.svg" alt="All" />
+          <img loading="lazy" src="/map-icons/general.svg" alt="All" />
           All
         </CategoryPill>
 
@@ -130,7 +130,7 @@ const SharedCategoryScroller: React.FC<Props> = ({ categories, activeCategories,
               $active={isActive}
               onClick={() => handleToggle(cat.label)}
             >
-              <img src={getMapIconUrl(cat.label)} alt={cat.label} />
+              <img loading="lazy" src={getMapIconUrl(cat.label)} alt={cat.label} />
               {cat.label}
             </CategoryPill>
           );

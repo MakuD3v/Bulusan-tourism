@@ -197,7 +197,7 @@ const FeaturedCarouselCard: React.FC<FeaturedCarouselCardProps> = ({ item, badge
       <div className="content-z">
         <div className="row-items">
           <div className="cat-pill">
-             <img src={getMapIconUrl(categoryName)} alt={categoryName} />
+             <img loading="lazy" src={getMapIconUrl(categoryName)} alt={categoryName} />
              {categoryName}
           </div>
           {item.rating && (

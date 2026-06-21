@@ -462,7 +462,7 @@ const EnterpriseDetailsPage = ({ item: selectedItem, onClose }: { item: any, onC
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                           {selectedItem.offers.map((offer: any) => (
                               <OfferItem key={offer.id}>
-                                  {offer.image && <img src={offer.image} alt={offer.name} />}
+                                  {offer.image && <img loading="lazy" src={offer.image} alt={offer.name} />}
                                   <div className="offer-details">
                                       <div className="name">{offer.name}</div>
                                       <div className="price">PHP {offer.price}</div>
@@ -485,7 +485,7 @@ const EnterpriseDetailsPage = ({ item: selectedItem, onClose }: { item: any, onC
                       item.reviews.map((review: any) => (
                         <div key={review.id} style={{ background: 'rgba(148, 163, 184, 0.05)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(148, 163, 184, 0.1)' }}>
                           <div style={{ display: 'flex', gap: '12px', marginBottom: '8px', alignItems: 'center' }}>
-                            <img src={review.avatar} style={{ width: '32px', height: '32px', borderRadius: '50%' }} alt="Reviewer" />
+                            <img loading="lazy" src={review.avatar} style={{ width: '32px', height: '32px', borderRadius: '50%' }} alt="Reviewer" />
                             <div>
                               <div style={{ fontWeight: 'bold', fontSize: '0.85rem', color: 'var(--text-dark)' }}>{review.author}</div>
                               <div style={{ fontSize: '0.7rem', color: 'var(--text-light)' }}>

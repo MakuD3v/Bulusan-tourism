@@ -355,7 +355,7 @@ const PendingApprovalsPanel: React.FC = () => {
       <AnimatePresence>
         {selectedImage && (
           <ImageModal initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedImage(null)}>
-            <img src={selectedImage} alt="Fullscreen Appeal" />
+            <img loading="lazy" src={selectedImage} alt="Fullscreen Appeal" />
           </ImageModal>
         )}
       </AnimatePresence>
@@ -422,7 +422,7 @@ const PendingApprovalsPanel: React.FC = () => {
                       </MessageArea>
                       <ImageArea>
                         <div className="label"><ImageIcon size={14} /> Proof Attached</div>
-                        <img src={appeal.image} alt="Proof" onClick={() => setSelectedImage(appeal.image)} />
+                        <img loading="lazy" src={appeal.image} alt="Proof" onClick={() => setSelectedImage(appeal.image)} />
                       </ImageArea>
                     </ContentBox>
                     <Actions>

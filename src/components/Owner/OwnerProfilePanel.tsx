@@ -430,7 +430,7 @@ const OwnerProfilePanel: React.FC = () => {
             <AvatarSection>
               <AvatarRing>
                 <div className="avatar-img">
-                  {avatarPreview ? <img src={avatarPreview} alt={name} /> : initials}
+                  {avatarPreview ? <img loading="lazy" src={avatarPreview} alt={name} /> : initials}
                 </div>
                 <div className="upload-btn" onClick={() => fileInputRef.current?.click()} title="Change avatar">
                   {uploading ? <Loader2 size={13} className="animate-spin" /> : <Camera size={13} />}

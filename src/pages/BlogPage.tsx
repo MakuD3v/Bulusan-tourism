@@ -523,7 +523,7 @@ const BlogPage = () => {
           >
             <div className="hero">
               <div className="close-btn" onClick={() => setSelectedPost(null)}>×</div>
-              <img src={selectedPost.image} alt={selectedPost.title} />
+              <img loading="lazy" src={selectedPost.image} alt={selectedPost.title} />
               <div className="overlay" />
             </div>
 
@@ -569,7 +569,7 @@ const BlogPage = () => {
                   selectedPost.reviews.map((review: any, idx: number) => (
                     <div key={review.id || idx} style={{ background: 'rgba(128,128,128,0.05)', borderRadius: '16px', padding: '16px', border: '1px solid rgba(128,128,128,0.1)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
-                        <img
+                        <img loading="lazy" 
                           src={review.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.author || 'U')}`}
                           alt={review.author}
                           style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
@@ -624,7 +624,7 @@ const BlogPage = () => {
               <div className="grid">
                 {blogPosts.filter(p => p.id !== selectedPost.id).slice(0, 2).map(p => (
                   <div className="item" key={p.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedPost(p)}>
-                    <img src={p.image} alt={p.title} />
+                    <img loading="lazy" src={p.image} alt={p.title} />
                     <h5>{p.title}</h5>
                   </div>
                 ))}

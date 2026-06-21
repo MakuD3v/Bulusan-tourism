@@ -328,7 +328,7 @@ const Header = ({ isTransparent }: { isTransparent: boolean }) => {
             >
               <div style={{ width: '34px', height: '34px', borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--cta-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#3b82f6', flexShrink: 0 }}>
                 {user.avatar 
-                  ? <img src={user.avatar} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ? <img loading="lazy" src={user.avatar} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   : <span style={{ color: 'white', fontWeight: 800, fontSize: '0.85rem' }}>{user.name?.charAt(0).toUpperCase()}</span>
                 }
               </div>
@@ -343,7 +343,7 @@ const Header = ({ isTransparent }: { isTransparent: boolean }) => {
                   <div style={{ padding: '8px 16px', borderBottom: '1px solid #f1f5f9', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ width: '36px', height: '36px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {user.avatar 
-                        ? <img src={user.avatar} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ? <img loading="lazy" src={user.avatar} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         : <span style={{ color: 'white', fontWeight: 800, fontSize: '0.9rem' }}>{user.name?.charAt(0).toUpperCase()}</span>
                       }
                     </div>

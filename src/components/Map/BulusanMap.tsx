@@ -479,7 +479,7 @@ const BulusanMarker = ({ item, priorityCategory, onHandleSelect, isMobile, setMo
         <PopupContent>
           <div className="image-container">
             <PopupCloseButton />
-            <img src={item.photos?.[0] || item.img || '/default-placeholder.jpg'} alt={item.name} />
+            <img loading="lazy" src={item.photos?.[0] || item.img || '/default-placeholder.jpg'} alt={item.name} />
             <div className="badges-wrapper">
               {(!badges || badges.length === 0) && badge && (
                 <div className={`badge-pill ${badge === 'New' ? 'badge-new' : badge === 'Top Rated' ? 'badge-top' : badge === 'Trending' ? 'badge-trending' : badge === 'Featured' ? 'badge-featured' : ''}`}>
@@ -506,7 +506,7 @@ const BulusanMarker = ({ item, priorityCategory, onHandleSelect, isMobile, setMo
           <div className="content-body">
             <div className="rating-location-row">
               <div className="category-label">
-                 <img src={stableIcon.options.iconUrl} alt={priorityCategory} />
+                 <img loading="lazy" src={stableIcon.options.iconUrl} alt={priorityCategory} />
                  {priorityCategory}
               </div>
               {item.rating && (

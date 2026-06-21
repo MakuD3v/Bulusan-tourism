@@ -157,7 +157,7 @@ export default function GalleryWithThumbnails({ videoUrl, images }: Props) {
               $active={currentIndex === i} 
               onClick={() => setCurrentIndex(i)}
             >
-              <img src={getMediaUrl(img)} alt={`Thumbnail ${i + 1}`} />
+              <img loading="lazy" src={getMediaUrl(img)} alt={`Thumbnail ${i + 1}`} />
             </Thumbnail>
           ))}
         </ThumbnailsRow>

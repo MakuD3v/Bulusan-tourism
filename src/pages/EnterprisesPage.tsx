@@ -592,7 +592,7 @@ const EnterprisesPage = () => {
             {selectedCategories.length > 0 && (
               <div style={{ display: 'flex', gap: '4px', marginLeft: '12px', alignItems: 'center' }}>
                  {selectedCategories.map(cat => (
-                   <img key={cat} src={getMapIconUrl(cat)} alt={cat} title={cat} style={{ width: 18, height: 18, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))' }} />
+                   <img loading="lazy" key={cat} src={getMapIconUrl(cat)} alt={cat} title={cat} style={{ width: 18, height: 18, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))' }} />
                  ))}
                  <div style={{ width: '1px', height: '16px', background: 'rgba(0,0,0,0.1)', marginLeft: '4px' }} />
               </div>

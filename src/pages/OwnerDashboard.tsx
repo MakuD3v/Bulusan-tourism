@@ -95,7 +95,7 @@ const OwnerDashboard = () => {
             <div style={{ fontSize: '0.75rem', color: '#90cdf4', fontWeight: 700, textTransform: 'uppercase' }}>Enterprise Owner</div>
           </div>
           <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#2b6cb0', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', overflow: 'hidden' }}>
-            {user?.avatar ? <img src={user.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (user?.name?.slice(0, 2).toUpperCase() || 'OW')}
+            {user?.avatar ? <img loading="lazy" src={user.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (user?.name?.slice(0, 2).toUpperCase() || 'OW')}
           </div>
         </div>
       </MainHeader>

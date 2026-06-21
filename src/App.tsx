@@ -4,24 +4,27 @@ import PersistentLayout from './components/Layout/PersistentLayout';
 import DashboardLayout from './components/Layout/DashboardLayout';
 import AdminRoute from './components/Layout/AdminRoute';
 import OwnerRoute from './components/Layout/OwnerRoute';
-import DiscoverPage from './pages/DiscoverPage';
-import AdminDashboard from './pages/AdminDashboard';
-import AttractionsPage from './pages/AttractionsPage';
-import EnterprisesPage from './pages/EnterprisesPage';
-import ToursAndMapPage from './pages/ToursAndMapPage';
-import BlogPage from './pages/BlogPage';
-import ContactPage from './pages/ContactPage';
-import HeritagePage from './pages/HeritagePage';
-import AdminPortalPage from './pages/AdminPortalPage';
-import LoginPage from './pages/LoginPage';
-import SignUpPage from './pages/SignUpPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import AccountPage from './pages/AccountPage';
-import OwnerDashboard from './pages/OwnerDashboard';
-import OwnerPendingPage from './pages/OwnerPendingPage';
+import { Suspense, lazy, useEffect } from 'react';
 import { useAuth } from './hooks/useAuth';
 import UserRoute from './components/Layout/UserRoute';
-import { useEffect } from 'react';
+import PageLoader from './components/Common/PageLoader';
+
+// Lazy loaded pages
+const DiscoverPage = lazy(() => import('./pages/DiscoverPage'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const AttractionsPage = lazy(() => import('./pages/AttractionsPage'));
+const EnterprisesPage = lazy(() => import('./pages/EnterprisesPage'));
+const ToursAndMapPage = lazy(() => import('./pages/ToursAndMapPage'));
+const BlogPage = lazy(() => import('./pages/BlogPage'));
+const ContactPage = lazy(() => import('./pages/ContactPage'));
+const HeritagePage = lazy(() => import('./pages/HeritagePage'));
+const AdminPortalPage = lazy(() => import('./pages/AdminPortalPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const SignUpPage = lazy(() => import('./pages/SignUpPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
+const AccountPage = lazy(() => import('./pages/AccountPage'));
+const OwnerDashboard = lazy(() => import('./pages/OwnerDashboard'));
+const OwnerPendingPage = lazy(() => import('./pages/OwnerPendingPage'));
 import VisitorTracker from './components/Common/VisitorTracker';
 import { preloadCollection } from './hooks/useData';
 import { AlertProvider } from './components/Common/AlertProvider';
@@ -35,45 +38,47 @@ function AnimatedRoutes() {
 
   return (
     <AnimatePresence mode="popLayout">
-      <Routes location={location} key={location.pathname}>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignUpPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Suspense fallback={<PageLoader />}>
+        <Routes location={location} key={location.pathname}>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
-        {/* Owner pending page */}
-        <Route path="/owner-pending" element={<OwnerPendingPage />} />
+          {/* Owner pending page */}
+          <Route path="/owner-pending" element={<OwnerPendingPage />} />
 
-        {/* ── PUBLIC PAGES — Original header + footer layout ── */}
-        <Route element={<PersistentLayout />}>
-          <Route path="/" element={<DiscoverPage />} />
-          <Route path="/discover" element={<DiscoverPage />} />
-          <Route path="/attractions" element={<AttractionsPage />} />
-          <Route path="/enterprises" element={<EnterprisesPage />} />
-          <Route path="/heritage" element={<HeritagePage />} />
-          <Route path="/explore" element={<ToursAndMapPage />} />
-          <Route path="/blog" element={<BlogPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-        </Route>
-
-        {/* ── DASHBOARD PAGES — Dark sidebar layout ── */}
-        <Route element={<DashboardLayout />}>
-          {/* My Account */}
-          <Route element={<UserRoute />}>
-            <Route path="/account" element={<AccountPage />} />
+          {/* ── PUBLIC PAGES — Original header + footer layout ── */}
+          <Route element={<PersistentLayout />}>
+            <Route path="/" element={<DiscoverPage />} />
+            <Route path="/discover" element={<DiscoverPage />} />
+            <Route path="/attractions" element={<AttractionsPage />} />
+            <Route path="/enterprises" element={<EnterprisesPage />} />
+            <Route path="/heritage" element={<HeritagePage />} />
+            <Route path="/explore" element={<ToursAndMapPage />} />
+            <Route path="/blog" element={<BlogPage />} />
+            <Route path="/contact" element={<ContactPage />} />
           </Route>
 
-          {/* Owner Dashboard */}
-          <Route element={<OwnerRoute />}>
-            <Route path="/owner-dashboard" element={<OwnerDashboard />} />
-          </Route>
+          {/* ── DASHBOARD PAGES — Dark sidebar layout ── */}
+          <Route element={<DashboardLayout />}>
+            {/* My Account */}
+            <Route element={<UserRoute />}>
+              <Route path="/account" element={<AccountPage />} />
+            </Route>
 
-          {/* Admin */}
-          <Route element={<AdminRoute />}>
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin-portal" element={<AdminPortalPage />} />
+            {/* Owner Dashboard */}
+            <Route element={<OwnerRoute />}>
+              <Route path="/owner-dashboard" element={<OwnerDashboard />} />
+            </Route>
+
+            {/* Admin */}
+            <Route element={<AdminRoute />}>
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin-portal" element={<AdminPortalPage />} />
+            </Route>
           </Route>
-        </Route>
-      </Routes>
+        </Routes>
+      </Suspense>
     </AnimatePresence>
   );
 }

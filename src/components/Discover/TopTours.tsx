@@ -105,7 +105,7 @@ const TopTours = () => {
             onClick={() => navigate(`/tours?openId=${tour.id}`)}
           >
             <div style={{ height: '180px' }}>
-              <img src={tour.image} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={tour.title} />
+              <img loading="lazy" src={tour.image} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={tour.title} />
             </div>
             <div className="content">
               <div className="meta">{tour.duration} · {tour.groupSize}</div>

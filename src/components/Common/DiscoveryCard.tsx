@@ -270,7 +270,7 @@ const DiscoveryCard: React.FC<DiscoveryCardProps> = ({
       onClick={onClick}
     >
       <div className="image-container">
-        <img src={getMediaUrl(image)} alt={title} />
+        <img loading="lazy" src={getMediaUrl(image)} alt={title} />
         <div className="overlay" />
         <div className="badges-wrapper">
           {(!badges || badges.length === 0) && (
@@ -329,13 +329,13 @@ const DiscoveryCard: React.FC<DiscoveryCardProps> = ({
             {Array.isArray(category) ? (
               category.map((cat, i) => (
                 <div key={i} className="category-pill">
-                   <img src={getMapIconUrl(cat)} alt={cat} />
+                   <img loading="lazy" src={getMapIconUrl(cat)} alt={cat} />
                    {cat}
                 </div>
               ))
             ) : (
               <div className="category-pill">
-                 <img src={getMapIconUrl(category)} alt={category} />
+                 <img loading="lazy" src={getMapIconUrl(category)} alt={category} />
                  {category}
               </div>
             )}

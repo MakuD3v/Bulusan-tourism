@@ -233,7 +233,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
                     {filesData.map((f) => (
                         <PreviewCard key={f.id}>
                             {f.type === 'image' ? (
-                                <img src={f.src} alt="Preview" />
+                                <img loading="lazy" src={f.src} alt="Preview" />
                             ) : (
                                 <div style={{ position: 'relative', width: '100%', height: '100%', background: '#000' }}>
                                     <video src={f.src} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.7 }} />
@@ -254,7 +254,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
             ) : (
                 <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', borderRadius: '14px', overflow: 'hidden' }}>
                     {filesData[0].type === 'image' ? (
-                        <img src={filesData[0].src} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img loading="lazy" src={filesData[0].src} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                         <div style={{ position: 'relative', width: '100%', height: '100%', background: '#000' }}>
                             <video src={filesData[0].src} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />

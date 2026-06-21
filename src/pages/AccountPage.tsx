@@ -404,7 +404,7 @@ export default function AccountPage() {
             <ExplorerRank $points={explorerPoints}>{rank}</ExplorerRank>
           </div>
           <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', overflow: 'hidden' }}>
-            {user.avatar ? <img src={user.avatar} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <UserIcon size={24} />}
+            {user.avatar ? <img loading="lazy" src={user.avatar} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <UserIcon size={24} />}
           </div>
         </div>
       </MainHeader>
@@ -613,7 +613,7 @@ export default function AccountPage() {
                      <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '24px' }}>
                         <p style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '12px' }}>Your Submission</p>
                         <p style={{ color: '#94a3b8', background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>"{appealData.message}"</p>
-                        <img src={appealData.image} alt="Appeal" style={{ width: '100%', maxWidth: '300px', borderRadius: '12px', marginTop: '16px' }} />
+                        <img loading="lazy" src={appealData.image} alt="Appeal" style={{ width: '100%', maxWidth: '300px', borderRadius: '12px', marginTop: '16px' }} />
                      </div>
                    </div>
                 ) : (
@@ -640,7 +640,7 @@ export default function AccountPage() {
                         style={{ width: '100%', height: '160px', border: '2px dashed rgba(255,255,255,0.2)', borderRadius: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: appealPreview ? 'transparent' : 'rgba(255,255,255,0.02)', overflow: 'hidden', position: 'relative' }}
                       >
                         {appealPreview ? (
-                          <img src={appealPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <img loading="lazy" src={appealPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         ) : (
                           <>
                             <ImageIcon size={32} color="#64748b" style={{ marginBottom: '12px' }} />
@@ -753,7 +753,7 @@ export default function AccountPage() {
                 <div style={{ marginBottom: '24px' }}>
                   <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: '#94a3b8', marginBottom: '16px' }}>Profile Picture</label>
                   <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                    <img 
+                    <img loading="lazy" 
                       src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=3b82f6&color=fff`} 
                       alt="Avatar" 
                       style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)' }}

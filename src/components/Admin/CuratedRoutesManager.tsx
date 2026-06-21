@@ -772,7 +772,7 @@ const CuratedRoutesManager: React.FC = () => {
                       <CategoryGrid $expanded={catExpanded}>
                         {ALL_CATEGORIES.map(cat => (
                           <CatChip key={cat.label} $active={selectedCategory === cat.label} onClick={() => setSelectedCategory(cat.label)}>
-                            <img src={cat.label === 'All' ? '/map-icons/general.svg' : getMapIconUrl(cat.label)} alt={cat.label} />
+                            <img loading="lazy" src={cat.label === 'All' ? '/map-icons/general.svg' : getMapIconUrl(cat.label)} alt={cat.label} />
                             {cat.label}
                           </CatChip>
                         ))}
@@ -814,8 +814,8 @@ const CuratedRoutesManager: React.FC = () => {
                             const size = inPool ? 40 : 26;
                             const opacity = inPool ? 1 : 0.4;
                             const html = inPool
-                              ? `<div style="position:relative;"><img src="${iconUrl}" style="width:${size}px;height:${size}px;filter:drop-shadow(0 3px 8px rgba(0,0,0,0.5));"/><div style="position:absolute;top:-5px;right:-5px;background:#10b981;width:14px;height:14px;border-radius:50%;border:2px solid white;"></div></div>`
-                              : `<img src="${iconUrl}" style="width:${size}px;height:${size}px;opacity:${opacity};filter:grayscale(0.3);"/>`;
+                              ? `<div style="position:relative;"><img loading="lazy" src="${iconUrl}" style="width:${size}px;height:${size}px;filter:drop-shadow(0 3px 8px rgba(0,0,0,0.5));"/><div style="position:absolute;top:-5px;right:-5px;background:#10b981;width:14px;height:14px;border-radius:50%;border:2px solid white;"></div></div>`
+                              : `<img loading="lazy" src="${iconUrl}" style="width:${size}px;height:${size}px;opacity:${opacity};filter:grayscale(0.3);"/>`;
                             const icon = L.divIcon({ html, className: '', iconSize: [size, size], iconAnchor: [size / 2, size] });
                             return <Marker key={`pool-${item.id}`} position={[lat, lng]} icon={icon} />;
                           })}
@@ -906,8 +906,7 @@ const CuratedRoutesManager: React.FC = () => {
                           <div style={{ position: 'relative' }}>
                             {activeRoute?.coverImage && !isUploadingRouteCover ? (
                               <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', height: 80 }}>
-                                <img
-                                  src={getMediaUrl(activeRoute.coverImage)}
+                                <img loading="lazy"                                   src={getMediaUrl(activeRoute.coverImage)}
                                   alt="Route Cover"
                                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                 />
@@ -1017,7 +1016,7 @@ const CuratedRoutesManager: React.FC = () => {
                             if (!lat || !lng) return null;
                             const cats = Array.isArray((item as any).categories) ? (item as any).categories : [(item as any).category || 'Others'];
                             const iconUrl = getMapIconUrl(cats[0] || 'Others');
-                            const html = `<img src="${iconUrl}" style="width:26px;height:26px;opacity:0.4;filter:grayscale(0.4);"/>`;
+                            const html = `<img loading="lazy" src="${iconUrl}" style="width:26px;height:26px;opacity:0.4;filter:grayscale(0.4);"/>`;
                             const icon = L.divIcon({ html, className: '', iconSize: [26, 26], iconAnchor: [13, 26] });
                             return <Marker key={`f-${item.id}`} position={[lat, lng]} icon={icon} />;
                           })}
@@ -1032,7 +1031,7 @@ const CuratedRoutesManager: React.FC = () => {
                             if (!lat || !lng) return null;
                             const cats = Array.isArray((item as any).categories) ? (item as any).categories : [(item as any).category || 'Others'];
                             const iconUrl = getMapIconUrl(cats[0] || 'Others');
-                            const html = `<div style="position:relative;"><img src="${iconUrl}" style="width:40px;height:40px;filter:drop-shadow(0 3px 8px rgba(0,0,0,0.5));"/><div style="position:absolute;top:-6px;right:-6px;background:#3b82f6;color:white;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:10px;border:2px solid white;">${idx + 1}</div>${stop.scheduledTime ? `<div style="position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);background:rgba(11,31,69,0.9);color:#60a5fa;font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;white-space:nowrap;">${stop.scheduledTime}</div>` : ''}</div>`;
+                            const html = `<div style="position:relative;"><img loading="lazy" src="${iconUrl}" style="width:40px;height:40px;filter:drop-shadow(0 3px 8px rgba(0,0,0,0.5));"/><div style="position:absolute;top:-6px;right:-6px;background:#3b82f6;color:white;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:10px;border:2px solid white;">${idx + 1}</div>${stop.scheduledTime ? `<div style="position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);background:rgba(11,31,69,0.9);color:#60a5fa;font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;white-space:nowrap;">${stop.scheduledTime}</div>` : ''}</div>`;
                             const icon = L.divIcon({ html, className: '', iconSize: [40, 58], iconAnchor: [20, 40] });
                             return <Marker key={`r-${stop.itemId}-${idx}`} position={[lat, lng]} icon={icon} />;
                           })}

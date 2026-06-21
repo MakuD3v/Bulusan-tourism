@@ -233,7 +233,7 @@ const FeaturedSplitCard: React.FC<FeaturedSplitCardProps> = ({ post, onClick }) 
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         onClick={onClick}
       >
-        <img src={getMediaUrl(post.image) || '/default-placeholder.jpg'} alt={post.title} />
+        <img loading="lazy" src={getMediaUrl(post.image) || '/default-placeholder.jpg'} alt={post.title} />
         <ImageOverlay>
           <div className="img-category">
             <BookOpen size={10} /> {post.category || 'Travel Guide'}
@@ -265,7 +265,7 @@ const FeaturedSplitCard: React.FC<FeaturedSplitCardProps> = ({ post, onClick }) 
 
         <Footer>
           <AuthorInfo>
-            <img src={getMediaUrl(post.authorAvatar) || `https://i.pravatar.cc/150?u=${encodeURIComponent(post.authorName || 'User')}`} alt={post.authorName} />
+            <img loading="lazy" src={getMediaUrl(post.authorAvatar) || `https://i.pravatar.cc/150?u=${encodeURIComponent(post.authorName || 'User')}`} alt={post.authorName} />
             <div className="details">
               <span className="name">{post.authorName || 'Local Explorer'}</span>
               <span className="date">{post.date || 'Recently'} • {post.readTime || '5 min read'}</span>

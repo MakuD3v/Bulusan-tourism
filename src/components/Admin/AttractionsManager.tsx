@@ -370,7 +370,7 @@ export default function AttractionsManager({ attractions, ownerMode, onDataChang
                          const isActive = (formData.categories || []).includes(cat.label);
                          return (
                             <button type="button" key={cat.label} onClick={() => isActive ? removeCategory(cat.label) : addCategory(cat.label)} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: isActive ? 'var(--cta-blue)' : 'var(--surface-bg)', color: isActive ? 'white' : 'var(--text-dark)', padding: '10px 18px', borderRadius: '30px', border: isActive ? '1px solid var(--cta-blue)' : '1px solid rgba(148, 163, 184, 0.2)', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', boxShadow: isActive ? '0 4px 12px rgba(46,117,182,0.2)' : 'none' }}>
-                              <img src={getMapIconUrl(cat.label)} alt="" style={{ height: 20, filter: isActive ? 'brightness(0) invert(1)' : 'none' }} />
+                              <img loading="lazy" src={getMapIconUrl(cat.label)} alt="" style={{ height: 20, filter: isActive ? 'brightness(0) invert(1)' : 'none' }} />
                               {cat.label}
                             </button>
                          )
@@ -423,7 +423,7 @@ export default function AttractionsManager({ attractions, ownerMode, onDataChang
                           {offers.map((o) => (
                              <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-bg)', padding: '12px 16px', borderRadius: '14px', border: '1px solid rgba(148, 163, 184, 0.1)', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                   {o.image ? <img src={getMediaUrl(o.image)} alt={o.name} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover' }} /> : <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(148, 163, 184, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ImageIcon size={16} color="var(--text-light)" /></div>}
+                                   {o.image ? <img loading="lazy" src={getMediaUrl(o.image)} alt={o.name} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover' }} /> : <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(148, 163, 184, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ImageIcon size={16} color="var(--text-light)" /></div>}
                                    <span style={{ fontWeight: 700, color: 'var(--text-dark)' }}>{o.name}</span>
                                </div>
                                <span style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--cta-blue)', fontWeight: 900 }}>PHP {o.price} <button type="button" onClick={() => setOffers(offers.filter(x => x.id !== o.id))} style={{ background: 'rgba(239, 68, 68, 0.1)', border: 'none', color: '#ef4444', cursor: 'pointer', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14}/></button></span>
@@ -508,7 +508,7 @@ export default function AttractionsManager({ attractions, ownerMode, onDataChang
                         {photos.map((p, i) => (
                           <PreviewItem key={i}>
                             {i === 0 && <div className="badge">Thumbnail</div>}
-                            <img src={getMediaUrl(p)} alt={`Preview ${i}`} />
+                            <img loading="lazy" src={getMediaUrl(p)} alt={`Preview ${i}`} />
                             <button type="button" onClick={() => setPhotos(prev => prev.filter((_, idx) => idx !== i))}><X size={14}/></button>
                           </PreviewItem>
                         ))}

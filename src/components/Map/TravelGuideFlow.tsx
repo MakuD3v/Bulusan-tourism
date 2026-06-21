@@ -558,7 +558,7 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
                         
                         const itemCats = (Array.isArray(item.categories) ? item.categories : [((item as any).category || (item as any).type || 'Others')]);
                         const iconUrl = getMapIconUrl(itemCats[0] || 'Others');
-                        const html = `<img src="${iconUrl}" style="width:32px;height:32px; opacity: 0.6; filter: grayscale(0.4);" />`;
+                        const html = `<img loading="lazy" src="${iconUrl}" style="width:32px;height:32px; opacity: 0.6; filter: grayscale(0.4);" />`;
                         const icon = L.divIcon({ html, className: '', iconSize: [32, 32], iconAnchor: [16, 32] });
                         
                         return <Marker key={`base-${item.id}`} position={[lat, lng]} icon={icon} />;
@@ -578,7 +578,7 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
                         const itemCats = (Array.isArray(item.categories) ? item.categories : [((item as any).category || (item as any).type || 'Others')]);
                         const iconUrl = getMapIconUrl(itemCats[0] || 'Others');
                         const html = `<div style="position:relative;">
-                                        <img src="${iconUrl}" style="width:42px;height:42px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));" />
+                                        <img loading="lazy" src="${iconUrl}" style="width:42px;height:42px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));" />
                                         <div style="position:absolute;top:-5px;right:-5px;background:#3b82f6;color:white;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:11px;border:2px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3);">${idx + 1}</div>
                                       </div>`;
                         const icon = L.divIcon({ html, className: '', iconSize: [42, 42], iconAnchor: [21, 42] });
@@ -710,7 +710,7 @@ const TravelGuideFlow: React.FC<TravelGuideFlowProps> = ({ onClose, onProceedToB
                         const itemCats = (Array.isArray(item.categories) ? item.categories : [((item as any).category || (item as any).type || 'Others')]);
                         const iconUrl = getMapIconUrl(itemCats[0] || 'Others');
                         const html = `<div style="position:relative;">
-                                        <img src="${iconUrl}" style="width:42px;height:42px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));" />
+                                        <img loading="lazy" src="${iconUrl}" style="width:42px;height:42px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));" />
                                         <div style="position:absolute;top:-5px;right:-5px;background:#3b82f6;color:white;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:11px;border:2px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3);">${idx + 1}</div>
                                       </div>`;
                         const icon = L.divIcon({ html, className: '', iconSize: [42, 42], iconAnchor: [21, 42] });
