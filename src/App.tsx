@@ -17,7 +17,6 @@ const EnterprisesPage = lazy(() => import('./pages/EnterprisesPage'));
 const ToursAndMapPage = lazy(() => import('./pages/ToursAndMapPage'));
 const BlogPage = lazy(() => import('./pages/BlogPage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
-const HeritagePage = lazy(() => import('./pages/HeritagePage'));
 const AdminPortalPage = lazy(() => import('./pages/AdminPortalPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const SignUpPage = lazy(() => import('./pages/SignUpPage'));
@@ -53,7 +52,6 @@ function AnimatedRoutes() {
             <Route path="/discover" element={<DiscoverPage />} />
             <Route path="/attractions" element={<AttractionsPage />} />
             <Route path="/enterprises" element={<EnterprisesPage />} />
-            <Route path="/heritage" element={<HeritagePage />} />
             <Route path="/explore" element={<ToursAndMapPage />} />
             <Route path="/blog" element={<BlogPage />} />
             <Route path="/contact" element={<ContactPage />} />
@@ -88,7 +86,6 @@ function App() {
     // Pre-warm the cache for instant navigation
     preloadCollection('attractions');
     preloadCollection('enterprises');
-    preloadCollection('heritage');
     preloadCollection('blogs');
   }, []);
 

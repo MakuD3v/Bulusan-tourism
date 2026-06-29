@@ -20,7 +20,7 @@ const upload = multer({
 });
 
 // File Upload endpoint
-router.post('/upload', authenticateToken, upload.single('file'), (req: any, res: any) => {
+router.post('/upload', upload.single('file'), (req: any, res: any) => {
   if (!req.file) return res.status(400).json({ error: 'No file received' });
 
   const stream = cloudinary.uploader.upload_stream(

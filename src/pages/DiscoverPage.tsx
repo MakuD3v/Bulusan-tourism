@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { motion, useScroll, useTransform, useSpring, useInView } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Globe, Heart, Compass, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowRight, Globe, Compass, Sparkles, Store, BookOpen } from 'lucide-react';
 import HeroSection from '../components/Discover/HeroSection';
 import FeaturedSlideshow from '../components/Discover/FeaturedSlideshow';
 import FeaturedBlogSection from '../components/Discover/FeaturedBlogSection';
@@ -84,30 +84,26 @@ const SectionHeader = styled(motion.div)`
 
 const PillarGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 40px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
   align-items: stretch;
 
-  @media (max-width: 1024px) {
+  @media (max-width: 1200px) {
     grid-template-columns: repeat(2, 1fr);
   }
 
   @media (max-width: 768px) {
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
-
-    /* Make third item span both columns */
-    & > *:last-child {
-      grid-column: span 2;
-    }
   }
 
   @media (max-width: 480px) {
+    grid-template-columns: 1fr;
     gap: 12px;
   }
 `;
 
-const PillarCard = styled(motion.div)`
+const PillarCard = styled(motion.div)<{ $bgImage?: string }>`
   background: var(--surface-bg);
   padding: 56px 44px;
   border-radius: 36px;
@@ -130,14 +126,23 @@ const PillarCard = styled(motion.div)`
     border-radius: 20px;
   }
 
+  & > * {
+    position: relative;
+    z-index: 2;
+    transition: color 0.4s ease;
+  }
+
   &::before {
     content: '';
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background: linear-gradient(135deg, rgba(46,117,182,0) 0%, rgba(46,117,182,0.03) 100%);
+    background: ${(props) => props.$bgImage ? `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.8)), url(${props.$bgImage})` : 'linear-gradient(135deg, rgba(46,117,182,0) 0%, rgba(46,117,182,0.03) 100%)'};
+    background-size: cover;
+    background-position: center;
     opacity: 0;
     transition: opacity 0.4s ease;
+    z-index: 1;
   }
 
   &::after {
@@ -150,10 +155,17 @@ const PillarCard = styled(motion.div)`
     background: radial-gradient(circle, rgba(46, 117, 182, 0.06) 0%, transparent 70%);
     border-radius: 50%;
     transform: translate(30%, 30%);
+    z-index: 0;
   }
 
   &:hover::before {
     opacity: 1;
+  }
+
+  &:hover {
+    h3, p, .explore-link {
+      color: white;
+    }
   }
 
   .icon-box {
@@ -569,33 +581,48 @@ const DiscoverPage = () => {
               variants={pillarItem}
               whileHover={{ y: -10, boxShadow: '0 30px 70px rgba(0,0,0,0.08)' }}
               onClick={() => navigate('/attractions')}
+              $bgImage="/mt_bulusan_volcano_1776130034237.png"
             >
               <div className="icon-box"><Globe size={30} /></div>
-              <h3>Sustainable Tourism</h3>
-              <p>We believe in preserving the untouched beauty of Bulusan. Our guides and routes are designed to respect the local ecosystem.</p>
+              <h3>Natural Wonders</h3>
+              <p>Discover pristine beaches, majestic waterfalls, and the unspoiled beauty of Bulusan's ecosystems.</p>
               <div className="explore-link">Explore Attractions <ArrowRight size={18} /></div>
             </PillarCard>
 
             <PillarCard
               variants={pillarItem}
               whileHover={{ y: -10, boxShadow: '0 30px 70px rgba(0,0,0,0.08)' }}
-              onClick={() => navigate('/heritage')}
+              onClick={() => navigate('/enterprises')}
+              $bgImage="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=1000"
             >
-              <div className="icon-box"><Heart size={30} /></div>
-              <h3>Heritage & Culture</h3>
-              <p>Bulusan is steeped in centuries of history. Connect with the locals, taste authentic cuisine, and hear the legends of the volcano.</p>
-              <div className="explore-link">Meet the people <ArrowRight size={18} /></div>
+              <div className="icon-box"><Store size={30} /></div>
+              <h3>Local Enterprises</h3>
+              <p>Support our community by visiting top-rated hotels, restaurants, and authentic local shops.</p>
+              <div className="explore-link">Find Enterprises <ArrowRight size={18} /></div>
             </PillarCard>
 
             <PillarCard
               variants={pillarItem}
               whileHover={{ y: -10, boxShadow: '0 30px 70px rgba(0,0,0,0.08)' }}
               onClick={() => navigate('/explore')}
+              $bgImage="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=1000"
             >
               <div className="icon-box"><Compass size={30} /></div>
-              <h3>Advanced Discovery</h3>
-              <p>Our interactive map system allows you to pinpoint local favorites, hidden falls, and the best enterprises in real-time.</p>
+              <h3>Interactive Exploration</h3>
+              <p>Our interactive map system allows you to pinpoint local favorites, curated tours, and the best enterprises.</p>
               <div className="explore-link">Open Map <ArrowRight size={18} /></div>
+            </PillarCard>
+
+            <PillarCard
+              variants={pillarItem}
+              whileHover={{ y: -10, boxShadow: '0 30px 70px rgba(0,0,0,0.08)' }}
+              onClick={() => navigate('/blog')}
+              $bgImage="https://images.unsplash.com/photo-1504280390226-0e9e4f4fb548?auto=format&fit=crop&q=80&w=1000"
+            >
+              <div className="icon-box"><BookOpen size={30} /></div>
+              <h3>Community Stories</h3>
+              <p>Immerse yourself in tales of hiking, camping, and the vibrant life of locals through our blog.</p>
+              <div className="explore-link">Read Blog <ArrowRight size={18} /></div>
             </PillarCard>
           </PillarGrid>
         </motion.div>
