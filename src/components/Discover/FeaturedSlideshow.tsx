@@ -107,8 +107,15 @@ const FeaturedSlideshow = () => {
   const { data: enterprises } = useEnterprises();
 
   // Take top 5 for the slideshow
-  const featuredAttractions = [...attractions].sort((a, b) => (b.visits || 0) - (a.visits || 0)).slice(0, 5);
-  const featuredEnterprises = [...enterprises].sort((a: any, b: any) => (b.visits || 0) - (a.visits || 0)).slice(0, 5);
+  const featuredAttractions = [...attractions]
+    .filter(i => (i.visits || 0) >= 50 || ((i.reviews?.length || 0) >= 10 && (i.rating || 0) >= 4.0))
+    .sort((a, b) => (b.visits || 0) - (a.visits || 0))
+    .slice(0, 15);
+
+  const featuredEnterprises = [...enterprises]
+    .filter((i: any) => (i.visits || 0) >= 50 || ((i.reviews?.length || 0) >= 10 && (i.rating || 0) >= 4.0))
+    .sort((a: any, b: any) => (b.visits || 0) - (a.visits || 0))
+    .slice(0, 15);
 
   return (
     <SlideshowContainer>

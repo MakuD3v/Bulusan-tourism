@@ -1,4 +1,4 @@
-﻿import styled from 'styled-components';
+import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, MapPin, Heart, Star, X, Clock, DollarSign, Info, Sparkles, Award, TrendingUp, Users, Zap } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -500,13 +500,34 @@ const EnterprisesPage = () => {
     return categoryMatch && matchesSearch;
   }).sort((a, b) => (b.visits || 0) - (a.visits || 0));
 
-  const featuredItems = enterprises.filter((i: any) => (new Date().getTime() - new Date(i.dateAdded || 0).getTime() <= 30 * 24 * 3600 * 1000) || i.rating >= 4.8).slice(0, 3);
+  const itineraryItems = enterprises.filter((a: any) => itinerary.includes(a.id));
+  const itineraryTags = [...new Set(itineraryItems.flatMap((a: any) => a.tags || []))];
+  const itineraryCategories = [...new Set(itineraryItems.flatMap((a: any) => a.categories || [a.category]))];
+
+  const featuredItems = [...enterprises]
+    .filter((i: any) => {
+      const isTrending = (i.visits || 0) >= 50;
+      const isTopRated = (i.reviews?.length || 0) >= 10 && (i.rating || 0) >= 4.0;
+      const hasSharedTag = i.tags?.some((t: string) => itineraryTags.includes(t) || visitedTags.includes(t));
+      const hasSharedCat = Array.isArray(i.categories) 
+          ? i.categories.some((c: string) => itineraryCategories.includes(c)) 
+          : itineraryCategories.includes(i.category);
+      return isTrending || isTopRated || hasSharedTag || hasSharedCat;
+    })
+    .sort((a: any, b: any) => (b.visits || 0) - (a.visits || 0))
+    .slice(0, 15);
 
   const recommendedItems = [...enterprises]
-    .map((a: any) => ({ ...a, sharedTags: (a.tags || []).filter((t: string) => visitedTags.includes(t)).length }))
-    .filter((a: any) => a.sharedTags > 0 && !featuredItems.find((f: any) => f.id === a.id))
-    .sort((a: any, b: any) => b.sharedTags - a.sharedTags)
-    .slice(0, 3);
+    .filter((a: any) => !featuredItems.find((f: any) => f.id === a.id))
+    .filter((a: any) => {
+      const hasSharedTag = a.tags?.some((t: string) => itineraryTags.includes(t) || visitedTags.includes(t));
+      const hasSharedCat = Array.isArray(a.categories) 
+          ? a.categories.some((c: string) => itineraryCategories.includes(c)) 
+          : itineraryCategories.includes(a.category);
+      return hasSharedTag || hasSharedCat;
+    })
+    .sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0))
+    .slice(0, 15);
 
   const isNew = (item: any) => {
     const added = new Date(item.dateAdded || 0).getTime();

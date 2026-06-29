@@ -513,13 +513,34 @@ const AttractionsPage = () => {
     return categoryMatch && matchesSearch;
   }).sort((a, b) => (b.visits || 0) - (a.visits || 0));
 
-  const featuredItems = attractions.filter(i => (new Date().getTime() - new Date(i.dateAdded || 0).getTime() <= 30 * 24 * 3600 * 1000) || i.rating >= 4.8).slice(0, 3);
+  const itineraryItems = attractions.filter(a => itinerary.includes(a.id));
+  const itineraryTags = [...new Set(itineraryItems.flatMap(a => a.tags || []))];
+  const itineraryCategories = [...new Set(itineraryItems.flatMap(a => a.categories || [a.category]))];
+
+  const featuredItems = [...attractions]
+    .filter(i => {
+      const isTrending = (i.visits || 0) >= 50;
+      const isTopRated = (i.reviews?.length || 0) >= 10 && (i.rating || 0) >= 4.0;
+      const hasSharedTag = i.tags?.some((t: string) => itineraryTags.includes(t) || visitedTags.includes(t));
+      const hasSharedCat = Array.isArray(i.categories) 
+          ? i.categories.some((c: string) => itineraryCategories.includes(c)) 
+          : itineraryCategories.includes(i.category);
+      return isTrending || isTopRated || hasSharedTag || hasSharedCat;
+    })
+    .sort((a, b) => (b.visits || 0) - (a.visits || 0))
+    .slice(0, 15);
 
   const recommendedItems = [...attractions]
-    .map(a => ({ ...a, sharedTags: (a.tags || []).filter((t: string) => visitedTags.includes(t)).length }))
-    .filter(a => a.sharedTags > 0 && !featuredItems.find(f => f.id === a.id))
-    .sort((a, b) => b.sharedTags - a.sharedTags)
-    .slice(0, 3);
+    .filter(a => !featuredItems.find(f => f.id === a.id))
+    .filter(a => {
+      const hasSharedTag = a.tags?.some((t: string) => itineraryTags.includes(t) || visitedTags.includes(t));
+      const hasSharedCat = Array.isArray(a.categories) 
+          ? a.categories.some((c: string) => itineraryCategories.includes(c)) 
+          : itineraryCategories.includes(a.category);
+      return hasSharedTag || hasSharedCat;
+    })
+    .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+    .slice(0, 15);
 
   const isNew = (item: any) => {
     const added = new Date(item.dateAdded || 0).getTime();
