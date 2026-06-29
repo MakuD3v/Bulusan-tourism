@@ -66,12 +66,15 @@ const Carousel = ({ items, type, basePath }: { items: any[], type: string, baseP
         onActiveIndexChange={setActiveIndex}
         renderItem={(item: any, isActive: boolean) => {
            let badge: 'new' | 'top' | 'trending' | 'featured' | 'most-visited' | undefined = undefined;
-           const isNew = (Date.now() - new Date(item.dateAdded || 0).getTime()) <= 30 * 24 * 3600 * 1000;
+           const added = new Date(item.dateAdded || 0).getTime();
+           const isNew = Date.now() - added <= 21 * 24 * 3600 * 1000;
+           const isTrendingItem = (item.visits || 0) >= 50 && (Date.now() - added) <= 7 * 24 * 3600 * 1000;
+           const isTopRatedItem = (Array.isArray(item.reviews) ? item.reviews.length : 0) >= 10 && (item.rating || 0) >= 4.5;
            
            if (item.featured) badge = 'featured';
+           else if (isTrendingItem) badge = 'trending';
+           else if (isTopRatedItem) badge = 'top';
            else if (isNew) badge = 'new';
-           else if (item.rating >= 4.8) badge = 'top';
-           else if ((item.visits || 0) >= 50) badge = 'trending';
 
            let displayCat = item.category || item.type || 'Stay';
            if (Array.isArray(item.categories)) displayCat = item.categories[0];

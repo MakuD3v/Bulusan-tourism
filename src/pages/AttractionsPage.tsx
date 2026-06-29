@@ -542,9 +542,22 @@ const AttractionsPage = () => {
     .sort((a, b) => (b.rating || 0) - (a.rating || 0))
     .slice(0, 15);
 
+  const THREE_WEEKS = 21 * 24 * 3600 * 1000;
+  const ONE_WEEK = 7 * 24 * 3600 * 1000;
+
   const isNew = (item: any) => {
     const added = new Date(item.dateAdded || 0).getTime();
-    return Date.now() - added <= 30 * 24 * 3600 * 1000;
+    return Date.now() - added <= THREE_WEEKS;
+  };
+
+  const isTrending = (item: any) => {
+    const added = new Date(item.dateAdded || 0).getTime();
+    return (item.visits || 0) >= 50 && (Date.now() - added) <= ONE_WEEK;
+  };
+
+  const isTopRated = (item: any) => {
+    const reviewCount = Array.isArray(item.reviews) ? item.reviews.length : 0;
+    return reviewCount >= 10 && (item.rating || 0) >= 4.5;
   };
 
   const renderCard = (item: any, index: number) => {
@@ -552,14 +565,12 @@ const AttractionsPage = () => {
     
     if (item.featured) {
       badge = 'featured';
+    } else if (isTrending(item)) {
+      badge = 'trending';
+    } else if (isTopRated(item)) {
+      badge = 'top';
     } else if (isNew(item)) {
       badge = 'new';
-    } else if (item.rating >= 4.8 || (item.rating === maxRating && maxRating >= 4.5)) {
-      badge = 'top';
-    } else if (item.visits >= 50 || (item.visits === maxVisits && maxVisits > 0)) {
-      badge = 'trending';
-    } else if (item.visits >= 30) {
-      badge = 'most-visited';
     }
 
     let displayCat = item.category || 'Nature';
@@ -670,9 +681,9 @@ const AttractionsPage = () => {
               renderItem={(item: any, isActive: boolean) => {
                  let badge: 'new' | 'top' | 'trending' | 'featured' | 'most-visited' | undefined = undefined;
                  if (item.featured) badge = 'featured';
+                 else if (isTrending(item)) badge = 'trending';
+                 else if (isTopRated(item)) badge = 'top';
                  else if (isNew(item)) badge = 'new';
-                 else if (item.rating >= 4.8) badge = 'top';
-                 else if (item.visits >= 50) badge = 'trending';
 
                  let displayCat = item.category || 'Nature';
                  if (Array.isArray(item.categories)) displayCat = item.categories[0];
