@@ -725,8 +725,8 @@ export default function EnterprisesManager({ enterprises, ownerMode, onDataChang
                     <OffersBuilder>
                       <FieldLabel style={{ marginBottom: 10 }}>Add Service / Package</FieldLabel>
                       <OfferInputRow>
-                        <SmallInput style={{ flex: '1 1 120px' }} placeholder="e.g. Room for 2" value={newOfferName} onChange={e => setNewOfferName(e.target.value)} />
-                        <SmallInput style={{ width: 90, flex: '0 0 auto' }} placeholder="PHP" type="number" value={newOfferPrice} onChange={e => setNewOfferPrice(e.target.value)} />
+                        <SmallInput style={{ flex: '1 1 100%' }} placeholder="e.g. Room for 2" value={newOfferName} onChange={e => setNewOfferName(e.target.value)} />
+                        <SmallInput style={{ flex: 1, minWidth: '80px' }} placeholder="PHP" type="number" value={newOfferPrice} onChange={e => setNewOfferPrice(e.target.value)} />
                         <div style={{ position: 'relative', flex: '0 0 auto' }}>
                           <input type="file" accept="image/*" ref={offerImageInputRef} style={{ display: 'none' }} onChange={e => e.target.files && processOfferImage(e.target.files)} />
                           <AddBtn type="button" onClick={() => offerImageInputRef.current?.click()} style={{ background: newOfferImage ? '#10b981' : 'rgba(148,163,184,0.2)', color: newOfferImage ? 'white' : 'var(--text-dark)', fontSize: '0.75rem', padding: '10px 12px' }}>
