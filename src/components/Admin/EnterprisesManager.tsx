@@ -1,6 +1,6 @@
 import React, { useState, lazy, Suspense, useRef } from 'react';
-import styled from 'styled-components';
-import { MapPin, Search, Edit2, Trash2, Plus, X, UploadCloud, Map, Film, Image as ImageIcon, Video } from 'lucide-react';
+import styled, { keyframes } from 'styled-components';
+import { MapPin, Edit2, Trash2, Plus, X, UploadCloud, Map, Film, Image as ImageIcon, Clock, Phone, Globe, DollarSign, Ticket, Check, ChevronDown, Store, Sparkles } from 'lucide-react';
 import AdminSearchBar from './AdminSearchBar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { dbService } from '../../api/db';
@@ -9,85 +9,394 @@ import { uploadFile } from '../../api/storage';
 import { compressImage } from '../../utils/imageUtils';
 import { useAlert } from '../Common/AlertProvider';
 import { getMediaUrl } from '../../utils/mediaUtils';
-
 import { useAuth } from '../../hooks/useAuth';
 
 const MapPicker = lazy(() => import('./MapPicker'));
 
+// ─── Animations ─────────────────────────────────────────────────────────────
+const fadeUp = keyframes`
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+// ─── Manager Container ───────────────────────────────────────────────────────
 const ManagerContainer = styled(motion.div)`
   background: var(--surface-bg); border-radius: 20px; padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);
 `;
 
 const HeaderRow = styled.div`
   display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
-  h2 { font-size: 1.5rem; color: ${(props) => props.theme.colors.darkBlue}; }
+  h2 { font-size: 1.5rem; color: ${p => p.theme.colors.darkBlue}; font-weight: 800; }
   .actions { display: flex; gap: 16px; align-items: center; }
-  button.add-btn { background: ${(props) => props.theme.colors.ctaBlue}; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: background 0.2s; white-space: nowrap; &:hover { background: ${(props) => props.theme.colors.primaryBlue}; } }
+  button.add-btn {
+    background: linear-gradient(135deg, ${p => p.theme.colors.ctaBlue}, ${p => p.theme.colors.primaryBlue});
+    color: white; border: none; padding: 10px 22px; border-radius: 12px; font-weight: 700;
+    display: flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(46,117,182,0.3);
+    &:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(46,117,182,0.4); }
+  }
 `;
 
 const Table = styled.table`
   width: 100%; border-collapse: collapse;
-  th, td { padding: 16px; text-align: left; border-bottom: 1px solid rgba(148, 163, 184, 0.1); }
-  th { font-weight: 600; color: var(--text-light); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+  th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid rgba(148,163,184,0.1); }
+  th { font-weight: 700; color: var(--text-light); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1.5px; }
   td { color: var(--text-dark); }
-  .row-actions { display: flex; gap: 8px; button { background: #f8fafc; border: 1px solid #e2e8f0; padding: 6px; border-radius: 6px; cursor: pointer; color: var(--text-light); &:hover { color: ${(props) => props.theme.colors.ctaBlue}; background: var(--surface-bg); } &.delete:hover { color: #ef4444; } } }
+  tr:hover td { background: rgba(46,117,182,0.02); }
+  .row-actions { display: flex; gap: 8px;
+    button { background: #f8fafc; border: 1px solid #e2e8f0; padding: 7px; border-radius: 8px; cursor: pointer; color: var(--text-light); transition: all 0.2s;
+      &:hover { color: ${p => p.theme.colors.ctaBlue}; background: rgba(46,117,182,0.08); border-color: var(--cta-blue); }
+      &.delete:hover { color: #ef4444; background: rgba(239,68,68,0.08); border-color: #ef4444; }
+    }
+  }
 `;
 
+// ─── Modal ───────────────────────────────────────────────────────────────────
 const FormModalOverlay = styled(motion.div)`
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 20px;
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(12px);
+  display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 16px;
 `;
 
 const FormModalContent = styled(motion.div)`
-  background: var(--surface-bg); width: 95%; max-width: 1200px; height: 90vh; border-radius: 24px; position: relative; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+  background: var(--surface-bg); width: 98%; max-width: 1500px; height: 94vh;
+  border-radius: 28px; position: relative; display: flex; flex-direction: column;
+  overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.35);
 `;
 
 const ModalHeader = styled.div`
-  padding: 32px 48px; border-bottom: 1px solid rgba(148, 163, 184, 0.1); display: flex; justify-content: space-between; align-items: center;
-  h3 { font-family: ${(props) => props.theme.fonts.heading}; font-size: 2.2rem; color: ${(props) => props.theme.colors.darkBlue}; font-weight: 800; letter-spacing: -0.5px; margin: 0; }
-  button { background: rgba(148, 163, 184, 0.05); border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-light); transition: all 0.2s; &:hover { background: #fee2e2; color: #ef4444; } }
+  padding: 0 40px; height: 72px;
+  background: linear-gradient(135deg, #0f172a 0%, #1a3a2f 100%);
+  display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .icon-box { width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; }
+  h3 { font-family: ${p => p.theme.fonts.heading}; font-size: 1.4rem; color: white; font-weight: 800; margin: 0; letter-spacing: -0.3px; }
+  .subtitle { font-size: 0.78rem; color: rgba(255,255,255,0.5); font-weight: 500; }
+  .close-btn {
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+    width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: rgba(255,255,255,0.7); transition: all 0.2s;
+    &:hover { background: rgba(239,68,68,0.4); color: white; border-color: transparent; }
+  }
 `;
 
-const SplitLayout = styled.div` display: flex; flex: 1; overflow: hidden; @media (max-width: 1024px) { flex-direction: column; overflow-y: auto; } `;
-
-const LeftPane = styled.div`
-  flex: 1.3; padding: 40px 48px; overflow-y: auto; border-right: 1px solid rgba(148, 163, 184, 0.1);
-  &::-webkit-scrollbar { width: 6px; } &::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+const ThreeColumnLayout = styled.div`
+  display: grid; grid-template-columns: 420px 1fr 340px; flex: 1; overflow: hidden;
 `;
 
-const RightPane = styled.div`
-  flex: 1; padding: 40px; display: flex; flex-direction: column; background: var(--light-bg); overflow-y: auto;
-  .map-container { flex: 1; background: var(--surface-bg); border-radius: 20px; border: 1px solid rgba(148, 163, 184, 0.2); margin-top: 16px; margin-bottom: 24px; min-height: 500px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+// ─── Form Pane ───────────────────────────────────────────────────────────────
+const FormPane = styled.div`
+  border-right: 1px solid rgba(148,163,184,0.12); overflow-y: auto; display: flex; flex-direction: column;
+  &::-webkit-scrollbar { width: 5px; }
+  &::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.3); border-radius: 10px; }
 `;
 
-const FormGroup = styled.div`
-  display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px;
-  label { font-weight: 800; font-size: 0.9rem; color: var(--text-dark); display:flex; align-items: center; gap: 6px; }
-  input, textarea, select { padding: 16px 20px; border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 16px; font-size: 1rem; background: var(--surface-bg); color: var(--text-dark); outline: none; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); &:focus { border-color: var(--cta-blue); box-shadow: 0 0 0 4px rgba(46, 117, 182, 0.1); } }
-  textarea { resize: vertical; min-height: 120px; }
+const FormSection = styled.div<{ $index: number }>`
+  padding: 24px 28px; border-bottom: 1px solid rgba(148,163,184,0.08);
+  animation: ${fadeUp} 0.3s ease both; animation-delay: ${p => p.$index * 0.05}s;
+`;
+
+const SectionLabel = styled.div`
+  display: flex; align-items: center; gap: 10px; margin-bottom: 18px;
+  .num { width: 26px; height: 26px; background: linear-gradient(135deg, #059669, #10b981); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.7rem; font-weight: 900; flex-shrink: 0; }
+  .title { font-weight: 800; font-size: 0.9rem; color: var(--text-dark); letter-spacing: 0.3px; }
+  .hint { font-size: 0.75rem; color: var(--text-light); font-weight: 500; margin-left: auto; }
+`;
+
+const StyledInput = styled.input`
+  width: 100%; padding: 13px 16px; border: 1.5px solid rgba(148,163,184,0.2); border-radius: 12px;
+  font-size: 0.95rem; background: var(--light-bg); color: var(--text-dark); outline: none;
+  transition: all 0.2s; box-sizing: border-box;
+  &:focus { border-color: #10b981; background: var(--surface-bg); box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
+  &::placeholder { color: rgba(148,163,184,0.7); }
+`;
+
+const StyledTextarea = styled.textarea`
+  width: 100%; padding: 13px 16px; border: 1.5px solid rgba(148,163,184,0.2); border-radius: 12px;
+  font-size: 0.95rem; background: var(--light-bg); color: var(--text-dark); outline: none;
+  transition: all 0.2s; resize: vertical; min-height: 100px; box-sizing: border-box; font-family: inherit;
+  &:focus { border-color: #10b981; background: var(--surface-bg); box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
+  &::placeholder { color: rgba(148,163,184,0.7); }
+`;
+
+const FieldLabel = styled.label`
+  display: block; font-weight: 700; font-size: 0.8rem; color: var(--text-light);
+  text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px;
+`;
+
+const FieldGroup = styled.div`
+  margin-bottom: 16px;
+`;
+
+const TwoCol = styled.div`
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+`;
+
+const CategoryGrid = styled.div`
+  display: flex; flex-wrap: wrap; gap: 8px;
+`;
+
+const CategoryPill = styled.button<{ $active: boolean }>`
+  display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 50px;
+  font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+  border: 1.5px solid ${p => p.$active ? '#10b981' : 'rgba(148,163,184,0.2)'};
+  background: ${p => p.$active ? '#10b981' : 'var(--light-bg)'};
+  color: ${p => p.$active ? 'white' : 'var(--text-dark)'};
+  box-shadow: ${p => p.$active ? '0 4px 12px rgba(16,185,129,0.25)' : 'none'};
+  img { height: 16px; filter: ${p => p.$active ? 'brightness(0) invert(1)' : 'none'}; }
+  &:hover { border-color: #10b981; transform: translateY(-1px); }
+`;
+
+const TagPill = styled.button<{ $active: boolean }>`
+  padding: 6px 12px; border-radius: 50px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: all 0.15s;
+  border: 1.5px solid ${p => p.$active ? '#10b981' : 'rgba(148,163,184,0.2)'};
+  background: ${p => p.$active ? 'rgba(16,185,129,0.1)' : 'transparent'};
+  color: ${p => p.$active ? '#10b981' : 'var(--text-light)'};
+  &:hover { border-color: #10b981; color: #10b981; }
+`;
+
+const ShowMoreBtn = styled.button`
+  background: none; border: none; color: #10b981; font-size: 0.8rem; font-weight: 700;
+  cursor: pointer; padding: 4px 0; margin-top: 8px; display: flex; align-items: center; gap: 4px;
+  svg { transition: transform 0.2s; }
+  &.expanded svg { transform: rotate(180deg); }
+`;
+
+const OffersBuilder = styled.div`
+  background: var(--light-bg); border-radius: 14px; padding: 16px; border: 1px solid rgba(148,163,184,0.15);
+`;
+
+const OfferInputRow = styled.div`
+  display: flex; gap: 8px; margin-bottom: 12px; align-items: center;
+`;
+
+const SmallInput = styled.input`
+  padding: 10px 12px; border: 1.5px solid rgba(148,163,184,0.2); border-radius: 10px;
+  font-size: 0.85rem; background: var(--surface-bg); color: var(--text-dark); outline: none; transition: all 0.2s;
+  &:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
+  &::placeholder { color: rgba(148,163,184,0.6); font-size: 0.8rem; }
+`;
+
+const AddBtn = styled.button`
+  background: #10b981; color: white; border: none; padding: 10px 16px; border-radius: 10px;
+  font-weight: 800; font-size: 0.82rem; cursor: pointer; white-space: nowrap; transition: all 0.2s;
+  &:hover { background: #059669; transform: scale(1.02); }
+`;
+
+const OfferItem = styled.div`
+  display: flex; align-items: center; gap: 10px; background: var(--surface-bg); padding: 10px 12px;
+  border-radius: 10px; margin-bottom: 6px; border: 1px solid rgba(148,163,184,0.1);
+  img { width: 32px; height: 32px; border-radius: 8px; object-fit: cover; }
+  .name { flex: 1; font-weight: 700; font-size: 0.85rem; color: var(--text-dark); }
+  .price { color: #10b981; font-weight: 900; font-size: 0.85rem; }
+  .del { background: rgba(239,68,68,0.1); border: none; color: #ef4444; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; &:hover { background: rgba(239,68,68,0.2); } }
 `;
 
 const DropZone = styled.div<{ $isDragActive: boolean }>`
-  border: 2px dashed ${p => p.$isDragActive ? 'var(--cta-blue)' : 'rgba(148, 163, 184, 0.3)'}; 
-  background: ${p => p.$isDragActive ? 'rgba(46, 117, 182, 0.1)' : 'rgba(255, 255, 255, 0.02)'};
-  border-radius: 16px; padding: 32px; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--text-dark); margin-bottom: 20px;
-  &:hover { border-color: var(--cta-blue); background: rgba(255, 255, 255, 0.05); }
+  border: 2px dashed ${p => p.$isDragActive ? '#10b981' : 'rgba(148,163,184,0.3)'};
+  background: ${p => p.$isDragActive ? 'rgba(16,185,129,0.08)' : 'rgba(148,163,184,0.03)'};
+  border-radius: 14px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s;
+  display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--text-light);
+  &:hover { border-color: #10b981; background: rgba(16,185,129,0.05); }
   input[type="file"] { display: none; }
+  .dz-title { font-weight: 700; font-size: 0.9rem; color: var(--text-dark); }
+  .dz-sub { font-size: 0.75rem; }
 `;
 
-const PreviewGrid = styled.div` display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px; margin-top: 16px; margin-bottom: 24px; `;
-const PreviewItem = styled.div`
-  position: relative; width: 100%; aspect-ratio: 1; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; background: #000;
-  img, video { width: 100%; height: 100%; object-fit: cover; }
-  .badge { position: absolute; top: 4px; left: 4px; background: rgba(0,0,0,0.6); color: white; font-size: 0.6rem; padding: 2px 6px; border-radius: 8px; font-weight: bold; z-index: 10;}
-  button { position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.9); color: white; border: none; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; font-size: 14px;}
+const PhotoGrid = styled.div`
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 12px;
 `;
 
-const SubmitBtn = styled.button`
-  background: var(--cta-blue); color: white; width: 100%; padding: 20px; border-radius: 16px; font-size: 1.2rem; font-weight: 900; border: none; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 20px rgba(46,117,182,0.25); margin-top: 32px;
-  &:hover { background: var(--primary-blue); transform: translateY(-3px); box-shadow: 0 15px 30px rgba(46,117,182,0.35); }
-  &:active { transform: translateY(-1px); }
+const PhotoThumb = styled.div`
+  position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; border: 1px solid rgba(148,163,184,0.2);
+  img { width: 100%; height: 100%; object-fit: cover; }
+  .thumb-badge { position: absolute; top: 3px; left: 3px; background: rgba(0,0,0,0.65); color: white; font-size: 0.55rem; font-weight: 800; padding: 2px 5px; border-radius: 5px; text-transform: uppercase; }
+  .del-btn { position: absolute; top: 3px; right: 3px; background: rgba(239,68,68,0.9); color: white; border: none; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; }
 `;
 
+const SaveBtn = styled.button`
+  margin: 20px 28px 28px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white; border: none; padding: 18px 32px; border-radius: 16px; font-size: 1.05rem; font-weight: 900;
+  cursor: pointer; transition: all 0.3s; box-shadow: 0 8px 25px rgba(16,185,129,0.3);
+  display: flex; align-items: center; justify-content: center; gap: 10px; flex-shrink: 0;
+  &:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 14px 35px rgba(16,185,129,0.4); }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+`;
+
+// ─── Preview Pane ────────────────────────────────────────────────────────────
+const PreviewPane = styled.div`
+  background: var(--light-bg); border-right: 1px solid rgba(148,163,184,0.12); overflow-y: auto;
+  display: flex; flex-direction: column; padding: 24px; gap: 20px;
+  &::-webkit-scrollbar { width: 5px; }
+  &::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.3); border-radius: 10px; }
+`;
+
+const PreviewTitle = styled.div`
+  display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 0.85rem;
+  color: var(--text-dark); text-transform: uppercase; letter-spacing: 1px;
+  svg { color: #10b981; }
+`;
+
+const PreviewCard = styled.div`
+  background: var(--surface-bg); border-radius: 20px; overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid rgba(148,163,184,0.1);
+`;
+
+const PreviewImageArea = styled.div`
+  width: 100%; height: 180px; background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+  position: relative; overflow: hidden;
+  img { width: 100%; height: 100%; object-fit: cover; }
+`;
+
+const PreviewPlaceholder = styled.div`
+  width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; color: rgba(148,163,184,0.8); font-size: 0.8rem; font-weight: 600;
+`;
+
+const PreviewCatBadge = styled.span`
+  position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.6); color: white;
+  font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;
+`;
+
+const PreviewBody = styled.div` padding: 18px; `;
+const PreviewName = styled.h4` font-size: 1.1rem; font-weight: 900; color: var(--text-dark); margin: 0 0 6px; font-family: ${p => p.theme.fonts.heading}; `;
+const PreviewLocation = styled.div` display: flex; align-items: center; gap: 5px; color: var(--text-light); font-size: 0.8rem; font-weight: 600; margin-bottom: 14px; `;
+const PreviewDivider = styled.hr` border: none; border-top: 1px solid rgba(148,163,184,0.12); margin: 0 0 14px; `;
+const PreviewInfoBlock = styled.div` display: flex; flex-direction: column; gap: 10px; `;
+const PreviewRow = styled.div` display: flex; align-items: flex-start; gap: 10px; `;
+const PreviewRowIcon = styled.div` width: 30px; height: 30px; border-radius: 8px; background: var(--light-bg); display: flex; align-items: center; justify-content: center; color: #10b981; flex-shrink: 0; `;
+const PreviewRowContent = styled.div` flex: 1; .label { font-size: 0.72rem; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; } .value { font-size: 0.85rem; font-weight: 600; color: var(--text-dark); } `;
+
+const PreviewOfferLine = styled.div`
+  display: flex; justify-content: space-between; font-size: 0.82rem; padding: 5px 0;
+  border-bottom: 1px solid rgba(148,163,184,0.08);
+  .oname { font-weight: 600; color: var(--text-dark); }
+  .oprice { font-weight: 800; color: #10b981; }
+  &:last-child { border-bottom: none; }
+`;
+
+const TagsPreview = styled.div`
+  display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px;
+  span { background: rgba(16,185,129,0.08); color: #10b981; font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 20px; }
+`;
+
+// ─── Map Pane ────────────────────────────────────────────────────────────────
+const MapPane = styled.div` display: flex; flex-direction: column; overflow: hidden; background: var(--light-bg); `;
+const MapHeader = styled.div`
+  padding: 18px 20px 12px; flex-shrink: 0; border-bottom: 1px solid rgba(148,163,184,0.12);
+  .map-title { font-weight: 800; font-size: 0.85rem; color: var(--text-dark); display: flex; align-items: center; gap: 8px; }
+  .map-sub { font-size: 0.75rem; color: var(--text-light); margin-top: 4px; }
+`;
+const MapContainer = styled.div` flex: 1; overflow: hidden; `;
+const CoordBadge = styled.div`
+  margin: 10px 20px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2);
+  border-radius: 10px; padding: 10px 14px; font-size: 0.78rem; color: #10b981; font-weight: 700;
+  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+`;
+
+// ─── Live Preview Component ──────────────────────────────────────────────────
+function LivePreview({ formData, photos, offers }: { formData: any; photos: string[]; offers: any[] }) {
+  const thumbnail = photos[0] ? getMediaUrl(photos[0]) : null;
+
+  return (
+    <>
+      <PreviewTitle><Sparkles size={14} />Live Preview</PreviewTitle>
+
+      <PreviewCard>
+        <PreviewImageArea>
+          {thumbnail ? <img src={thumbnail} alt="Preview" /> : <PreviewPlaceholder><Store size={28} /><span>Upload a photo to see thumbnail</span></PreviewPlaceholder>}
+          {formData.categories?.[0] && <PreviewCatBadge>{formData.categories[0]}</PreviewCatBadge>}
+        </PreviewImageArea>
+        <PreviewBody>
+          <PreviewName>{formData.name || <span style={{ color: '#94a3b8', fontWeight: 400 }}>Business Name...</span>}</PreviewName>
+          <PreviewLocation>
+            <MapPin size={13} />
+            {formData.location || <span style={{ opacity: 0.5 }}>Location will appear here</span>}
+          </PreviewLocation>
+          {formData.categories?.length > 0 && (
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
+              {formData.categories.map((c: string) => (
+                <span key={c} style={{ background: '#f0fdf4', color: '#16a34a', fontSize: '0.72rem', fontWeight: 800, padding: '3px 10px', borderRadius: 20 }}>{c}</span>
+              ))}
+            </div>
+          )}
+          <PreviewDivider />
+          <PreviewInfoBlock>
+            {/* Services / Offers */}
+            <PreviewRow>
+              <PreviewRowIcon><DollarSign size={15} /></PreviewRowIcon>
+              <PreviewRowContent>
+                <div className="label">Services & Pricing</div>
+                {offers.length > 0 ? (
+                  <div>
+                    {offers.slice(0, 3).map(o => (
+                      <PreviewOfferLine key={o.id}>
+                        <span className="oname">{o.name}</span>
+                        <span className="oprice">₱{o.price}</span>
+                      </PreviewOfferLine>
+                    ))}
+                    {offers.length > 3 && <div style={{ fontSize: '0.72rem', color: 'var(--text-light)', marginTop: 4 }}>+{offers.length - 3} more services</div>}
+                  </div>
+                ) : <span className="value" style={{ color: '#94a3b8' }}>Add services below...</span>}
+              </PreviewRowContent>
+            </PreviewRow>
+            {(formData.openingTime || formData.closingTime) && (
+              <PreviewRow>
+                <PreviewRowIcon><Clock size={15} /></PreviewRowIcon>
+                <PreviewRowContent>
+                  <div className="label">Operating Hours</div>
+                  <div className="value">{formData.openingTime || '--:--'} – {formData.closingTime || '--:--'}</div>
+                </PreviewRowContent>
+              </PreviewRow>
+            )}
+            {formData.contactInfo && (
+              <PreviewRow>
+                <PreviewRowIcon><Phone size={15} /></PreviewRowIcon>
+                <PreviewRowContent>
+                  <div className="label">Contact</div>
+                  <div className="value">{formData.contactInfo}</div>
+                </PreviewRowContent>
+              </PreviewRow>
+            )}
+            {formData.website && (
+              <PreviewRow>
+                <PreviewRowIcon><Globe size={15} /></PreviewRowIcon>
+                <PreviewRowContent>
+                  <div className="label">Website</div>
+                  <div className="value" style={{ color: '#10b981' }}>{formData.website}</div>
+                </PreviewRowContent>
+              </PreviewRow>
+            )}
+          </PreviewInfoBlock>
+          {(formData.tags || []).length > 0 && (
+            <TagsPreview>{(formData.tags || []).map((t: string) => <span key={t}>#{t}</span>)}</TagsPreview>
+          )}
+        </PreviewBody>
+      </PreviewCard>
+
+      {formData.description && (
+        <div style={{ background: 'var(--surface-bg)', borderRadius: 16, padding: '16px 18px', border: '1px solid rgba(148,163,184,0.1)' }}>
+          <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 8 }}>Description</div>
+          <div style={{ fontSize: '0.85rem', color: 'var(--text-dark)', lineHeight: 1.6, opacity: 0.85 }}>{formData.description}</div>
+        </div>
+      )}
+
+      {photos.length > 1 && (
+        <div style={{ background: 'var(--surface-bg)', borderRadius: 16, padding: '16px 18px', border: '1px solid rgba(148,163,184,0.1)' }}>
+          <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 10 }}>Gallery ({photos.length} photos)</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
+            {photos.slice(1).map((p, i) => (
+              <img key={i} src={getMediaUrl(p)} alt="" style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: 8 }} />
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ─── Main Component ──────────────────────────────────────────────────────────
 export default function EnterprisesManager({ enterprises, ownerMode, onDataChange }: { enterprises?: any[]; ownerMode?: boolean; onDataChange?: () => void }) {
   const { role, user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
@@ -96,7 +405,8 @@ export default function EnterprisesManager({ enterprises, ownerMode, onDataChang
   const [photos, setPhotos] = useState<string[]>([]);
   const [videoUrl, setVideoUrl] = useState<string>('');
   const [dragActive, setDragActive] = useState(false);
-  
+  const [videoDragActive, setVideoDragActive] = useState(false);
+
   const [offers, setOffers] = useState<any[]>([]);
   const [newOfferName, setNewOfferName] = useState('');
   const [newOfferPrice, setNewOfferPrice] = useState('');
@@ -105,32 +415,29 @@ export default function EnterprisesManager({ enterprises, ownerMode, onDataChang
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
   const [isUploadingVideo, setIsUploadingVideo] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const [isCategoriesExpanded, setIsCategoriesExpanded] = useState(false);
   const [isTagsExpanded, setIsTagsExpanded] = useState(false);
   const [customTag, setCustomTag] = useState('');
 
   const { showAlert, showConfirm } = useAlert();
-
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const offerImageInputRef = useRef<HTMLInputElement>(null);
 
-  // In ownerMode, data is already filtered by server; otherwise filter by owner locally
   const displayEnterprises = ownerMode
     ? (enterprises || [])
     : role === 'OWNER'
-    ? (enterprises || []).filter(item => item.ownerId === user?.id)
+    ? (enterprises || []).filter((item: any) => item.ownerId === user?.id)
     : (enterprises || []);
 
-  const filtered = displayEnterprises.filter(item => 
+  const filtered = displayEnterprises.filter((item: any) =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleOpenModal = (item?: any) => {
     if (item) {
-      // Parse opening/closing hours from metadata if present
       const hoursParts = item.metadata?.hours ? item.metadata.hours.split(' - ') : [];
       setFormData({
         recordId: item.id,
@@ -150,15 +457,14 @@ export default function EnterprisesManager({ enterprises, ownerMode, onDataChang
       setOffers(item.offers || []);
     } else {
       setFormData({ name: '', location: '', description: '', categories: [], tags: [], openingTime: '', closingTime: '', contactInfo: '', website: '', coordinates: null });
-      setPhotos([]);
-      setVideoUrl('');
-      setOffers([]);
+      setPhotos([]); setVideoUrl(''); setOffers([]);
     }
     setIsModalOpen(true);
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     if (isUploadingPhotos || isUploadingVideo || isUploadingOfferImg) return showAlert("Wait", "Please wait for files to finish uploading.", "error");
     if (photos.length < 1) return showAlert("Validation Error", "Please upload at least 1 photo for the thumbnail.", "error");
     if (photos.length > 5) return showAlert("Validation Error", "Maximum 5 photos allowed.", "error");
@@ -172,7 +478,6 @@ export default function EnterprisesManager({ enterprises, ownerMode, onDataChang
       offers: offers,
       metadata: { hours: `${formData.openingTime} - ${formData.closingTime}`, contact: formData.contactInfo, website: formData.website },
     };
-    
     const cleanData = JSON.parse(JSON.stringify(dataToSave));
 
     setIsSubmitting(true);
@@ -189,22 +494,22 @@ export default function EnterprisesManager({ enterprises, ownerMode, onDataChang
       setIsModalOpen(false);
       showAlert("Success", "Enterprise saved successfully!", "success");
       onDataChange?.();
-    } catch (err: any) { 
-      console.error(err); 
-      showAlert("Error", `Failed to save enterprise: ${err.message}`, "error"); 
+    } catch (err: any) {
+      console.error(err);
+      showAlert("Error", `Failed to save enterprise: ${err.message}`, "error");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    showConfirm("Delete Enterprise", "Are you sure you want to delete this enterprise? This action cannot be undone.", async () => {
-      try { 
-        await dbService.delete('enterprises', id); 
+    showConfirm("Delete Enterprise", "Are you sure you want to delete this enterprise?", async () => {
+      try {
+        await dbService.delete('enterprises', id);
         showAlert("Success", "Enterprise deleted.", "success");
         onDataChange?.();
-      } catch (err) { 
-        showAlert("Error", "Failed to delete enterprise.", "error"); 
+      } catch (err) {
+        showAlert("Error", "Failed to delete enterprise.", "error");
       }
     });
   };
@@ -217,80 +522,61 @@ export default function EnterprisesManager({ enterprises, ownerMode, onDataChang
         for (const file of valid) {
           const compressedFile = await compressImage(file as File);
           const url = await uploadFile(compressedFile, `enterprises/photos/${Date.now()}_${compressedFile.name}`);
-          setPhotos(prev => {
-            if (prev.length >= 5) return prev;
-            return [...prev, url];
-          });
+          setPhotos(prev => { if (prev.length >= 5) return prev; return [...prev, url]; });
         }
       } catch (e: any) {
-        console.error(e);
         showAlert("Upload Error", `Failed to upload photos: ${e.message}`, "error");
       } finally {
         setIsUploadingPhotos(false);
       }
     }
   };
-  
+
   const processVideo = async (files: FileList | File[]) => {
-      const file = Array.from(files).find(f => f.type.startsWith('video/'));
-      if (file) {
-          setIsUploadingVideo(true);
-          try {
-              const url = await uploadFile(file, `enterprises/videos/${Date.now()}_${file.name}`);
-              setVideoUrl(url);
-          } catch(e: any) {
-              console.error(e);
-              showAlert("Upload Error", `Failed to upload video: ${e.message}`, "error");
-          } finally {
-              setIsUploadingVideo(false);
-          }
+    const file = Array.from(files).find(f => f.type.startsWith('video/'));
+    if (file) {
+      setIsUploadingVideo(true);
+      try {
+        const url = await uploadFile(file, `enterprises/videos/${Date.now()}_${file.name}`);
+        setVideoUrl(url);
+      } catch (e: any) {
+        showAlert("Upload Error", `Failed to upload video: ${e.message}`, "error");
+      } finally {
+        setIsUploadingVideo(false);
       }
-  }
+    }
+  };
 
   const processOfferImage = async (files: FileList | File[]) => {
-      const file = Array.from(files).find(f => f.type.startsWith('image/'));
-      if (file) {
-          setIsUploadingOfferImg(true);
-          try {
-              const url = await uploadFile(file, `offers/${Date.now()}_${file.name}`);
-              setNewOfferImage(url);
-          } catch(e) {
-              showAlert("Upload Error", "Failed to upload offer image", "error");
-          } finally {
-              setIsUploadingOfferImg(false);
-          }
+    const file = Array.from(files).find(f => f.type.startsWith('image/'));
+    if (file) {
+      setIsUploadingOfferImg(true);
+      try {
+        const url = await uploadFile(file, `offers/${Date.now()}_${file.name}`);
+        setNewOfferImage(url);
+      } catch (e) {
+        showAlert("Upload Error", "Failed to upload offer image", "error");
+      } finally {
+        setIsUploadingOfferImg(false);
       }
-  }
+    }
+  };
 
   const addCategory = (cat: string) => {
     if (!cat) return;
     setFormData((prev: any) => {
       let newCats = [...(prev.categories || [])];
-      if (!newCats.includes(cat)) {
-        newCats.push(cat);
-        if (newCats.length > 3) newCats.shift();
-      }
+      if (!newCats.includes(cat)) { newCats.push(cat); if (newCats.length > 3) newCats.shift(); }
       return { ...prev, categories: newCats };
     });
   };
-
-  const removeCategory = (cat: string) => {
-    setFormData((prev: any) => ({ ...prev, categories: prev.categories.filter((c: string) => c !== cat) }));
-  };
-
+  const removeCategory = (cat: string) => setFormData((prev: any) => ({ ...prev, categories: prev.categories.filter((c: string) => c !== cat) }));
   const addTag = (tag: string) => {
     if (!tag) return;
     const cleanTag = tag.startsWith('#') ? tag.substring(1) : tag;
-    setFormData((prev: any) => {
-      let newTags = [...(prev.tags || [])];
-      if (!newTags.includes(cleanTag)) newTags.push(cleanTag);
-      return { ...prev, tags: newTags };
-    });
+    setFormData((prev: any) => { let newTags = [...(prev.tags || [])]; if (!newTags.includes(cleanTag)) newTags.push(cleanTag); return { ...prev, tags: newTags }; });
   };
-
-  const removeTag = (tag: string) => {
-    setFormData((prev: any) => ({ ...prev, tags: prev.tags.filter((t: string) => t !== tag) }));
-  };
+  const removeTag = (tag: string) => setFormData((prev: any) => ({ ...prev, tags: prev.tags.filter((t: string) => t !== tag) }));
 
   return (
     <ManagerContainer initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -303,28 +589,28 @@ export default function EnterprisesManager({ enterprises, ownerMode, onDataChang
           )}
         </div>
       </HeaderRow>
-      
+
       <Table>
         <thead>
           <tr><th>Name</th><th>Location</th><th>Categories</th><th>Author</th><th style={{ width: 100 }}>Actions</th></tr>
         </thead>
         <tbody>
-          {filtered.map((item) => (
+          {filtered.map((item: any) => (
             <tr key={item.id}>
-              <td style={{ fontWeight: 600 }}>{item.name}</td>
-              <td><MapPin size={14} style={{ display: 'inline', marginRight: 4, opacity: 0.5 }}/> {item.location}</td>
+              <td style={{ fontWeight: 700 }}>{item.name}</td>
+              <td><MapPin size={14} style={{ display: 'inline', marginRight: 4, opacity: 0.5 }} />{item.location}</td>
               <td>
                 <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                  {(Array.isArray(item.categories) ? item.categories : [item.categories]).map(c => (
-                    c && <span key={`${item.id}-${c}`} style={{ background: '#f0f4f8', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem', color: '#1d4ed8', fontWeight: 700 }}>{c}</span>
-                  ))}
+                  {(Array.isArray(item.categories) ? item.categories : [item.categories]).map((c: string) =>
+                    c && <span key={`${item.id}-${c}`} style={{ background: '#f0fdf4', padding: '3px 8px', borderRadius: '6px', fontSize: '0.72rem', color: '#16a34a', fontWeight: 800 }}>{c}</span>
+                  )}
                 </div>
               </td>
               <td style={{ position: 'relative' }}>
-                <div 
+                <div
                   style={{ display: 'flex', flexDirection: 'column', gap: 2, cursor: 'help', position: 'relative' }}
-                  onMouseEnter={(e) => { const t = e.currentTarget.nextElementSibling as HTMLElement; if(t) { t.style.opacity = '1'; t.style.visibility = 'visible'; t.style.transform = 'translateX(-50%) translateY(0)'; } }}
-                  onMouseLeave={(e) => { const t = e.currentTarget.nextElementSibling as HTMLElement; if(t) { t.style.opacity = '0'; t.style.visibility = 'hidden'; t.style.transform = 'translateX(-50%) translateY(-10px)'; } }}
+                  onMouseEnter={(e) => { const t = e.currentTarget.nextElementSibling as HTMLElement; if (t) { t.style.opacity = '1'; t.style.visibility = 'visible'; t.style.transform = 'translateX(-50%) translateY(0)'; } }}
+                  onMouseLeave={(e) => { const t = e.currentTarget.nextElementSibling as HTMLElement; if (t) { t.style.opacity = '0'; t.style.visibility = 'hidden'; t.style.transform = 'translateX(-50%) translateY(-10px)'; } }}
                 >
                   <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{item.ownerName || item.owner?.name || (item.ownerId ? `User #${item.ownerId}` : 'Admin')}</span>
                 </div>
@@ -349,226 +635,215 @@ export default function EnterprisesManager({ enterprises, ownerMode, onDataChang
             </tr>
           ))}
           {(!enterprises || enterprises.length === 0) && (
-            <tr><td colSpan={4} style={{ textAlign: 'center', padding: '32px' }}>No enterprises found.</td></tr>
+            <tr><td colSpan={5} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-light)' }}>No enterprises found.</td></tr>
           )}
         </tbody>
       </Table>
 
       <AnimatePresence>
         {isModalOpen && (
-          <FormModalOverlay initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <FormModalContent initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}>
+          <FormModalOverlay initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={e => { if (e.target === e.currentTarget) setIsModalOpen(false); }}>
+            <FormModalContent initial={{ scale: 0.96, y: 24 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.96, y: 24 }} transition={{ type: 'spring', stiffness: 300, damping: 28 }}>
+
               <ModalHeader>
-                <h3>{formData.recordId ? 'Edit' : 'Add New'} Enterprise</h3>
-                <button onClick={() => setIsModalOpen(false)}><X size={20} /></button>
+                <div className="header-left">
+                  <div className="icon-box"><Store size={20} /></div>
+                  <div>
+                    <h3>{formData.recordId ? 'Edit Enterprise' : 'New Enterprise'}</h3>
+                    <div className="subtitle">Fill in the details • Preview updates live on the right</div>
+                  </div>
+                </div>
+                <button className="close-btn" onClick={() => setIsModalOpen(false)}><X size={18} /></button>
               </ModalHeader>
-              
-              <SplitLayout>
-                <LeftPane>
-                  <FormGroup>
-                    <label>Name *</label>
-                    <input required value={formData.name || ''} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Enterprises Name" />
-                  </FormGroup>
 
-                  <FormGroup>
-                    <label style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                        <span>Category (Max 3) *</span>
-                        <button type="button" onClick={() => setIsCategoriesExpanded(!isCategoriesExpanded)} style={{ background:'none', border:'none', color:'var(--cta-blue)', cursor:'pointer', fontSize:'0.85rem', fontWeight:'bold' }}>
-                            {isCategoriesExpanded ? 'Hide' : 'Show All'}
-                        </button>
-                    </label>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
-                      {(isCategoriesExpanded ? ENTERPRISE_CATEGORIES : ENTERPRISE_CATEGORIES.slice(0, 5)).map(cat => {
-                         const isActive = (formData.categories || []).includes(cat.label);
-                         return (
-                            <button type="button" key={cat.label} onClick={() => isActive ? removeCategory(cat.label) : addCategory(cat.label)} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: isActive ? 'var(--cta-blue)' : 'var(--surface-bg)', color: isActive ? 'white' : 'var(--text-dark)', padding: '10px 18px', borderRadius: '30px', border: isActive ? '1px solid var(--cta-blue)' : '1px solid rgba(148, 163, 184, 0.2)', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', boxShadow: isActive ? '0 4px 12px rgba(46,117,182,0.2)' : 'none' }}>
-                              <img loading="lazy" src={getMapIconUrl(cat.label)} alt="" style={{ height: 20, filter: isActive ? 'brightness(0) invert(1)' : 'none' }} />
+              <ThreeColumnLayout>
+                {/* ── Form ─── */}
+                <FormPane>
+                  {/* 1: Basic Info */}
+                  <FormSection $index={0}>
+                    <SectionLabel><div className="num">1</div><span className="title">Basic Information</span></SectionLabel>
+                    <FieldGroup>
+                      <FieldLabel>Business Name *</FieldLabel>
+                      <StyledInput required value={formData.name || ''} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. Bulusan Spring Resort" />
+                    </FieldGroup>
+                    <FieldGroup>
+                      <FieldLabel>Full Address *</FieldLabel>
+                      <StyledInput required value={formData.location || ''} onChange={e => setFormData({ ...formData, location: e.target.value })} placeholder="e.g. Brgy. San Roque, Bulusan, Sorsogon" />
+                    </FieldGroup>
+                    <FieldGroup style={{ marginBottom: 0 }}>
+                      <FieldLabel>Description *</FieldLabel>
+                      <StyledTextarea required value={formData.description || ''} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Describe the business, its offerings, and what makes it special..." />
+                    </FieldGroup>
+                  </FormSection>
+
+                  {/* 2: Categories & Tags */}
+                  <FormSection $index={1}>
+                    <SectionLabel><div className="num">2</div><span className="title">Categories & Tags</span><span className="hint">Max 3 categories</span></SectionLabel>
+                    <FieldGroup>
+                      <FieldLabel>Categories *</FieldLabel>
+                      <CategoryGrid>
+                        {(isCategoriesExpanded ? ENTERPRISE_CATEGORIES : ENTERPRISE_CATEGORIES.slice(0, 6)).map((cat: any) => {
+                          const isActive = (formData.categories || []).includes(cat.label);
+                          return (
+                            <CategoryPill type="button" key={cat.label} $active={isActive} onClick={() => isActive ? removeCategory(cat.label) : addCategory(cat.label)}>
+                              <img loading="lazy" src={getMapIconUrl(cat.label)} alt="" />
                               {cat.label}
-                            </button>
-                         )
-                      })}
-                    </div>
-                  </FormGroup>
+                              {isActive && <Check size={12} />}
+                            </CategoryPill>
+                          );
+                        })}
+                      </CategoryGrid>
+                      <ShowMoreBtn type="button" className={isCategoriesExpanded ? 'expanded' : ''} onClick={() => setIsCategoriesExpanded(!isCategoriesExpanded)}>
+                        {isCategoriesExpanded ? 'Show Less' : `Show All (${ENTERPRISE_CATEGORIES.length})`}<ChevronDown size={14} />
+                      </ShowMoreBtn>
+                    </FieldGroup>
+                    <FieldGroup style={{ marginBottom: 0 }}>
+                      <FieldLabel>Tags (Optional)</FieldLabel>
+                      <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                        <SmallInput style={{ flex: 1 }} placeholder="Custom tag..." value={customTag} onChange={e => setCustomTag(e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (customTag) { addTag(customTag); setCustomTag(''); } } }} />
+                        <AddBtn type="button" onClick={() => { if (customTag) { addTag(customTag); setCustomTag(''); } }}>Add</AddBtn>
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        {(isTagsExpanded ? ENTERPRISE_TAGS : ENTERPRISE_TAGS.slice(0, 10)).map((tag: string) => {
+                          const isActive = (formData.tags || []).includes(tag);
+                          return <TagPill type="button" key={tag} $active={isActive} onClick={() => isActive ? removeTag(tag) : addTag(tag)}>#{tag}</TagPill>;
+                        })}
+                        {(formData.tags || []).filter((t: string) => !ENTERPRISE_TAGS.includes(t)).map((tag: string) => (
+                          <TagPill type="button" key={`c-${tag}`} $active={true} onClick={() => removeTag(tag)}>#{tag} <X size={10} style={{ marginLeft: 3 }} /></TagPill>
+                        ))}
+                      </div>
+                      <ShowMoreBtn type="button" className={isTagsExpanded ? 'expanded' : ''} onClick={() => setIsTagsExpanded(!isTagsExpanded)}>
+                        {isTagsExpanded ? 'Show Less' : 'Show All Tags'}<ChevronDown size={14} />
+                      </ShowMoreBtn>
+                    </FieldGroup>
+                  </FormSection>
 
-                  <FormGroup>
-                    <label>Address *</label>
-                    <input required value={formData.location || ''} onChange={e => setFormData({ ...formData, location: e.target.value })} placeholder="Full Address" />
-                  </FormGroup>
-
-                  <FormGroup style={{ marginBottom: '32px' }}>
-                    <label>Description *</label>
-                    <textarea required value={formData.description || ''} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Provide a rich description..." />
-                  </FormGroup>
-
-                  {/* Offers Section */}
-                  <div style={{ background: 'rgba(148, 163, 184, 0.05)', padding: '24px', borderRadius: '20px', border: '1px solid rgba(148, 163, 184, 0.1)', marginBottom: '32px' }}>
-                    <div style={{ marginBottom: 0 }}>
-                        <label style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-dark)', marginBottom: '12px', display: 'block' }}>Offers Builder (Menu / Services)</label>
-                        
-                        <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                          <input placeholder="Offer Name (e.g. Standard Room)" value={newOfferName} onChange={e => setNewOfferName(e.target.value)} style={{ flex: 1, minWidth: '200px', padding: '12px', borderRadius: '12px', border: '1px solid rgba(148, 163, 184, 0.2)', background: 'var(--surface-bg)', color: 'var(--text-dark)' }} />
-                          <input placeholder="Price" type="number" value={newOfferPrice} onChange={e => setNewOfferPrice(e.target.value)} style={{ width: '120px', padding: '12px', borderRadius: '12px', border: '1px solid rgba(148, 163, 184, 0.2)', background: 'var(--surface-bg)', color: 'var(--text-dark)' }} />
-                          
-                          <div style={{ position: 'relative' }}>
-                              <input type="file" accept="image/*" ref={offerImageInputRef} style={{ display: 'none' }} onChange={e => e.target.files && processOfferImage(e.target.files)} />
-                              <button type="button" onClick={() => offerImageInputRef.current?.click()} style={{ background: newOfferImage ? 'rgba(34, 197, 94, 0.1)' : 'var(--surface-bg)', border: '1px solid rgba(148, 163, 184, 0.2)', color: 'var(--text-dark)', padding: '12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                  <ImageIcon size={16} /> {isUploadingOfferImg ? '...' : newOfferImage ? 'Uploaded' : 'Pic (Opt)'}
-                              </button>
-                              {newOfferImage && (
-                                  <button type="button" onClick={() => setNewOfferImage('')} style={{ position: 'absolute', top: -8, right: -8, background: '#ef4444', color: 'white', border: 'none', borderRadius: '50%', width: 20, height: 20, fontSize: 10, cursor: 'pointer' }}>×</button>
-                              )}
-                          </div>
-
-                          <button type="button" onClick={() => { if(newOfferName && newOfferPrice) { setOffers([...offers, { id: Date.now().toString(), name: newOfferName, price: newOfferPrice, image: newOfferImage }]); setNewOfferName(''); setNewOfferPrice(''); setNewOfferImage(''); } }} style={{ background: 'var(--cta-blue)', color: 'white', border: 'none', borderRadius: '12px', padding: '12px 20px', fontWeight: 'bold', cursor: 'pointer' }}>Add</button>
+                  {/* 3: Services / Offers */}
+                  <FormSection $index={2}>
+                    <SectionLabel><div className="num">3</div><span className="title">Services & Pricing</span></SectionLabel>
+                    <OffersBuilder>
+                      <FieldLabel style={{ marginBottom: 10 }}>Add Service / Package</FieldLabel>
+                      <OfferInputRow>
+                        <SmallInput style={{ flex: 1 }} placeholder="e.g. Room for 2" value={newOfferName} onChange={e => setNewOfferName(e.target.value)} />
+                        <SmallInput style={{ width: 90 }} placeholder="PHP" type="number" value={newOfferPrice} onChange={e => setNewOfferPrice(e.target.value)} />
+                        <div style={{ position: 'relative' }}>
+                          <input type="file" accept="image/*" ref={offerImageInputRef} style={{ display: 'none' }} onChange={e => e.target.files && processOfferImage(e.target.files)} />
+                          <AddBtn type="button" onClick={() => offerImageInputRef.current?.click()} style={{ background: newOfferImage ? '#10b981' : 'rgba(148,163,184,0.2)', color: newOfferImage ? 'white' : 'var(--text-dark)', fontSize: '0.75rem', padding: '10px 12px' }}>
+                            <ImageIcon size={14} />
+                            {isUploadingOfferImg ? '...' : newOfferImage ? '✓' : 'Pic'}
+                          </AddBtn>
                         </div>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          {offers.map((o) => (
-                             <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-bg)', padding: '12px 16px', borderRadius: '14px', border: '1px solid rgba(148, 163, 184, 0.1)', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                   {o.image ? <img loading="lazy" src={getMediaUrl(o.image)} alt={o.name} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover' }} /> : <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(148, 163, 184, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ImageIcon size={16} color="var(--text-light)" /></div>}
-                                   <span style={{ fontWeight: 700, color: 'var(--text-dark)' }}>{o.name}</span>
-                               </div>
-                               <span style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--cta-blue)', fontWeight: 900 }}>PHP {o.price} <button type="button" onClick={() => setOffers(offers.filter(x => x.id !== o.id))} style={{ background: 'rgba(239, 68, 68, 0.1)', border: 'none', color: '#ef4444', cursor: 'pointer', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14}/></button></span>
-                             </div>
-                          ))}
-                        </div>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '32px' }}>
-                    <FormGroup style={{ marginBottom: 0 }}>
-                      <label>Opening Time *</label>
-                      <input type="time" required value={formData.openingTime || ''} onChange={e => setFormData({ ...formData, openingTime: e.target.value })} />
-                    </FormGroup>
-                    <FormGroup style={{ marginBottom: 0 }}>
-                      <label>Closing Time *</label>
-                      <input type="time" required value={formData.closingTime || ''} onChange={e => setFormData({ ...formData, closingTime: e.target.value })} />
-                    </FormGroup>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '32px' }}>
-                    <FormGroup style={{ marginBottom: 0 }}>
-                      <label>Contact Number *</label>
-                      <input required value={formData.contactInfo || ''} onChange={e => setFormData({ ...formData, contactInfo: e.target.value })} placeholder="e.g. +639123456789" />
-                    </FormGroup>
-                    <FormGroup style={{ marginBottom: 0 }}>
-                      <label>Website URL (Optional)</label>
-                      <input type="url" value={formData.website || ''} onChange={e => setFormData({ ...formData, website: e.target.value })} placeholder="https://example.com" />
-                    </FormGroup>
-                  </div>
-
-                  <FormGroup style={{ marginBottom: '40px' }}>
-                    <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span>Tags</span>
-                        <button type="button" onClick={() => setIsTagsExpanded(!isTagsExpanded)} style={{ background:'none', border:'none', color:'var(--cta-blue)', cursor:'pointer', fontSize:'0.85rem', fontWeight:'bold' }}>
-                            {isTagsExpanded ? 'Hide' : 'Show All'}
-                        </button>
-                    </label>
-                    <div style={{ display: 'flex', gap: '8px', marginTop: '8px', marginBottom: '16px' }}>
-                        <input placeholder="Add custom tag (e.g. Swimming)" value={customTag} onChange={e => setCustomTag(e.target.value)} style={{ flex: 1, padding: '10px 16px', borderRadius: '12px', border: '1px solid #e2e8f0' }} />
-                        <button type="button" onClick={() => { if(customTag) { addTag(customTag); setCustomTag(''); } }} style={{ background: 'var(--cta-blue)', color: 'white', border: 'none', borderRadius: '12px', padding: '0 20px', fontWeight: 'bold', cursor: 'pointer' }}>Add Tag</button>
-                    </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                      {(isTagsExpanded ? ENTERPRISE_TAGS : ENTERPRISE_TAGS.slice(0, 8)).map(tag => {
-                         const isActive = (formData.tags || []).includes(tag);
-                         return (
-                            <button type="button" key={tag} onClick={() => isActive ? removeTag(tag) : addTag(tag)} style={{ background: isActive ? 'rgba(46, 117, 182, 0.1)' : 'var(--surface-bg)', color: isActive ? 'var(--cta-blue)' : 'var(--text-light)', padding: '8px 16px', borderRadius: '30px', fontSize: '0.8rem', fontWeight: 700, border: isActive ? '1px solid var(--cta-blue)' : '1px solid rgba(148, 163, 184, 0.2)', cursor: 'pointer', transition: 'all 0.2s' }}>
-                              #{tag}
-                            </button>
-                         )
-                      })}
-                      {/* Show custom tags that are not in the predefined list */}
-                      {(formData.tags || []).filter((t: string) => !ENTERPRISE_TAGS.includes(t)).map((tag: string) => (
-                           <button type="button" key={`custom-${tag}`} onClick={() => removeTag(tag)} style={{ background: '#f0f7ff', color: 'var(--cta-blue)', padding: '8px 16px', borderRadius: '30px', fontSize: '0.8rem', fontWeight: 700, border: '1px solid var(--cta-blue)', cursor: 'pointer' }}>
-                              #{tag} <X size={12} style={{ display: 'inline', marginLeft: 4 }}/>
-                           </button>
+                        <AddBtn type="button" onClick={() => { if (newOfferName && newOfferPrice) { setOffers([...offers, { id: Date.now().toString(), name: newOfferName, price: newOfferPrice, image: newOfferImage }]); setNewOfferName(''); setNewOfferPrice(''); setNewOfferImage(''); } }}>+ Add</AddBtn>
+                      </OfferInputRow>
+                      {offers.map((o: any) => (
+                        <OfferItem key={o.id}>
+                          {o.image ? <img src={getMediaUrl(o.image)} alt={o.name} /> : <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(148,163,184,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Ticket size={14} color="var(--text-light)" /></div>}
+                          <span className="name">{o.name}</span>
+                          <span className="price">₱{o.price}</span>
+                          <button className="del" type="button" onClick={() => setOffers(offers.filter((x: any) => x.id !== o.id))}><X size={12} /></button>
+                        </OfferItem>
                       ))}
-                    </div>
-                  </FormGroup>
+                      {offers.length === 0 && <div style={{ textAlign: 'center', padding: '16px', fontSize: '0.8rem', color: 'var(--text-light)' }}>No services added yet</div>}
+                    </OffersBuilder>
+                  </FormSection>
 
-                  <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '32px' }}>
-                    <label style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-dark)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                       <ImageIcon size={18} color="var(--text-dark)" /> Photos (Min 1, Max 5) *
-                    </label>
-                    <DropZone 
-                      $isDragActive={dragActive}
-                      onDragEnter={() => setDragActive(true)}
-                      onDragLeave={() => setDragActive(false)}
-                      onDragOver={e => e.preventDefault()}
-                      onDrop={e => { e.preventDefault(); setDragActive(false); processFiles(e.dataTransfer.files); }}
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <UploadCloud size={40} color="var(--text-dark)" strokeWidth={1.5} />
-                      <div style={{ fontSize: '1.1rem' }}><strong>{isUploadingPhotos ? 'Uploading...' : 'Drop images here'}</strong> or click to browse</div>
-                      <div style={{ fontSize: '0.85rem', opacity: 0.7 }}>First image uploaded will be the thumbnail</div>
+                  {/* 4: Hours & Contact */}
+                  <FormSection $index={3}>
+                    <SectionLabel><div className="num">4</div><span className="title">Hours & Contact</span></SectionLabel>
+                    <TwoCol style={{ marginBottom: 12 }}>
+                      <FieldGroup style={{ marginBottom: 0 }}>
+                        <FieldLabel>Opening Time *</FieldLabel>
+                        <StyledInput type="time" required value={formData.openingTime || ''} onChange={e => setFormData({ ...formData, openingTime: e.target.value })} />
+                      </FieldGroup>
+                      <FieldGroup style={{ marginBottom: 0 }}>
+                        <FieldLabel>Closing Time *</FieldLabel>
+                        <StyledInput type="time" required value={formData.closingTime || ''} onChange={e => setFormData({ ...formData, closingTime: e.target.value })} />
+                      </FieldGroup>
+                    </TwoCol>
+                    <TwoCol>
+                      <FieldGroup style={{ marginBottom: 0 }}>
+                        <FieldLabel>Contact Number *</FieldLabel>
+                        <StyledInput required value={formData.contactInfo || ''} onChange={e => setFormData({ ...formData, contactInfo: e.target.value })} placeholder="+639..." />
+                      </FieldGroup>
+                      <FieldGroup style={{ marginBottom: 0 }}>
+                        <FieldLabel>Website (Optional)</FieldLabel>
+                        <StyledInput type="url" value={formData.website || ''} onChange={e => setFormData({ ...formData, website: e.target.value })} placeholder="https://..." />
+                      </FieldGroup>
+                    </TwoCol>
+                  </FormSection>
+
+                  {/* 5: Photos */}
+                  <FormSection $index={4}>
+                    <SectionLabel><div className="num">5</div><span className="title">Photos</span><span className="hint">Min 1 • Max 5</span></SectionLabel>
+                    <DropZone $isDragActive={dragActive} onDragEnter={() => setDragActive(true)} onDragLeave={() => setDragActive(false)} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); setDragActive(false); processFiles(e.dataTransfer.files); }} onClick={() => fileInputRef.current?.click()}>
+                      <UploadCloud size={32} strokeWidth={1.5} />
+                      <div className="dz-title">{isUploadingPhotos ? 'Uploading...' : 'Drop photos here or click to browse'}</div>
+                      <div className="dz-sub">First uploaded photo = thumbnail · JPG/PNG/WEBP</div>
                       <input type="file" multiple accept="image/*" ref={fileInputRef} onChange={e => e.target.files && processFiles(e.target.files)} />
                     </DropZone>
-                    
                     {photos.length > 0 && (
-                      <PreviewGrid>
+                      <PhotoGrid>
                         {photos.map((p, i) => (
-                          <PreviewItem key={i}>
-                            {i === 0 && <div className="badge">Thumbnail</div>}
-                            <img loading="lazy" src={getMediaUrl(p)} alt={`Preview ${i}`} />
-                            <button type="button" onClick={() => setPhotos(prev => prev.filter((_, idx) => idx !== i))}><X size={14}/></button>
-                          </PreviewItem>
+                          <PhotoThumb key={i}>
+                            {i === 0 && <div className="thumb-badge">Thumbnail</div>}
+                            <img loading="lazy" src={getMediaUrl(p)} alt={`Photo ${i + 1}`} />
+                            <button className="del-btn" type="button" onClick={() => setPhotos(prev => prev.filter((_, idx) => idx !== i))}><X size={12} /></button>
+                          </PhotoThumb>
                         ))}
-                      </PreviewGrid>
+                      </PhotoGrid>
                     )}
-                  </div>
-                  
-                  <div style={{ marginTop: '32px', paddingBottom: '40px' }}>
-                     <label style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-dark)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Film size={18} color="var(--text-dark)" /> Promo Video (Optional)
-                     </label>
-                     <DropZone 
-                      $isDragActive={dragActive}
-                      onDragEnter={() => setDragActive(true)}
-                      onDragLeave={() => setDragActive(false)}
-                      onDragOver={e => e.preventDefault()}
-                      onDrop={e => { e.preventDefault(); setDragActive(false); processVideo(e.dataTransfer.files); }}
-                      onClick={() => videoInputRef.current?.click()}
-                    >
-                      <Film size={40} color="var(--text-dark)" strokeWidth={1.5} />
-                      <div style={{ fontSize: '1.1rem' }}><strong>{isUploadingVideo ? 'Uploading Video (This may take a few minutes)...' : 'Drop video here'}</strong> or click to browse</div>
-                      <input type="file" accept="video/mp4,video/webm" ref={videoInputRef} onChange={e => e.target.files && processVideo(e.target.files)} />
-                    </DropZone>
-                    {videoUrl && (
-                        <PreviewItem style={{ width: '200px', height: '150px', marginTop: '16px' }}>
-                            <div className="badge" style={{ background: 'var(--cta-blue)'}}>Featured Promo</div>
-                            <video src={getMediaUrl(videoUrl)} autoPlay muted loop />
-                            <button type="button" onClick={() => setVideoUrl('')}><X size={14}/></button>
-                        </PreviewItem>
-                    )}
-                  </div>
-                  
-                  {/* Save button moved to the bottom of the scrollable form (left side) */}
-                  <SubmitBtn onClick={handleSave} disabled={isSubmitting}>
-                    {isSubmitting ? 'Saving...' : 'Save Enterprise'}
-                  </SubmitBtn>
+                  </FormSection>
 
-                </LeftPane>
-                
-                <RightPane>
-                  <label style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-dark)', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                    <Map size={22} color="var(--text-dark)" strokeWidth={2.5} /> Pinpoint Location
-                  </label>
-                  <div className="map-container">
-                    <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8' }}>Initializing high-precision map...</div>}>
-                       <MapPicker 
-                         value={formData.coordinates} 
-                         onChange={(c) => setFormData({ ...formData, coordinates: c })} 
-                       />
+                  {/* 6: Video */}
+                  <FormSection $index={5}>
+                    <SectionLabel><div className="num">6</div><span className="title">Promo Video</span><span className="hint">Optional</span></SectionLabel>
+                    {!videoUrl ? (
+                      <DropZone $isDragActive={videoDragActive} onDragEnter={() => setVideoDragActive(true)} onDragLeave={() => setVideoDragActive(false)} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); setVideoDragActive(false); processVideo(e.dataTransfer.files); }} onClick={() => videoInputRef.current?.click()}>
+                        <Film size={32} strokeWidth={1.5} />
+                        <div className="dz-title">{isUploadingVideo ? 'Uploading video...' : 'Drop promo video here'}</div>
+                        <div className="dz-sub">MP4 or WEBM format</div>
+                        <input type="file" accept="video/mp4,video/webm" ref={videoInputRef} onChange={e => e.target.files && processVideo(e.target.files)} />
+                      </DropZone>
+                    ) : (
+                      <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(148,163,184,0.2)' }}>
+                        <video src={getMediaUrl(videoUrl)} style={{ width: '100%', maxHeight: 160, objectFit: 'cover', display: 'block' }} autoPlay muted loop />
+                        <button type="button" onClick={() => setVideoUrl('')} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(239,68,68,0.9)', color: 'white', border: 'none', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontWeight: 700, fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <X size={12} /> Remove
+                        </button>
+                      </div>
+                    )}
+                  </FormSection>
+
+                  <SaveBtn onClick={handleSave} disabled={isSubmitting}>
+                    {isSubmitting ? 'Saving...' : <><Check size={20} /> {formData.recordId ? 'Save Changes' : 'Publish Enterprise'}</>}
+                  </SaveBtn>
+                </FormPane>
+
+                {/* ── Live Preview ─── */}
+                <PreviewPane>
+                  <LivePreview formData={formData} photos={photos} offers={offers} />
+                </PreviewPane>
+
+                {/* ── Map ─── */}
+                <MapPane>
+                  <MapHeader>
+                    <div className="map-title"><Map size={16} color="#10b981" /> Pinpoint Location *</div>
+                    <div className="map-sub">Click on the map to drop a pin</div>
+                  </MapHeader>
+                  <MapContainer>
+                    <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8', fontSize: '0.85rem' }}>Loading map...</div>}>
+                      <MapPicker value={formData.coordinates} onChange={(c: any) => setFormData({ ...formData, coordinates: c })} />
                     </Suspense>
-                  </div>
-                  <div>
-                    <p style={{ textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-light)', marginTop: '16px', fontWeight: 500 }}>
-                      Pinpoint the exact location on the map for visitors to navigate.
-                    </p>
-                  </div>
-                </RightPane>
-              </SplitLayout>
+                  </MapContainer>
+                  {formData.coordinates?.lat && (
+                    <CoordBadge>
+                      <Check size={14} />
+                      {formData.coordinates.lat.toFixed(5)}, {formData.coordinates.lng.toFixed(5)}
+                    </CoordBadge>
+                  )}
+                </MapPane>
+              </ThreeColumnLayout>
             </FormModalContent>
           </FormModalOverlay>
         )}
