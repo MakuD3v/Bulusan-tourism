@@ -519,13 +519,13 @@ const AttractionsPage = () => {
 
   const featuredItems = [...attractions]
     .filter(i => {
-      const isTrending = (i.visits || 0) >= 50;
-      const isTopRated = (i.reviews?.length || 0) >= 10 && (i.rating || 0) >= 4.0;
+      const tags = getDynamicTags(i, attractions);
+      const isFeatured = tags.includes('New') || tags.includes('Trending') || tags.includes('Top Rated') || i.featured;
       const hasSharedTag = i.tags?.some((t: string) => itineraryTags.includes(t) || visitedTags.includes(t));
       const hasSharedCat = Array.isArray(i.categories) 
           ? i.categories.some((c: string) => itineraryCategories.includes(c)) 
           : itineraryCategories.includes((i as any).category);
-      return isTrending || isTopRated || hasSharedTag || hasSharedCat;
+      return isFeatured || hasSharedTag || hasSharedCat;
     })
     .sort((a, b) => (b.visits || 0) - (a.visits || 0))
     .slice(0, 15);

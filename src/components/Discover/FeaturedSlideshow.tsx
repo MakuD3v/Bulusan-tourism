@@ -111,12 +111,18 @@ const FeaturedSlideshow = () => {
 
   // Take top 5 for the slideshow
   const featuredAttractions = [...attractions]
-    .filter(i => (i.visits || 0) >= 50 || ((i.reviews?.length || 0) >= 10 && (i.rating || 0) >= 4.0))
+    .filter(i => {
+      const tags = getDynamicTags(i, attractions);
+      return tags.includes('New') || tags.includes('Trending') || tags.includes('Top Rated') || i.featured;
+    })
     .sort((a, b) => (b.visits || 0) - (a.visits || 0))
     .slice(0, 15);
 
   const featuredEnterprises = [...enterprises]
-    .filter((i: any) => (i.visits || 0) >= 50 || ((i.reviews?.length || 0) >= 10 && (i.rating || 0) >= 4.0))
+    .filter((i: any) => {
+      const tags = getDynamicTags(i, enterprises);
+      return tags.includes('New') || tags.includes('Trending') || tags.includes('Top Rated') || i.featured;
+    })
     .sort((a: any, b: any) => (b.visits || 0) - (a.visits || 0))
     .slice(0, 15);
 

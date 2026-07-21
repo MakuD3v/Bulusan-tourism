@@ -12,9 +12,9 @@ export const getDynamicTags = (item: any, allItems: any[]): string[] => {
         tags.push('New');
     }
 
-    // "Top Rated" label: rating of atleast 5.0 or above and should have atleast 20 reviews
+    // "Top Rated" label: rating of atleast 4.5 or above and should have atleast 20 reviews
     const reviewCount = Array.isArray(item.reviews) ? item.reviews.length : 0;
-    if (reviewCount >= 20 && (item.rating || 0) >= 5.0) {
+    if (reviewCount >= 20 && (item.rating || 0) >= 4.5) {
         tags.push('Top Rated');
     }
 
