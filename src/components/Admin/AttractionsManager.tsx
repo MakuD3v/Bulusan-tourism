@@ -870,9 +870,6 @@ export default function AttractionsManager({ attractions, ownerMode, onDataChang
         await dbService.update('attractions', formData.recordId, cleanData);
       } else {
         cleanData.ownerId = user?.id;
-        cleanData.ownerName = user?.name;
-        cleanData.ownerRole = user?.role;
-        cleanData.ownerAvatar = user?.avatar;
         await dbService.add('attractions', cleanData);
       }
       setIsModalOpen(false);

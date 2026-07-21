@@ -283,8 +283,8 @@ router.get('/enterprises/mine', authenticateToken, async (req: any, res: any) =>
 });
 
 // Apply generic routes
-router.use('/attractions', createCrudRoutes(prisma.attraction, 'Attraction', { reviews: true, offers: true }));
-router.use('/enterprises', createCrudRoutes(prisma.enterprise, 'Enterprise', { reviews: true, offers: true }));
+router.use('/attractions', createCrudRoutes(prisma.attraction, 'Attraction', { reviews: true, offers: true, owner: true }));
+router.use('/enterprises', createCrudRoutes(prisma.enterprise, 'Enterprise', { reviews: true, offers: true, owner: true }));
 router.use('/heritage', createCrudRoutes(prisma.heritage, 'Heritage', { reviews: true }));
 router.use('/tours', createCrudRoutes(prisma.tour, 'Tour', { routes: true }));
 router.use('/blogs', createCrudRoutes(prisma.blogPost, 'BlogPost', { reviews: true }));

@@ -494,9 +494,6 @@ export default function EnterprisesManager({ enterprises, ownerMode, onDataChang
         await dbService.update('enterprises', formData.recordId, cleanData);
       } else {
         cleanData.ownerId = user?.id;
-        cleanData.ownerName = user?.name;
-        cleanData.ownerRole = user?.role;
-        cleanData.ownerAvatar = user?.avatar;
         await dbService.add('enterprises', cleanData);
       }
       setIsModalOpen(false);
