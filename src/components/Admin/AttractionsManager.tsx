@@ -342,6 +342,7 @@ const OfferInputRow = styled.div`
   gap: 8px;
   margin-bottom: 12px;
   align-items: center;
+  flex-wrap: wrap;
 `;
 
 const SmallInput = styled.input`
@@ -353,6 +354,7 @@ const SmallInput = styled.input`
   color: var(--text-dark);
   outline: none;
   transition: all 0.2s;
+  min-width: 0;
   &:focus { border-color: var(--cta-blue); box-shadow: 0 0 0 3px rgba(46,117,182,0.1); }
   &::placeholder { color: rgba(148,163,184,0.6); font-size: 0.8rem; }
 `;
@@ -1155,9 +1157,9 @@ export default function AttractionsManager({ attractions, ownerMode, onDataChang
                       <OffersBuilder>
                         <FieldLabel style={{ marginBottom: 10 }}>Add Ticket / Offer</FieldLabel>
                         <OfferInputRow>
-                          <SmallInput style={{ flex: 1 }} placeholder="e.g. Adult Entrance" value={newOfferName} onChange={e => setNewOfferName(e.target.value)} />
-                          <SmallInput style={{ width: 90 }} placeholder="PHP" type="number" value={newOfferPrice} onChange={e => setNewOfferPrice(e.target.value)} />
-                          <div style={{ position: 'relative' }}>
+                          <SmallInput style={{ flex: '1 1 120px' }} placeholder="e.g. Adult Entrance" value={newOfferName} onChange={e => setNewOfferName(e.target.value)} />
+                          <SmallInput style={{ width: 90, flex: '0 0 auto' }} placeholder="PHP" type="number" value={newOfferPrice} onChange={e => setNewOfferPrice(e.target.value)} />
+                          <div style={{ position: 'relative', flex: '0 0 auto' }}>
                             <input type="file" accept="image/*" ref={offerImageInputRef} style={{ display: 'none' }} onChange={e => e.target.files && processOfferImage(e.target.files)} />
                             <AddOfferBtn type="button" onClick={() => offerImageInputRef.current?.click()} style={{ background: newOfferImage ? '#10b981' : 'rgba(148,163,184,0.2)', color: newOfferImage ? 'white' : 'var(--text-dark)', fontSize: '0.75rem', padding: '10px 12px' }}>
                               <ImageIcon size={14} />
