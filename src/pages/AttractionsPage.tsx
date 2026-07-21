@@ -515,7 +515,7 @@ const AttractionsPage = () => {
 
   const itineraryItems = attractions.filter(a => itinerary.includes(a.id));
   const itineraryTags = [...new Set(itineraryItems.flatMap(a => a.tags || []))];
-  const itineraryCategories = [...new Set(itineraryItems.flatMap(a => a.categories || [a.category]))];
+  const itineraryCategories = [...new Set(itineraryItems.flatMap(a => a.categories || [(a as any).category]))];
 
   const featuredItems = [...attractions]
     .filter(i => {
@@ -524,7 +524,7 @@ const AttractionsPage = () => {
       const hasSharedTag = i.tags?.some((t: string) => itineraryTags.includes(t) || visitedTags.includes(t));
       const hasSharedCat = Array.isArray(i.categories) 
           ? i.categories.some((c: string) => itineraryCategories.includes(c)) 
-          : itineraryCategories.includes(i.category);
+          : itineraryCategories.includes((i as any).category);
       return isTrending || isTopRated || hasSharedTag || hasSharedCat;
     })
     .sort((a, b) => (b.visits || 0) - (a.visits || 0))
@@ -536,7 +536,7 @@ const AttractionsPage = () => {
       const hasSharedTag = a.tags?.some((t: string) => itineraryTags.includes(t) || visitedTags.includes(t));
       const hasSharedCat = Array.isArray(a.categories) 
           ? a.categories.some((c: string) => itineraryCategories.includes(c)) 
-          : itineraryCategories.includes(a.category);
+          : itineraryCategories.includes((a as any).category);
       return hasSharedTag || hasSharedCat;
     })
     .sort((a, b) => (b.rating || 0) - (a.rating || 0))
