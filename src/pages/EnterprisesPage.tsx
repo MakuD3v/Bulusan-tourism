@@ -507,12 +507,7 @@ const EnterprisesPage = () => {
   const featuredItems = [...enterprises]
     .filter((i: any) => {
       const tags = getDynamicTags(i, enterprises);
-      const isFeatured = tags.includes('New') || tags.includes('Trending') || tags.includes('Top Rated') || i.featured;
-      const hasSharedTag = i.tags?.some((t: string) => itineraryTags.includes(t) || visitedTags.includes(t));
-      const hasSharedCat = Array.isArray(i.categories) 
-          ? i.categories.some((c: string) => itineraryCategories.includes(c)) 
-          : itineraryCategories.includes(i.category);
-      return isFeatured || hasSharedTag || hasSharedCat;
+      return tags.includes('New') || tags.includes('Trending') || tags.includes('Top Rated') || i.featured;
     })
     .sort((a: any, b: any) => (b.visits || 0) - (a.visits || 0))
     .slice(0, 15);
