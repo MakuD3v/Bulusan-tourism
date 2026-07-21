@@ -55,12 +55,12 @@ const Table = styled.table`
 const FormModalOverlay = styled(motion.div)`
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.6); backdrop-filter: blur(12px);
-  display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 16px;
+  display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 8px;
 `;
 
 const FormModalContent = styled(motion.div)`
-  background: var(--surface-bg); width: 98%; max-width: 1500px; height: 94vh;
-  border-radius: 28px; position: relative; display: flex; flex-direction: column;
+  background: var(--surface-bg); width: calc(100vw - 16px); height: calc(100vh - 16px);
+  border-radius: 20px; position: relative; display: flex; flex-direction: column;
   overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.35);
 `;
 
@@ -81,7 +81,7 @@ const ModalHeader = styled.div`
 `;
 
 const ThreeColumnLayout = styled.div`
-  display: grid; grid-template-columns: 420px 1fr 340px; flex: 1; overflow: hidden;
+  display: grid; grid-template-columns: 400px 1fr 420px; flex: 1; overflow: hidden;
 `;
 
 // ─── Form Pane ───────────────────────────────────────────────────────────────
