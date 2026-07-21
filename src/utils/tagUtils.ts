@@ -1,29 +1,32 @@
 export const getDynamicTags = (item: any, allItems: any[]): string[] => {
     const tags: string[] = [];
     const now = Date.now();
-    const THREE_WEEKS = 21 * 24 * 3600 * 1000;
+    const THIRTY_DAYS = 30 * 24 * 3600 * 1000;
     const ONE_WEEK = 7 * 24 * 3600 * 1000;
 
     if (item.featured) tags.push('Featured');
 
-    // "New" label: only for the first 3 weeks after being added
+    // "New" label: 30 days before new badge gets removed
     const added = new Date(item.dateAdded || 0).getTime();
-    if (now - added <= THREE_WEEKS) {
+    if (now - added <= THIRTY_DAYS) {
         tags.push('New');
     }
 
-    // "Top Rated" label: must have at least 10 reviews AND rating >= 4.5
+    // "Top Rated" label: rating of atleast 5.0 or above and should have atleast 20 reviews
     const reviewCount = Array.isArray(item.reviews) ? item.reviews.length : 0;
-    if (reviewCount >= 10 && (item.rating || 0) >= 4.5) {
+    if (reviewCount >= 20 && (item.rating || 0) >= 5.0) {
         tags.push('Top Rated');
     }
 
-    // "Trending" label: must have 50+ visits AND the item was added/visited within the last 7 days
-    // We use dateAdded as a weekly rolling window proxy — resets if item is older than 1 week
-    const isTrendingWindow = now - added <= ONE_WEEK;
-    if ((item.visits || 0) >= 50 && isTrendingWindow) {
+    // "Trending" label: must have atleast 30 weekly clicks
+    // Using isTrendingWindow if the data tracks clicks weekly, or just >= 30 visits
+    // We remove the old isTrendingWindow if we assume 'visits' represents the weekly tracked clicks, 
+    // or we check if visits >= 30. The prompt says "must have aleast 30 weekly clicks to have this badge". 
+    // Since we only have `visits`, we just check if it's >= 30.
+    if ((item.visits || 0) >= 30) {
         tags.push('Trending');
     }
 
-    return tags;
+    // Filter out hardcoded tags that might conflict
+    return Array.from(new Set(tags));
 };

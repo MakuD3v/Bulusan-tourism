@@ -182,6 +182,10 @@ export default function AttractionsManager({ attractions, ownerMode, onDataChang
       if (formData.recordId) {
         await dbService.update('attractions', formData.recordId, cleanData);
       } else {
+        cleanData.ownerId = user?.id;
+        cleanData.ownerName = user?.name;
+        cleanData.ownerRole = user?.role;
+        cleanData.ownerAvatar = user?.avatar;
         await dbService.add('attractions', cleanData);
       }
       setIsModalOpen(false);
@@ -313,17 +317,30 @@ export default function AttractionsManager({ attractions, ownerMode, onDataChang
                   ))}
                 </div>
               </td>
-              <td>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <td style={{ position: 'relative' }}>
+                <div 
+                  style={{ display: 'flex', flexDirection: 'column', gap: 2, cursor: 'help' }}
+                  onMouseEnter={(e) => { const t = e.currentTarget.nextElementSibling as HTMLElement; if(t) { t.style.opacity = '1'; t.style.visibility = 'visible'; t.style.transform = 'translateX(-50%) translateY(0)'; } }}
+                  onMouseLeave={(e) => { const t = e.currentTarget.nextElementSibling as HTMLElement; if(t) { t.style.opacity = '0'; t.style.visibility = 'hidden'; t.style.transform = 'translateX(-50%) translateY(-10px)'; } }}
+                >
                   <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{item.ownerName || item.owner?.name || (item.ownerId ? `User #${item.ownerId}` : 'Admin')}</span>
                   <span style={{
                     display: 'inline-block', padding: '2px 8px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 800,
-                    background: item.ownerId ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)',
-                    color: item.ownerId ? '#059669' : '#1d4ed8',
-                    textTransform: 'uppercase', letterSpacing: '0.5px'
+                    background: item.ownerRole === 'OWNER' || item.ownerId ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+                    color: item.ownerRole === 'OWNER' || item.ownerId ? '#059669' : '#1d4ed8',
+                    textTransform: 'uppercase', letterSpacing: '0.5px', alignSelf: 'flex-start'
                   }}>
-                    {item.ownerId ? 'OWNER' : 'ADMIN'}
+                    {item.ownerRole || (item.ownerId ? 'OWNER' : 'ADMIN')}
                   </span>
+                </div>
+                <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%) translateY(-10px)', background: 'var(--surface-bg)', padding: '16px', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.15)', zIndex: 100, minWidth: '220px', border: '1px solid rgba(148,163,184,0.2)', opacity: 0, visibility: 'hidden', transition: 'all 0.2s', pointerEvents: 'none' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <img src={item.ownerAvatar || item.owner?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.ownerName || item.owner?.name || 'Admin')}`} style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' }} alt="Avatar" />
+                    <div>
+                      <div style={{ fontWeight: 800, color: 'var(--text-dark)', fontSize: '0.95rem' }}>{item.ownerName || item.owner?.name || 'Admin'}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', fontWeight: 600, textTransform: 'uppercase' }}>{item.ownerRole || (item.ownerId ? 'Owner' : 'System Admin')}</div>
+                    </div>
+                  </div>
                 </div>
               </td>
               <td>
