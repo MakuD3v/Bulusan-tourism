@@ -125,13 +125,10 @@ const ModalHeader = styled.div`
 
 const ThreeColumnLayout = styled.div`
   display: grid;
-  grid-template-columns: 400px 1fr 420px;
+  grid-template-columns: 400px minmax(350px, 1fr) 420px;
   flex: 1;
-  overflow: hidden;
-
-  @media (max-width: 1200px) {
-    grid-template-columns: 1fr 1fr;
-  }
+  overflow-x: auto;
+  overflow-y: hidden;
 `;
 
 // ─── Left Pane (Form) ────────────────────────────────────────────────────────
@@ -849,7 +846,11 @@ export default function AttractionsManager({ attractions, ownerMode, onDataChang
     if (isUploadingPhotos || isUploadingVideo || isUploadingOfferImg) return showAlert("Wait", "Please wait for files to finish uploading.", "error");
     if (photos.length < 1) return showAlert("Validation Error", "Please upload at least 1 photo for the thumbnail.", "error");
     if (photos.length > 5) return showAlert("Validation Error", "Maximum 5 photos allowed.", "error");
-    if (!formData.coordinates?.lat) return showAlert("Validation Error", "Please pinpoint the location on the map.", "error");
+    if (!formData.name?.trim()) return showAlert("Validation Error", "Please enter an attraction name.", "error");
+    if (!formData.location?.trim()) return showAlert("Validation Error", "Please enter an address.", "error");
+    if (!formData.description?.trim()) return showAlert("Validation Error", "Please enter a description.", "error");
+    if (!formData.categories?.length) return showAlert("Validation Error", "Please select at least 1 category.", "error");
+    if (!formData.coordinates?.lat) return showAlert("Validation Error", "Please pinpoint the location on the map on the right side.", "error");
 
     const isFree = formData.pricingType === 'Free';
     const dataToSave = {
