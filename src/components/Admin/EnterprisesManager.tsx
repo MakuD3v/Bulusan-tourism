@@ -104,6 +104,7 @@ export default function EnterprisesManager({ enterprises, ownerMode, onDataChang
   const [isUploadingOfferImg, setIsUploadingOfferImg] = useState(false);
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
   const [isUploadingVideo, setIsUploadingVideo] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [isCategoriesExpanded, setIsCategoriesExpanded] = useState(false);
   const [isTagsExpanded, setIsTagsExpanded] = useState(false);
@@ -174,6 +175,7 @@ export default function EnterprisesManager({ enterprises, ownerMode, onDataChang
     
     const cleanData = JSON.parse(JSON.stringify(dataToSave));
 
+    setIsSubmitting(true);
     try {
       if (formData.recordId) {
         await dbService.update('enterprises', formData.recordId, cleanData);
@@ -187,7 +189,12 @@ export default function EnterprisesManager({ enterprises, ownerMode, onDataChang
       setIsModalOpen(false);
       showAlert("Success", "Enterprise saved successfully!", "success");
       onDataChange?.();
-    } catch (err: any) { console.error(err); showAlert("Error", `Failed to save enterprise: ${err.message}`, "error"); }
+    } catch (err: any) { 
+      console.error(err); 
+      showAlert("Error", `Failed to save enterprise: ${err.message}`, "error"); 
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -315,19 +322,11 @@ export default function EnterprisesManager({ enterprises, ownerMode, onDataChang
               </td>
               <td style={{ position: 'relative' }}>
                 <div 
-                  style={{ display: 'flex', flexDirection: 'column', gap: 2, cursor: 'help' }}
+                  style={{ display: 'flex', flexDirection: 'column', gap: 2, cursor: 'help', position: 'relative' }}
                   onMouseEnter={(e) => { const t = e.currentTarget.nextElementSibling as HTMLElement; if(t) { t.style.opacity = '1'; t.style.visibility = 'visible'; t.style.transform = 'translateX(-50%) translateY(0)'; } }}
                   onMouseLeave={(e) => { const t = e.currentTarget.nextElementSibling as HTMLElement; if(t) { t.style.opacity = '0'; t.style.visibility = 'hidden'; t.style.transform = 'translateX(-50%) translateY(-10px)'; } }}
                 >
                   <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{item.ownerName || item.owner?.name || (item.ownerId ? `User #${item.ownerId}` : 'Admin')}</span>
-                  <span style={{
-                    display: 'inline-block', padding: '2px 8px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 800,
-                    background: item.ownerRole === 'OWNER' || item.ownerId ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)',
-                    color: item.ownerRole === 'OWNER' || item.ownerId ? '#059669' : '#1d4ed8',
-                    textTransform: 'uppercase', letterSpacing: '0.5px', alignSelf: 'flex-start'
-                  }}>
-                    {item.ownerRole || (item.ownerId ? 'OWNER' : 'ADMIN')}
-                  </span>
                 </div>
                 <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%) translateY(-10px)', background: 'var(--surface-bg)', padding: '16px', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.15)', zIndex: 100, minWidth: '220px', border: '1px solid rgba(148,163,184,0.2)', opacity: 0, visibility: 'hidden', transition: 'all 0.2s', pointerEvents: 'none' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -545,8 +544,8 @@ export default function EnterprisesManager({ enterprises, ownerMode, onDataChang
                   </div>
                   
                   {/* Save button moved to the bottom of the scrollable form (left side) */}
-                  <SubmitBtn onClick={handleSave}>
-                    Save Enterprise
+                  <SubmitBtn onClick={handleSave} disabled={isSubmitting}>
+                    {isSubmitting ? 'Saving...' : 'Save Enterprise'}
                   </SubmitBtn>
 
                 </LeftPane>

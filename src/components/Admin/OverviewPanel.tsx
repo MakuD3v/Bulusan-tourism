@@ -234,7 +234,11 @@ const OverviewPanel: React.FC<OverviewPanelProps> = ({
                   </div>
                 </td>
                 <td style={{ textAlign: 'right' }}>
-                  <ArrowUpRight size={18} color="#2ecc71" style={{ opacity: 0.5 }} />
+                  {(entity.visits || 0) >= 30 ? (
+                    <ArrowUpRight size={18} color="#2ecc71" title="Trending" />
+                  ) : (
+                    <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>-</span>
+                  )}
                 </td>
               </tr>
             ))}
