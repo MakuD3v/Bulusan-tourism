@@ -15,6 +15,7 @@ import {
   Compass, ArrowRight, SlidersHorizontal, Navigation,
   Users, ChevronDown, ChevronUp, X, Ticket, CalendarDays,
   Sun, CloudRain, CloudSnow, Zap, Umbrella, ChevronLeft, ChevronRight
+
 } from 'lucide-react';
 
 // ─── Animations ──────────────────────────────────────────────────────────────
@@ -816,17 +817,35 @@ const Skel = styled.div`
 `;
 
 // ─── WEATHER HOOK ─────────────────────────────────────────────────────────────
+interface DayForecast { day: string; date: string; code: number; high: number; low: number; }
 interface WeatherData {
   temp: number;
   feelsLike: number;
   desc: string;
   humidity: number;
   wind: number;
+  windGusts: number;
+  windDir: number;
   visibility: number;
   pressure: number;
   code: number;
   uvIndex: number;
-  forecast: Array<{ day: string; code: number; high: number; low: number }>;
+  sunrise: string;
+  sunset: string;
+  forecast: DayForecast[]; // index 0 = yesterday, 1 = today, 2 = tomorrow, 3 = day after, ...
+}
+
+function formatTime(iso: string): string {
+  if (!iso) return '--';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', hour12: true });
+  } catch { return '--'; }
+}
+
+function windDirLabel(deg: number): string {
+  const dirs = ['N','NE','E','SE','S','SW','W','NW'];
+  return dirs[Math.round(deg / 45) % 8];
 }
 
 function useWeather(): WeatherData | null {
@@ -835,8 +854,9 @@ function useWeather(): WeatherData | null {
     const lat = 12.7533, lng = 124.1362;
     fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}` +
-      `&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code,surface_pressure,visibility` +
-      `&daily=weather_code,temperature_2m_max,temperature_2m_min&wind_speed_unit=kmh&timezone=Asia%2FManila&forecast_days=5`
+      `&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code,surface_pressure,visibility` +
+      `&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset` +
+      `&wind_speed_unit=kmh&timezone=Asia%2FManila&forecast_days=4&past_days=1`
     )
       .then(r => r.json())
       .then(d => {
@@ -845,33 +865,45 @@ function useWeather(): WeatherData | null {
         const code = c.weather_code ?? 0;
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+        const forecastList: DayForecast[] = (daily.time as string[]).map((dateStr: string, i: number) => {
+          const dateObj = new Date(dateStr);
+          return {
+            day: days[dateObj.getDay()],
+            date: dateObj.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }),
+            code: daily.weather_code[i],
+            high: Math.round(daily.temperature_2m_max[i]),
+            low: Math.round(daily.temperature_2m_min[i]),
+          };
+        });
+
         setData({
           temp: Math.round(c.temperature_2m),
           feelsLike: Math.round(c.apparent_temperature),
           desc: getDesc(code),
           humidity: c.relative_humidity_2m,
           wind: Math.round(c.wind_speed_10m),
+          windGusts: Math.round(c.wind_gusts_10m ?? 0),
+          windDir: c.wind_direction_10m ?? 0,
           visibility: Math.round((c.visibility ?? 10000) / 1000),
           pressure: Math.round(c.surface_pressure ?? 1013),
           code,
           uvIndex: code <= 1 ? 8 : code <= 3 ? 5 : 2,
-          forecast: (daily.time as string[]).slice(1).map((dateStr: string, i: number) => ({
-            day: days[new Date(dateStr).getDay()],
-            code: daily.weather_code[i + 1],
-            high: Math.round(daily.temperature_2m_max[i + 1]),
-            low: Math.round(daily.temperature_2m_min[i + 1]),
-          })),
+          sunrise: formatTime(daily.sunrise?.[1] ?? ''),
+          sunset: formatTime(daily.sunset?.[1] ?? ''),
+          forecast: forecastList,
         });
       })
       .catch(() => {
         setData({
           temp: 28, feelsLike: 30, desc: 'Partly Cloudy', humidity: 78,
-          wind: 12, visibility: 10, pressure: 1012, code: 2, uvIndex: 6,
+          wind: 12, windGusts: 22, windDir: 135, visibility: 10, pressure: 1012, code: 2, uvIndex: 6,
+          sunrise: '5:42 AM', sunset: '6:08 PM',
           forecast: [
-            { day: 'Tue', code: 1, high: 30, low: 24 },
-            { day: 'Wed', code: 61, high: 27, low: 23 },
-            { day: 'Thu', code: 3, high: 29, low: 24 },
-            { day: 'Fri', code: 1, high: 31, low: 25 },
+            { day: 'Sun', date: 'Jul 27', code: 3, high: 29, low: 23 },
+            { day: 'Mon', date: 'Jul 28', code: 2, high: 28, low: 22 },
+            { day: 'Tue', date: 'Jul 29', code: 61, high: 27, low: 23 },
+            { day: 'Wed', date: 'Jul 30', code: 1, high: 30, low: 24 },
+            { day: 'Thu', date: 'Jul 31', code: 1, high: 31, low: 25 },
           ],
         });
       });
@@ -1127,7 +1159,7 @@ const ToursAndMapPage: React.FC = () => {
                     <Wind className="icon" size={14} />
                     <div className="info">
                       <span className="val">{weather.wind} km/h</span>
-                      <span className="lbl">Wind</span>
+                      <span className="lbl">Wind {windDirLabel(weather.windDir)}</span>
                     </div>
                   </WeatherCell>
                   <WeatherCell>
@@ -1151,6 +1183,88 @@ const ToursAndMapPage: React.FC = () => {
                 <Skel style={{ height: 60, marginBottom: 10 }} />
                 <Skel style={{ height: 70 }} />
               </WeatherHero>
+            )}
+
+            {/* ── EXPANDED ONLY: Sunrise/Sunset + Wind detail + Daily breakdown ── */}
+            {weather && weatherExpanded && (
+              <>
+                {/* Sunrise / Sunset */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 10 }}>
+                  <div style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.1), rgba(245,158,11,0.05))', border: '1px solid rgba(251,191,36,0.2)', borderRadius: 12, padding: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Sunrise size={18} color="#fbbf24" style={{ flexShrink: 0 }} />
+                    <div>
+                      <div style={{ color: '#fbbf24', fontWeight: 900, fontSize: '0.88rem' }}>{weather.sunrise}</div>
+                      <div style={{ color: '#475569', fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Sunrise</div>
+                    </div>
+                  </div>
+                  <div style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.1), rgba(239,68,68,0.05))', border: '1px solid rgba(249,115,22,0.2)', borderRadius: 12, padding: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Sunset size={18} color="#f97316" style={{ flexShrink: 0 }} />
+                    <div>
+                      <div style={{ color: '#f97316', fontWeight: 900, fontSize: '0.88rem' }}>{weather.sunset}</div>
+                      <div style={{ color: '#475569', fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Sunset</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Wind detail */}
+                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 12, marginBottom: 10 }}>
+                  <SectionLabel2>Wind Detail</SectionLabel2>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    {/* Direction arrow */}
+                    <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Navigation size={18} color="#60a5fa" style={{ transform: `rotate(${weather.windDir}deg)`, transition: 'transform 0.5s' }} />
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 16px', flex: 1 }}>
+                      <div>
+                        <div style={{ color: 'white', fontWeight: 800, fontSize: '0.85rem' }}>{weather.wind} km/h</div>
+                        <div style={{ color: '#334155', fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase' }}>Speed</div>
+                      </div>
+                      <div>
+                        <div style={{ color: 'white', fontWeight: 800, fontSize: '0.85rem' }}>{weather.windGusts} km/h</div>
+                        <div style={{ color: '#334155', fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase' }}>Gusts</div>
+                      </div>
+                      <div>
+                        <div style={{ color: 'white', fontWeight: 800, fontSize: '0.85rem' }}>{weather.windDir}°</div>
+                        <div style={{ color: '#334155', fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase' }}>Direction</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#60a5fa', fontWeight: 800, fontSize: '0.85rem' }}>{windDirLabel(weather.windDir)}</div>
+                        <div style={{ color: '#334155', fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase' }}>Bearing</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Day-by-day breakdown (Yesterday, Today, Tomorrow, Day After) */}
+                <SectionLabel2>Daily Breakdown</SectionLabel2>
+                {weather.forecast.map((f, i) => {
+                  const label = i === 0 ? 'Yesterday' : i === 1 ? 'Today' : i === 2 ? 'Tomorrow' : f.day;
+                  const isToday = i === 1;
+                  return (
+                    <div key={i} style={{
+                      background: isToday ? 'rgba(59,130,246,0.08)' : 'rgba(255,255,255,0.02)',
+                      border: `1px solid ${isToday ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.05)'}`,
+                      borderRadius: 10, padding: '10px 12px', marginBottom: 6,
+                      display: 'flex', alignItems: 'center', gap: 10
+                    }}>
+                      <div style={{ width: 36, textAlign: 'center', flexShrink: 0 }}>
+                        <WeatherEmoji code={f.code} size="1.4rem" />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ color: isToday ? '#60a5fa' : '#94a3b8', fontWeight: 800, fontSize: '0.8rem' }}>{label}</span>
+                          <span style={{ color: '#475569', fontSize: '0.65rem', fontWeight: 600 }}>{f.date}</span>
+                        </div>
+                        <div style={{ color: '#334155', fontSize: '0.68rem', fontWeight: 600, marginTop: 2 }}>{getDesc(f.code)}</div>
+                      </div>
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <div style={{ color: 'white', fontWeight: 900, fontSize: '0.9rem' }}>{f.high}°</div>
+                        <div style={{ color: '#334155', fontSize: '0.7rem', fontWeight: 600 }}>{f.low}°</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
             )}
 
             {/* UV Index */}
