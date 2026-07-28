@@ -1155,7 +1155,7 @@ export default function AttractionsManager({ attractions, ownerMode, onDataChang
                         <FieldLabel style={{ marginBottom: 10 }}>Add Ticket / Offer</FieldLabel>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px', background: 'rgba(148,163,184,0.05)', padding: '12px', borderRadius: '12px' }}>
                           <div style={{ display: 'flex', gap: '8px' }}>
-                            <SmallInput style={{ flex: '1 1 100%' }} placeholder="e.g. Adult Entrance" value={newOfferName} onChange={e => setNewOfferName(e.target.value)} />
+                            <SmallInput style={{ flex: 1, minWidth: '100px' }} placeholder="e.g. Adult Entrance" value={newOfferName} onChange={e => setNewOfferName(e.target.value)} />
                             <select
                               value={newOfferType}
                               onChange={e => setNewOfferType(e.target.value as any)}
