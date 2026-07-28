@@ -79,7 +79,7 @@ const SidebarScroll = styled.div`
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-bottom: 72px;
+  padding-bottom: 20px;
 
   &::-webkit-scrollbar { width: 3px; }
   &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
@@ -214,26 +214,7 @@ const TypePill = styled.span<{ $t: string }>`
   color: ${p => p.$t === 'Attraction' ? '#60a5fa' : p.$t === 'Enterprise' ? '#fbbf24' : '#a78bfa'};
 `;
 
-// Bottom plan button
-const PlanBtn = styled.button`
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  padding: 14px;
-  background: linear-gradient(90deg, #1d4ed8, #2563eb);
-  border: none;
-  color: white;
-  font-weight: 800;
-  font-size: 0.85rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: background 0.2s;
-  letter-spacing: 0.3px;
 
-  &:hover { background: linear-gradient(90deg, #2563eb, #3b82f6); box-shadow: 0 -4px 20px rgba(59,130,246,0.25); }
-`;
 
 // ─── MAP CENTER ───────────────────────────────────────────────────────────────
 const MapCenter = styled.div`
@@ -928,9 +909,6 @@ const ToursAndMapPage: React.FC = () => {
           <input placeholder="Search destinations..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
         </SearchBox>
         <SidebarScroll>{DestList}</SidebarScroll>
-        <PlanBtn onClick={() => setShowTravelGuide(true)}>
-          <Compass size={15} /> Plan My Tour <ArrowRight size={13} />
-        </PlanBtn>
       </LeftSidebar>
 
       {/* ── CENTER: Map ── */}
@@ -1111,16 +1089,13 @@ const ToursAndMapPage: React.FC = () => {
           <div className="pill" />
           <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#334155' }}>{mobileDrawerOpen ? 'Collapse' : 'Destinations'}</span>
         </DrawerHandle>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 72 }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 20 }}>
           <SearchBox style={{ margin: '0 0 0' }}>
             <Search size={13} />
             <input placeholder="Search..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
           </SearchBox>
           {DestList}
         </div>
-        <PlanBtn style={{ position: 'relative', bottom: 'auto' }} onClick={() => setShowTravelGuide(true)}>
-          <Compass size={15} /> Plan My Tour <ArrowRight size={13} />
-        </PlanBtn>
       </MobileDrawer>
 
       {/* ── TOURS COMING SOON MODAL ── */}
