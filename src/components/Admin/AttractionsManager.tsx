@@ -10,6 +10,7 @@ import { compressImage } from '../../utils/imageUtils';
 import { useAlert } from '../Common/AlertProvider';
 import { getMediaUrl } from '../../utils/mediaUtils';
 import { useAuth } from '../../hooks/useAuth';
+import OfferCapsule from '../Common/OfferCapsule';
 
 const MapPicker = lazy(() => import('./MapPicker'));
 
@@ -691,14 +692,10 @@ function LivePreview({ formData, photos, offers }: { formData: any; photos: stri
                 {isFree ? (
                   <FreeBadge>Free Entry</FreeBadge>
                 ) : offers.length > 0 ? (
-                  <div>
-                    {offers.slice(0, 3).map(o => (
-                      <PreviewOfferLine key={o.id}>
-                        <span className="oname">{o.name}</span>
-                        <span className="oprice">{o.type === 'Hourly Price' ? `₱${o.price}/hr` : `₱${o.price}`}</span>
-                      </PreviewOfferLine>
+                  <div style={{ marginTop: '8px', width: '100%' }}>
+                    {offers.map(o => (
+                      <OfferCapsule key={o.id} offer={o} />
                     ))}
-                    {offers.length > 3 && <div style={{ fontSize: '0.72rem', color: 'var(--text-light)', marginTop: 4 }}>+{offers.length - 3} more offers</div>}
                   </div>
                 ) : (
                   <span className="value" style={{ color: '#94a3b8' }}>Add offers below...</span>
