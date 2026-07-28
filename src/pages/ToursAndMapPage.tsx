@@ -14,7 +14,7 @@ import {
   Eye, Gauge, Sunrise, Sunset, Cloud, Lock,
   Compass, ArrowRight, SlidersHorizontal, Navigation,
   Users, ChevronDown, ChevronUp, X, Ticket, CalendarDays,
-  Sun, CloudRain, CloudSnow, Zap, Umbrella,
+  Sun, CloudRain, CloudSnow, Zap, Umbrella, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 // ─── Animations ──────────────────────────────────────────────────────────────
@@ -30,10 +30,46 @@ const pulse = keyframes`
   0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(245,158,11,0.4); }
   50% { opacity: 0.85; box-shadow: 0 0 0 6px rgba(245,158,11,0); }
 `;
-const spin = keyframes`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+
+// ─── Rain Effect ──────────────────────────────────────────────────────────────
+const RainOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  z-index: 35;
+  pointer-events: none;
+  overflow: hidden;
+
+  .drop {
+    position: absolute;
+    bottom: 100%;
+    width: 1.5px;
+    pointer-events: none;
+    animation: drop linear infinite;
+    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0.6));
+    border-radius: 2px;
+  }
+
+  @keyframes drop {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(120vh); opacity: 0; }
+  }
 `;
+
+function RainEffect() {
+  const drops = useMemo(() => Array.from({ length: 80 }).map((_, i) => ({
+    left: `${Math.random() * 100}%`,
+    animationDelay: `${Math.random() * 1.5}s`,
+    animationDuration: `${0.4 + Math.random() * 0.4}s`,
+    opacity: Math.random() * 0.4 + 0.2,
+    height: `${15 + Math.random() * 25}px`
+  })), []);
+  
+  return (
+    <RainOverlay>
+      {drops.map((style, i) => <div key={i} className="drop" style={style} />)}
+    </RainOverlay>
+  );
+}
 
 // ─── Layout Shell ─────────────────────────────────────────────────────────────
 const PageWrapper = styled(motion.div)`
@@ -140,6 +176,28 @@ const FilterPill = styled.button<{ $active: boolean }>`
   &:hover { color: #94a3b8; border-color: rgba(255,255,255,0.12); }
 `;
 
+const TagsContainer = styled.div`
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+`;
+
+const TagBadge = styled.button<{ $active: boolean }>`
+  background: ${p => p.$active ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.03)'};
+  color: ${p => p.$active ? 'white' : '#94a3b8'};
+  border: 1px solid ${p => p.$active ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)'};
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 0.6rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover { background: rgba(255,255,255,0.1); color: #e2e8f0; }
+`;
+
 const CountLabel = styled.div`
   padding: 8px 12px 4px;
   font-size: 0.62rem;
@@ -214,8 +272,6 @@ const TypePill = styled.span<{ $t: string }>`
   color: ${p => p.$t === 'Attraction' ? '#60a5fa' : p.$t === 'Enterprise' ? '#fbbf24' : '#a78bfa'};
 `;
 
-
-
 // ─── MAP CENTER ───────────────────────────────────────────────────────────────
 const MapCenter = styled.div`
   flex: 1;
@@ -252,18 +308,50 @@ const MapChip = styled.div`
   svg { color: #60a5fa; flex-shrink: 0; }
 `;
 
+const CompassWidget = styled.div`
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  z-index: 30;
+  width: 44px; height: 44px;
+  background: rgba(13,21,38,0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  pointer-events: none;
+  
+  .n { color: #ef4444; font-size: 0.65rem; font-weight: 900; line-height: 1; margin-bottom: 12px; }
+  
+  /* little needle in middle */
+  &::after {
+    content: '';
+    position: absolute;
+    width: 3px; height: 16px;
+    background: linear-gradient(to bottom, #ef4444 50%, #94a3b8 50%);
+    border-radius: 2px;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+  }
+`;
+
 // Floating "Tours" button on map
 const ToursFloatBtn = styled.button`
   position: absolute;
-  bottom: 20px;
-  right: 20px;
+  bottom: 24px;
+  right: 24px;
   z-index: 50;
   background: linear-gradient(135deg, #d97706, #b45309);
   border: none;
   color: white;
   font-size: 0.78rem;
   font-weight: 800;
-  padding: 10px 18px;
+  padding: 12px 20px;
   border-radius: 30px;
   cursor: pointer;
   display: flex;
@@ -315,16 +403,56 @@ const DrawerHandle = styled.button`
 `;
 
 // ─── RIGHT PANEL (Weather Dashboard) ─────────────────────────────────────────
-const RightPanel = styled.div`
-  width: 290px;
-  flex-shrink: 0;
+const RightPanelWrapper = styled(motion.div)<{ $expanded: boolean }>`
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: ${p => p.$expanded ? '290px' : '0px'};
   background: #0d1526;
   border-left: 1px solid rgba(255,255,255,0.05);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  z-index: 40;
+  box-shadow: ${p => p.$expanded ? '-10px 0 30px rgba(0,0,0,0.4)' : 'none'};
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 
   @media (max-width: 1279px) { display: none; }
+`;
+
+const WeatherToggleBtn = styled.button`
+  position: absolute;
+  top: 12px;
+  right: 100%;
+  margin-right: 12px;
+  background: rgba(13,21,38,0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  font-weight: 700;
+  font-size: 0.8rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 45;
+
+  &:hover { background: rgba(30,41,59,0.9); }
+  
+  @media (max-width: 1279px) { display: none; }
+`;
+
+const RightPanelContent = styled.div`
+  width: 290px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  opacity: 1;
+  transition: opacity 0.2s;
 `;
 
 const WeatherPanelScroll = styled.div`
@@ -549,6 +677,7 @@ const ToursModal = styled(motion.div)`
   max-width: 520px;
   overflow: hidden;
   box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+  position: relative;
 `;
 
 const ModalHeader = styled.div`
@@ -682,8 +811,30 @@ const NotifyBtn = styled.button`
   align-items: center;
   justify-content: center;
   gap: 8px;
+  position: relative;
+  overflow: hidden;
 
   &:hover { background: rgba(59,130,246,0.2); box-shadow: 0 0 20px rgba(59,130,246,0.15); }
+`;
+
+// Simple elegant toast notification inside modal
+const ToastMessage = styled(motion.div)`
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  background: #1e293b;
+  border: 1px solid rgba(59,130,246,0.4);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+  z-index: 10;
 `;
 
 // Skeleton
@@ -810,12 +961,13 @@ const ToursAndMapPage: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'All' | 'Attraction' | 'Enterprise' | 'Heritage'>('All');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [focusedLocation, setFocusedLocation] = useState<any>(null);
-  const [showTravelGuide, setShowTravelGuide] = useState(false);
-  const [showBookingModal, setShowBookingModal] = useState(false);
-  const [bookingDetails, setBookingDetails] = useState<any>(null);
+  
   const [showToursModal, setShowToursModal] = useState(false);
+  const [showComingSoonMsg, setShowComingSoonMsg] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [weatherExpanded, setWeatherExpanded] = useState(true);
 
   const weather = useWeather();
   const advisory = weather ? getTravelAdvisory(weather.code) : null;
@@ -826,6 +978,17 @@ const ToursAndMapPage: React.FC = () => {
     ...enterprises.map(e => ({ ...e, entityType: 'Enterprise' })),
     ...heritage.map(h => ({ ...h, entityType: 'Heritage', categories: [h.period] })),
   ], [attractions, enterprises, heritage]);
+
+  // Extract available tags for the current tab
+  const availableTags = useMemo(() => {
+    const tags = new Set<string>();
+    allItems
+      .filter(i => activeTab === 'All' || i.entityType === activeTab)
+      .forEach(item => {
+        (item.categories || item.tags || []).forEach((t: string) => tags.add(t));
+      });
+    return Array.from(tags).sort().slice(0, 15);
+  }, [allItems, activeTab]);
 
   useEffect(() => {
     if (initialRef.current) return;
@@ -843,8 +1006,13 @@ const ToursAndMapPage: React.FC = () => {
   const filteredItems = useMemo(() => allItems.filter(item => {
     const textMatch = searchQuery === '' || (item.name + ' ' + ((item as any).description || '')).toLowerCase().includes(searchQuery.toLowerCase());
     const tabMatch = activeTab === 'All' || (item as any).entityType === activeTab;
-    return textMatch && tabMatch;
-  }), [allItems, searchQuery, activeTab]);
+    const catMatch = selectedCategories.length === 0 || selectedCategories.some(sc => (item.categories || item.tags || []).includes(sc));
+    return textMatch && tabMatch && catMatch;
+  }), [allItems, searchQuery, activeTab, selectedCategories]);
+
+  const toggleCategory = (cat: string) => {
+    setSelectedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]);
+  };
 
   const TABS: ('All' | 'Attraction' | 'Enterprise' | 'Heritage')[] = ['All', 'Attraction', 'Enterprise', 'Heritage'];
 
@@ -852,9 +1020,20 @@ const ToursAndMapPage: React.FC = () => {
     <>
       <FilterRow>
         {TABS.map(t => (
-          <FilterPill key={t} $active={activeTab === t} onClick={() => setActiveTab(t)}>{t}</FilterPill>
+          <FilterPill key={t} $active={activeTab === t} onClick={() => { setActiveTab(t); setSelectedCategories([]); }}>{t}</FilterPill>
         ))}
       </FilterRow>
+      
+      {availableTags.length > 0 && (
+        <TagsContainer>
+          {availableTags.map(tag => (
+            <TagBadge key={tag} $active={selectedCategories.includes(tag)} onClick={() => toggleCategory(tag)}>
+              {tag}
+            </TagBadge>
+          ))}
+        </TagsContainer>
+      )}
+
       <CountLabel>{filteredItems.length} Destinations</CountLabel>
       {loading ? (
         Array.from({ length: 5 }).map((_, i) => (
@@ -893,6 +1072,8 @@ const ToursAndMapPage: React.FC = () => {
     </>
   );
 
+  const isRaining = weather && weather.code >= 51 && weather.code <= 67;
+
   return (
     <PageWrapper initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
 
@@ -913,175 +1094,184 @@ const ToursAndMapPage: React.FC = () => {
 
       {/* ── CENTER: Map ── */}
       <MapCenter>
+        {isRaining && <RainEffect />}
+        
         <MapTopBar>
           <MapChip><MapPin size={10} />{allItems.length} Spots</MapChip>
-          {weather && (
-            <MapChip><Thermometer size={10} />{weather.temp}°C · {weather.desc}</MapChip>
-          )}
         </MapTopBar>
 
         {activeTourId ? (
           <LiveTourTracker bookingId={activeTourId} onExit={() => {}} onFocusItem={id => { const i = filteredItems.find(x => x.id.toString() === id); if (i) setFocusedLocation(i); }} />
         ) : (
-          <BulusanMap items={allItems} searchQuery={searchQuery} selectedCategories={[]} focusLat={focusedLocation?.coordinates?.lat} focusLng={focusedLocation?.coordinates?.lng} focusName={focusedLocation?.name} autoRoute={autoRoute} />
+          <BulusanMap items={filteredItems} searchQuery={searchQuery} selectedCategories={selectedCategories} focusLat={focusedLocation?.coordinates?.lat} focusLng={focusedLocation?.coordinates?.lng} focusName={focusedLocation?.name} autoRoute={autoRoute} />
         )}
+
+        {/* Compass Widget */}
+        <CompassWidget>
+          <div className="n">N</div>
+        </CompassWidget>
 
         {/* Tours floating button */}
         <ToursFloatBtn onClick={() => setShowToursModal(true)}>
           <Ticket size={14} /> Tours & Packages
         </ToursFloatBtn>
-
-        {/* Mobile drawer toggle */}
-        <div style={{ display: 'none' }}>
-          <button style={{ display: 'none' }} onClick={() => setMobileDrawerOpen(o => !o)} />
-        </div>
       </MapCenter>
 
-      {/* ── RIGHT: Full Weather Dashboard ── */}
-      <RightPanel>
-        <WeatherPanelScroll>
-          <WeatherHeader>
-            <div>
-              <h3>Weather</h3>
-              <div className="loc">Bulusan, Sorsogon</div>
-            </div>
-            {weather && <WeatherEmoji code={weather.code} size="1.8rem" />}
-          </WeatherHeader>
-
-          {/* Hero temp card */}
-          {weather ? (
-            <WeatherHero>
-              <TempRow>
-                <div>
-                  <BigTemp>{weather.temp}<sup>°C</sup></BigTemp>
-                  <WeatherCondition>{weather.desc}</WeatherCondition>
-                  <FeelsLike>Feels like {weather.feelsLike}°C</FeelsLike>
-                </div>
-                <WeatherIconBig><WeatherEmoji code={weather.code} size="3rem" /></WeatherIconBig>
-              </TempRow>
-              <WeatherGrid>
-                <WeatherCell>
-                  <Droplets className="icon" size={14} />
-                  <div className="info">
-                    <span className="val">{weather.humidity}%</span>
-                    <span className="lbl">Humidity</span>
-                  </div>
-                </WeatherCell>
-                <WeatherCell>
-                  <Wind className="icon" size={14} />
-                  <div className="info">
-                    <span className="val">{weather.wind} km/h</span>
-                    <span className="lbl">Wind</span>
-                  </div>
-                </WeatherCell>
-                <WeatherCell>
-                  <Eye className="icon" size={14} />
-                  <div className="info">
-                    <span className="val">{weather.visibility} km</span>
-                    <span className="lbl">Visibility</span>
-                  </div>
-                </WeatherCell>
-                <WeatherCell>
-                  <Gauge className="icon" size={14} />
-                  <div className="info">
-                    <span className="val">{weather.pressure} hPa</span>
-                    <span className="lbl">Pressure</span>
-                  </div>
-                </WeatherCell>
-              </WeatherGrid>
-            </WeatherHero>
+      {/* ── RIGHT: Full Weather Dashboard (Expandable) ── */}
+      <RightPanelWrapper $expanded={weatherExpanded}>
+        <WeatherToggleBtn onClick={() => setWeatherExpanded(!weatherExpanded)}>
+          {weatherExpanded ? (
+            <><ChevronRight size={14} /> Close Weather</>
           ) : (
-            <WeatherHero>
-              <Skel style={{ height: 60, marginBottom: 10 }} />
-              <Skel style={{ height: 70 }} />
-            </WeatherHero>
+            <>{weather ? <WeatherEmoji code={weather.code} size="1rem" /> : <Thermometer size={14} />} {weather?.temp}°C <ChevronLeft size={14} /></>
           )}
+        </WeatherToggleBtn>
 
-          {/* UV Index */}
-          {weather && (
-            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, padding: 12, marginBottom: 10 }}>
-              <SectionLabel2>UV Index</SectionLabel2>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ flex: 1, height: 6, borderRadius: 4, background: 'linear-gradient(90deg, #10b981, #f59e0b, #ef4444)', position: 'relative', overflow: 'hidden' }}>
-                  <div style={{ position: 'absolute', left: `${Math.min(weather.uvIndex / 12 * 100, 100)}%`, top: -3, width: 12, height: 12, borderRadius: '50%', background: 'white', border: '2px solid #0d1526', transform: 'translateX(-50%)' }} />
-                </div>
-                <div style={{ color: weather.uvIndex <= 2 ? '#10b981' : weather.uvIndex <= 5 ? '#f59e0b' : '#ef4444', fontWeight: 900, fontSize: '0.9rem', minWidth: 24 }}>{weather.uvIndex}</div>
-                <div style={{ color: '#334155', fontSize: '0.68rem', fontWeight: 700 }}>
-                  {weather.uvIndex <= 2 ? 'Low' : weather.uvIndex <= 5 ? 'Moderate' : weather.uvIndex <= 7 ? 'High' : 'Very High'}
+        <RightPanelContent style={{ opacity: weatherExpanded ? 1 : 0, pointerEvents: weatherExpanded ? 'auto' : 'none' }}>
+          <WeatherPanelScroll>
+            <WeatherHeader>
+              <div>
+                <h3>Weather</h3>
+                <div className="loc">Bulusan, Sorsogon</div>
+              </div>
+              {weather && <WeatherEmoji code={weather.code} size="1.8rem" />}
+            </WeatherHeader>
+
+            {/* Hero temp card */}
+            {weather ? (
+              <WeatherHero>
+                <TempRow>
+                  <div>
+                    <BigTemp>{weather.temp}<sup>°C</sup></BigTemp>
+                    <WeatherCondition>{weather.desc}</WeatherCondition>
+                    <FeelsLike>Feels like {weather.feelsLike}°C</FeelsLike>
+                  </div>
+                  <WeatherIconBig><WeatherEmoji code={weather.code} size="3rem" /></WeatherIconBig>
+                </TempRow>
+                <WeatherGrid>
+                  <WeatherCell>
+                    <Droplets className="icon" size={14} />
+                    <div className="info">
+                      <span className="val">{weather.humidity}%</span>
+                      <span className="lbl">Humidity</span>
+                    </div>
+                  </WeatherCell>
+                  <WeatherCell>
+                    <Wind className="icon" size={14} />
+                    <div className="info">
+                      <span className="val">{weather.wind} km/h</span>
+                      <span className="lbl">Wind</span>
+                    </div>
+                  </WeatherCell>
+                  <WeatherCell>
+                    <Eye className="icon" size={14} />
+                    <div className="info">
+                      <span className="val">{weather.visibility} km</span>
+                      <span className="lbl">Visibility</span>
+                    </div>
+                  </WeatherCell>
+                  <WeatherCell>
+                    <Gauge className="icon" size={14} />
+                    <div className="info">
+                      <span className="val">{weather.pressure} hPa</span>
+                      <span className="lbl">Pressure</span>
+                    </div>
+                  </WeatherCell>
+                </WeatherGrid>
+              </WeatherHero>
+            ) : (
+              <WeatherHero>
+                <Skel style={{ height: 60, marginBottom: 10 }} />
+                <Skel style={{ height: 70 }} />
+              </WeatherHero>
+            )}
+
+            {/* UV Index */}
+            {weather && (
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, padding: 12, marginBottom: 10 }}>
+                <SectionLabel2>UV Index</SectionLabel2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ flex: 1, height: 6, borderRadius: 4, background: 'linear-gradient(90deg, #10b981, #f59e0b, #ef4444)', position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', left: `${Math.min(weather.uvIndex / 12 * 100, 100)}%`, top: -3, width: 12, height: 12, borderRadius: '50%', background: 'white', border: '2px solid #0d1526', transform: 'translateX(-50%)' }} />
+                  </div>
+                  <div style={{ color: weather.uvIndex <= 2 ? '#10b981' : weather.uvIndex <= 5 ? '#f59e0b' : '#ef4444', fontWeight: 900, fontSize: '0.9rem', minWidth: 24 }}>{weather.uvIndex}</div>
+                  <div style={{ color: '#334155', fontSize: '0.68rem', fontWeight: 700 }}>
+                    {weather.uvIndex <= 2 ? 'Low' : weather.uvIndex <= 5 ? 'Moderate' : weather.uvIndex <= 7 ? 'High' : 'Very High'}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* 4-day forecast */}
-          {weather && weather.forecast.length > 0 && (
-            <>
-              <SectionLabel2>4-Day Forecast</SectionLabel2>
-              <ForecastStrip>
-                {weather.forecast.map((f, i) => (
-                  <ForecastItem key={i}>
-                    <div className="day">{f.day}</div>
-                    <div className="ico"><WeatherEmoji code={f.code} size="1rem" /></div>
-                    <div className="tmp">{f.high}°</div>
-                    <div style={{ color: '#334155', fontSize: '0.6rem', fontWeight: 600 }}>{f.low}°</div>
-                  </ForecastItem>
-                ))}
-              </ForecastStrip>
-            </>
-          )}
+            {/* 4-day forecast */}
+            {weather && weather.forecast.length > 0 && (
+              <>
+                <SectionLabel2>4-Day Forecast</SectionLabel2>
+                <ForecastStrip>
+                  {weather.forecast.map((f, i) => (
+                    <ForecastItem key={i}>
+                      <div className="day">{f.day}</div>
+                      <div className="ico"><WeatherEmoji code={f.code} size="1rem" /></div>
+                      <div className="tmp">{f.high}°</div>
+                      <div style={{ color: '#334155', fontSize: '0.6rem', fontWeight: 600 }}>{f.low}°</div>
+                    </ForecastItem>
+                  ))}
+                </ForecastStrip>
+              </>
+            )}
 
-          {/* Travel advisory */}
-          {advisory && (
-            <>
-              <SectionLabel2>Travel Advisory</SectionLabel2>
-              <AdvisoryCard $level={advisory.level}>
-                <div className="header">
-                  <div className="dot" />
-                  <div className="label">
-                    {advisory.level === 'safe' ? '✓ Safe to Explore' : advisory.level === 'caution' ? '⚠ Caution' : '✖ Advisory'}
+            {/* Travel advisory */}
+            {advisory && (
+              <>
+                <SectionLabel2>Travel Advisory</SectionLabel2>
+                <AdvisoryCard $level={advisory.level}>
+                  <div className="header">
+                    <div className="dot" />
+                    <div className="label">
+                      {advisory.level === 'safe' ? '✓ Safe to Explore' : advisory.level === 'caution' ? '⚠ Caution' : '✖ Advisory'}
+                    </div>
                   </div>
-                </div>
-                <div className="desc">{advisory.text}</div>
-              </AdvisoryCard>
-            </>
-          )}
+                  <div className="desc">{advisory.text}</div>
+                </AdvisoryCard>
+              </>
+            )}
 
-          {/* Best time to visit indicator */}
-          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, padding: 12, marginBottom: 10 }}>
-            <SectionLabel2>Best Activities Now</SectionLabel2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {[
-                { name: 'Hiking Trails', ok: weather ? weather.code <= 3 : true },
-                { name: 'Lake Tours', ok: weather ? weather.code <= 48 : true },
-                { name: 'Heritage Sites', ok: true },
-                { name: 'Hot Springs', ok: true },
-              ].map(act => (
-                <div key={act.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 600 }}>{act.name}</span>
-                  <span style={{ color: act.ok ? '#10b981' : '#f59e0b', fontSize: '0.65rem', fontWeight: 800, background: act.ok ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', padding: '2px 8px', borderRadius: 20, border: `1px solid ${act.ok ? 'rgba(16,185,129,0.2)' : 'rgba(245,158,11,0.2)'}` }}>
-                    {act.ok ? '✓ Great' : '⚠ Fair'}
-                  </span>
-                </div>
-              ))}
+            {/* Best time to visit indicator */}
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, padding: 12, marginBottom: 10 }}>
+              <SectionLabel2>Best Activities Now</SectionLabel2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {[
+                  { name: 'Hiking Trails', ok: weather ? weather.code <= 3 : true },
+                  { name: 'Lake Tours', ok: weather ? weather.code <= 48 : true },
+                  { name: 'Heritage Sites', ok: true },
+                  { name: 'Hot Springs', ok: true },
+                ].map(act => (
+                  <div key={act.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 600 }}>{act.name}</span>
+                    <span style={{ color: act.ok ? '#10b981' : '#f59e0b', fontSize: '0.65rem', fontWeight: 800, background: act.ok ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', padding: '2px 8px', borderRadius: 20, border: `1px solid ${act.ok ? 'rgba(16,185,129,0.2)' : 'rgba(245,158,11,0.2)'}` }}>
+                      {act.ok ? '✓ Great' : '⚠ Fair'}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </WeatherPanelScroll>
+          </WeatherPanelScroll>
 
-        <WeatherFooter>
-          <FooterStat>
-            <span className="val">{attractions.length}</span>
-            <span className="lbl">Attractions</span>
-          </FooterStat>
-          <FooterStat>
-            <span className="val">{enterprises.length}</span>
-            <span className="lbl">Enterprises</span>
-          </FooterStat>
-          <FooterStat>
-            <span className="val">{heritage.length}</span>
-            <span className="lbl">Heritage</span>
-          </FooterStat>
-        </WeatherFooter>
-      </RightPanel>
+          <WeatherFooter>
+            <FooterStat>
+              <span className="val">{attractions.length}</span>
+              <span className="lbl">Attractions</span>
+            </FooterStat>
+            <FooterStat>
+              <span className="val">{enterprises.length}</span>
+              <span className="lbl">Enterprises</span>
+            </FooterStat>
+            <FooterStat>
+              <span className="val">{heritage.length}</span>
+              <span className="lbl">Heritage</span>
+            </FooterStat>
+          </WeatherFooter>
+        </RightPanelContent>
+      </RightPanelWrapper>
 
       {/* ── MOBILE DRAWER ── */}
       <MobileDrawer $open={mobileDrawerOpen}>
@@ -1138,20 +1328,29 @@ const ToursAndMapPage: React.FC = () => {
                 <p style={{ color: '#475569', fontSize: '0.78rem', textAlign: 'center', marginBottom: 12, lineHeight: 1.5 }}>
                   Want to explore Bulusan now? Our local guides are ready!
                 </p>
-                <NotifyBtn onClick={() => { setShowToursModal(false); setShowTravelGuide(true); }}>
+                <NotifyBtn onClick={() => {
+                  setShowComingSoonMsg(true);
+                  setTimeout(() => setShowComingSoonMsg(false), 3000);
+                }}>
                   <Navigation size={14} /> Plan My Trip Now
                 </NotifyBtn>
               </div>
+              
+              {/* Coming Soon Toast within Modal */}
+              <AnimatePresence>
+                {showComingSoonMsg && (
+                  <ToastMessage
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  >
+                    <CalendarDays size={16} color="#60a5fa" />
+                    <div>The custom itinerary planner is coming soon!</div>
+                  </ToastMessage>
+                )}
+              </AnimatePresence>
             </ToursModal>
           </ToursOverlay>
-        )}
-
-        {showTravelGuide && (
-          <TravelGuideFlow items={allItems} onClose={() => setShowTravelGuide(false)} onProceedToBooking={(route, dates, mode, answers) => { setBookingDetails({ route, dates, mode, answers }); setShowTravelGuide(false); setShowBookingModal(true); }} />
-        )}
-
-        {showBookingModal && bookingDetails && (
-          <BookingModal route={bookingDetails.route} scheduledDates={bookingDetails.dates} autoScheduled={bookingDetails.mode === 'auto'} autoAnswers={bookingDetails.answers} onClose={() => setShowBookingModal(false)} onBack={() => { setShowBookingModal(false); setShowTravelGuide(true); }} />
         )}
       </AnimatePresence>
     </PageWrapper>
