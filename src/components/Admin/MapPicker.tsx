@@ -44,11 +44,20 @@ interface MapPickerProps {
 }
 
 const BULUSAN_CENTER: [number, number] = [12.7533, 124.1362];
+const BULUSAN_BOUNDS: L.LatLngBoundsExpression = [
+    [12.70, 124.03], // SouthWest (bottom-left)
+    [12.82, 124.20]  // NorthEast (top-right)
+];
 
 function LocationSelector({ onSelect }: { onSelect: (latlng: L.LatLng) => void }) {
     useMapEvents({
         click(e) {
-            onSelect(e.latlng);
+            const bounds = L.latLngBounds(BULUSAN_BOUNDS);
+            if (bounds.contains(e.latlng)) {
+                onSelect(e.latlng);
+            } else {
+                alert("Please select a location within Bulusan borders.");
+            }
         },
     });
     return null;
@@ -75,6 +84,9 @@ export default function MapPicker({ value, onChange }: MapPickerProps) {
             <MapContainer 
                 center={position} 
                 zoom={17} 
+                minZoom={12}
+                maxBounds={BULUSAN_BOUNDS}
+                maxBoundsViscosity={1.0}
                 style={{ height: '100%', width: '100%' }}
                 scrollWheelZoom={true}
             >
@@ -89,7 +101,13 @@ export default function MapPicker({ value, onChange }: MapPickerProps) {
                             dragend: (e) => {
                                 const marker = e.target;
                                 const pos = marker.getLatLng();
-                                onChange({ lat: pos.lat, lng: pos.lng });
+                                const bounds = L.latLngBounds(BULUSAN_BOUNDS);
+                                if (bounds.contains(pos)) {
+                                    onChange({ lat: pos.lat, lng: pos.lng });
+                                } else {
+                                    marker.setLatLng([value.lat, value.lng]); // Revert to old valid position
+                                    alert("Please drag the marker within Bulusan borders.");
+                                }
                             }
                         }}
                     />
@@ -101,8 +119,8 @@ export default function MapPicker({ value, onChange }: MapPickerProps) {
                 </CoordinatesDisplay>
             )}
             {!value && (
-                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 1000, background: 'rgba(0,0,0,0.6)', color: 'white', padding: '8px 16px', borderRadius: '20px', fontSize: '0.8rem', pointerEvents: 'none' }}>
-                    Click map to pinpoint location
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 1000, background: 'rgba(0,0,0,0.6)', color: 'white', padding: '8px 16px', borderRadius: '20px', fontSize: '0.8rem', pointerEvents: 'none', textAlign: 'center' }}>
+                    Click within Bulusan to pinpoint location
                 </div>
             )}
         </MapWrapper>
