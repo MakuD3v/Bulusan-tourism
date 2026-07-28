@@ -1,6 +1,8 @@
+import React, { useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { animate, stagger } from 'animejs';
 import { Mountain, Waves, Trees, Droplets, Info } from 'lucide-react';
 import SmartMedia from '../Common/SmartMedia';
 
@@ -39,7 +41,7 @@ const HeroOverlay = styled.div`
   z-index: 2;
 `;
 
-const HeroContent = styled(motion.div)`
+const HeroContent = styled.div`
   position: relative;
   z-index: 10;
   max-width: 1100px;
@@ -211,7 +213,7 @@ const SymmetricalButton = styled(motion(Link)) <{ $secondary?: boolean }>`
   }
 `;
 
-const FloatingNav = styled(motion.div)`
+const FloatingNav = styled.div`
   max-width: var(--container-max-width);
   width: calc(100% - 40px);
   margin: -80px auto 100px auto;
@@ -315,6 +317,35 @@ const FloatingNav = styled(motion.div)`
 import { ArrowRight, Map, Sparkles } from 'lucide-react';
 
 const HeroSection = () => {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Animate Hero Content
+    if (contentRef.current) {
+      const elements = contentRef.current.querySelectorAll('.animate-item');
+      animate(elements, {
+        translateY: [40, 0],
+        opacity: [0, 1],
+        easing: 'easeOutExpo',
+        duration: 1200,
+        delay: stagger(150, { start: 600 })
+      });
+    }
+
+    // Animate Floating Nav
+    if (navRef.current) {
+      const navItems = navRef.current.querySelectorAll('.nav-item');
+      animate(navItems, {
+        translateY: [30, 0],
+        opacity: [0, 1],
+        easing: 'easeOutQuint',
+        duration: 1000,
+        delay: stagger(150, { start: 1400 })
+      });
+    }
+  }, []);
+
   return (
     <>
       <HeroContainer>
@@ -331,21 +362,12 @@ const HeroSection = () => {
         </VideoBgWrapper>
         <HeroOverlay />
 
-        <HeroContent
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1.5, ease: "easeOut" }}
-        >
-          <motion.div
-            className="badge"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8, duration: 1.0 }}
-          >
+        <HeroContent ref={contentRef}>
+          <div className="badge animate-item" style={{ opacity: 0 }}>
             <Sparkles size={16} /> Welcome to the Heart and Soul of Sorsogon
-          </motion.div>
+          </div>
 
-          <h1>
+          <h1 className="animate-item" style={{ opacity: 0 }}>
             <span className="tagline">Where wonders <em>flow</em> from ridges to reef</span>
             <span className="main-title">BULUSAN</span>
             <span className="statement">
@@ -354,7 +376,7 @@ const HeroSection = () => {
             </span>
           </h1>
 
-          <ButtonGroup>
+          <ButtonGroup className="animate-item" style={{ opacity: 0 }}>
             <SymmetricalButton
               to="/attractions"
               whileHover={{ scale: 1.05 }}
@@ -375,33 +397,29 @@ const HeroSection = () => {
         </HeroContent>
       </HeroContainer>
 
-      <FloatingNav 
-        initial={{ opacity: 0 }} 
-        animate={{ opacity: 1 }} 
-        transition={{ duration: 1.0, delay: 1.2 }}
-      >
-        <div className="nav-item">
+      <FloatingNav ref={navRef}>
+        <div className="nav-item" style={{ opacity: 0 }}>
           <div className="icon-box"><Mountain size={24} /></div>
           <div className="text-content">
             <strong>4th Most Active Volcano</strong><span>In the Philippines</span>
             <div className="description">Mount Bulusan is a spectacular natural wonder and the home of the 4th most active volcano in the country.</div>
           </div>
         </div>
-        <div className="nav-item">
+        <div className="nav-item" style={{ opacity: 0 }}>
           <div className="icon-box"><Mountain size={24} /></div>
           <div className="text-content">
             <strong>3 Peaks and 3 Lakes</strong><span>In a Single Climb</span>
             <div className="description">Experience an epic adventure conquering three peaks and witnessing three beautiful lakes in one journey.</div>
           </div>
         </div>
-        <div className="nav-item">
+        <div className="nav-item" style={{ opacity: 0 }}>
           <div className="icon-box"><Trees size={24} /></div>
           <div className="text-content">
             <strong>Ecotourism Destination</strong><span>Nature's Sanctuary</span>
             <div className="description">A vast expanse of protected rainforests, lakes, and hot springs teeming with biodiversity.</div>
           </div>
         </div>
-        <div className="nav-item">
+        <div className="nav-item" style={{ opacity: 0 }}>
           <div className="icon-box"><Droplets size={24} /></div>
           <div className="text-content">
             <strong>'Bulus' Flow</strong><span>Land of Waterfalls</span>

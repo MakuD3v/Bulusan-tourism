@@ -3,6 +3,10 @@ import { PrismaClient } from '@prisma/client';
 import { v2 as cloudinary } from 'cloudinary';
 import { authenticateToken } from './auth';
 import multer from 'multer';
+import { redisCache } from './redis';
+import path from 'path';
+import fs from 'fs';
+import crypto from 'crypto';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -14,15 +18,41 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+const isCloudinaryConfigured = !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
+
 const upload = multer({ 
   storage: multer.memoryStorage(),
   limits: { fileSize: 50 * 1024 * 1024 }
 });
 
-// File Upload endpoint
+// Local uploads directory (used when Cloudinary is not configured)
+const uploadDir = path.join(__dirname, '../../uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// File Upload endpoint – uses Cloudinary in production, local disk on localhost
 router.post('/upload', upload.single('file'), (req: any, res: any) => {
   if (!req.file) return res.status(400).json({ error: 'No file received' });
 
+  // LOCAL FALLBACK: save to disk when Cloudinary credentials are absent
+  if (!isCloudinaryConfigured) {
+    const ext = path.extname(req.file.originalname) || '.bin';
+    const filename = `${crypto.randomUUID()}${ext}`;
+    const dest = path.join(uploadDir, filename);
+    fs.writeFile(dest, req.file.buffer, (err) => {
+      if (err) {
+        console.error('Local file write error:', err);
+        return res.status(500).json({ error: 'Failed to save file locally' });
+      }
+      const localUrl = `http://localhost:${process.env.PORT || 5000}/uploads/${filename}`;
+      console.log(`[LOCAL STORAGE] Saved: ${localUrl}`);
+      res.json({ url: localUrl });
+    });
+    return;
+  }
+
+  // CLOUDINARY: upload in production
   const stream = cloudinary.uploader.upload_stream(
     { folder: 'bulusan-tourism', resource_type: 'auto' },
     (error: any, result: any) => {
@@ -90,6 +120,12 @@ const createCrudRoutes = (model: any, modelName: string, include?: any) => {
   const r = Router();
   r.get('/', async (req, res) => {
     try {
+      const cacheKey = `${modelName}:list`;
+      const cachedData = await redisCache.get(cacheKey);
+      if (cachedData) {
+        return res.json(cachedData);
+      }
+
       // Determine default sorting field
       let orderBy: any = undefined;
       
@@ -106,6 +142,7 @@ const createCrudRoutes = (model: any, modelName: string, include?: any) => {
       }
 
       const data = await model.findMany({ include, orderBy });
+      await redisCache.set(cacheKey, data, 3600);
       res.json(data);
     } catch (e) {
       res.status(500).json({ error: 'Error fetching data', details: e });
@@ -114,10 +151,20 @@ const createCrudRoutes = (model: any, modelName: string, include?: any) => {
 
   r.get('/:id', async (req, res) => {
     try {
+      const idParam = isNaN(Number(req.params.id)) ? req.params.id : Number(req.params.id);
+      const cacheKey = `${modelName}:item:${idParam}`;
+      const cachedData = await redisCache.get(cacheKey);
+      if (cachedData) {
+        return res.json(cachedData);
+      }
+
       const data = await model.findUnique({ 
-        where: { id: isNaN(Number(req.params.id)) ? req.params.id : Number(req.params.id) },
+        where: { id: idParam },
         include 
       });
+      if (data) {
+        await redisCache.set(cacheKey, data, 3600);
+      }
       res.json(data);
     } catch (e) {
       res.status(500).json({ error: 'Error fetching data', details: e });
@@ -154,6 +201,7 @@ const createCrudRoutes = (model: any, modelName: string, include?: any) => {
       }
 
       const data = await model.create({ data: payload });
+      await redisCache.invalidatePattern(`${modelName}:*`);
       res.json(data);
     } catch (e: any) {
       console.error('Create error:', e.message);
@@ -210,6 +258,7 @@ const createCrudRoutes = (model: any, modelName: string, include?: any) => {
         where: { id: recordId },
         data: payload
       });
+      await redisCache.invalidatePattern(`${modelName}:*`);
       res.json(data);
     } catch (e: any) {
       console.error('Update error:', e.message);
@@ -240,6 +289,7 @@ const createCrudRoutes = (model: any, modelName: string, include?: any) => {
       }
 
       await model.delete({ where: { id: recordId } });
+      await redisCache.invalidatePattern(`${modelName}:*`);
       res.json({ success: true });
     } catch (e) {
       res.status(500).json({ error: 'Error deleting data', details: e });

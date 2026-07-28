@@ -1,274 +1,216 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { motion } from 'framer-motion';
-import { Search, MapPin, Heart, Star, X, Clock, DollarSign, Info, Sparkles, Award, TrendingUp, Users, Zap, Tag } from 'lucide-react';
-import { Attraction, Review } from '../data/types';
-import GalleryWithThumbnails from '../components/Common/GalleryWithThumbnails';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MapPin, Heart, Star, X, Clock, DollarSign, Phone, Globe, MessageSquare } from 'lucide-react';
 import StarRating from '../components/Common/StarRating';
 import AuthGuardPopup from '../components/Common/AuthGuardPopup';
 import { useAuth } from '../hooks/useAuth';
-import { dbService } from '../api/db';
 import { apiClient } from '../api/client';
-import { getDynamicTags } from '../utils/tagUtils';
 import { useAlert } from '../components/Common/AlertProvider';
+import { getMediaUrl } from '../utils/mediaUtils';
 
+// ─── STYLES ─────────────────────────────────────────────────────────────────
 const PageContainer = styled(motion.div)`
   position: fixed;
   top: 0; left: 0; width: 100vw; height: 100vh;
-  background: var(--surface-bg);
+  background: rgba(15, 23, 42, 0.85); /* Darkened backdrop */
+  backdrop-filter: blur(12px);
   z-index: 2000;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
 
-  @media (max-width: 1024px) {
-    position: fixed;
-    top: 0; left: 0; width: 100vw; height: 100vh;
-    overflow-y: auto;
-    z-index: 2100;
+  @media (max-width: 768px) {
+    padding: 0;
+    align-items: flex-end;
+  }
+`;
+
+const CardWrapper = styled(motion.div)`
+  width: 100%;
+  max-width: 650px;
+  max-height: 90vh;
+  background: #1e293b; /* Sleek dark surface bg */
+  border-radius: 24px;
+  overflow-y: auto;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+
+  &::-webkit-scrollbar { width: 6px; }
+  &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+  @media (max-width: 768px) {
+    max-height: 95vh;
+    border-radius: 24px 24px 0 0;
   }
 `;
 
 const CloseButton = styled.button`
   position: absolute;
-  top: 32px;
-  right: 60px;
-  background: var(--surface-bg);
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  color: var(--text-dark);
-  padding: 10px 20px;
-  border-radius: 30px;
-  font-weight: 700;
+  top: 16px;
+  right: 16px;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: white;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s;
   z-index: 50;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-
-  &:hover {
-    background: var(--soft-blue);
-    color: var(--cta-blue);
-  }
-
-  @media (max-width: 1024px) {
-    top: 16px;
-    right: 20px;
-    position: fixed;
-  }
-`;
-
-const ContentWrapper = styled.div`
-  flex: 1;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 32px 60px 40px;
-  overflow: hidden; /* Prevent body scroll on desktop */
-  
-  @media (max-width: 1024px) {
-    padding: 70px 20px 20px;
-    overflow: visible;
-  }
-`;
-
-const HeaderSection = styled.div`
-  margin-bottom: 24px;
-  flex-shrink: 0;
-  
-  h2 {
-    font-size: 3rem;
-    color: var(--dark-blue);
-    font-family: 'Outfit', sans-serif;
-    margin: 0 0 16px 0;
-    line-height: 1.1;
-    
-    @media (max-width: 768px) {
-      font-size: 2.2rem;
-    }
-  }
-`;
-
-const DetailTags = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  
-  .tag-pill {
-    background: #f0f7ff;
-    color: var(--cta-blue);
-    padding: 8px 18px;
-    border-radius: 30px;
-    font-size: 0.85rem;
-    font-weight: 800;
-    border: 1px solid rgba(46, 117, 182, 0.1);
-    box-shadow: 0 4px 12px rgba(46, 117, 182, 0.05);
-  }
-  
-  .dynamic-pill {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-    color: white;
-    border: none;
-    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);
-  }
-`;
-
-const SplitLayout = styled.div`
-  display: flex;
-  gap: 40px;
-  flex: 1;
-  overflow: hidden;
-  
-  @media (max-width: 1024px) {
-    flex-direction: column;
-    overflow: visible;
-  }
-`;
-
-const LeftColumn = styled.div`
-  flex: 1.8;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  overflow: hidden;
-`;
-
-const DetailsScrollArea = styled.div`
-  flex: 1;
-  overflow-y: auto;
-  padding-right: 20px;
-  padding-bottom: 20px;
-  
-  &::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.4); border-radius: 10px; }
-
-  @media (max-width: 1024px) {
-    overflow-y: visible;
-    padding-right: 0;
-    padding-bottom: 0;
-  }
-`;
-
-const MediaSection = styled.div`
-  width: 100%;
-  flex-shrink: 0;
-`;
-
-const RightColumn = styled.div`
-  flex: 1.2;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  gap: 24px;
-  padding-right: 20px;
-
-  &::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.4); border-radius: 10px; }
-
-  @media (max-width: 1024px) {
-    overflow-y: visible;
-    padding-right: 0;
-  }
-`;
-
-const InfoCard = styled.div<{ $glass?: boolean, $highlight?: boolean }>`
-  background: ${(props) => props.$highlight ? 'var(--highlight-bg, #fffbeb)' : props.$glass ? 'rgba(255, 255, 255, 0.05)' : 'var(--surface-bg)'};
-  border: 1px solid ${(props) => props.$highlight ? 'var(--highlight-border, #fde68a)' : 'rgba(148, 163, 184, 0.1)'};
-  padding: 32px;
-  border-radius: 24px;
-  box-shadow: ${(props) => props.theme.shadows.soft};
-  
-  h3 {
-    font-size: 1.25rem;
-    margin-bottom: 16px;
-    color: var(--dark-blue);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  
-  p {
-    font-size: 1rem;
-    line-height: 1.7;
-    color: ${(props) => props.theme.colors.textDark};
-    opacity: 0.85;
-  }
-`;
-
-const SwitcherHeader = styled.div`
-  display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
-  background: var(--surface-bg);
-  padding: 8px;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-`;
-
-const SwitchButton = styled.button<{ $active: boolean }>`
-  flex: 1;
-  padding: 12px;
-  background: ${p => p.$active ? 'var(--cta-blue)' : 'rgba(148, 163, 184, 0.05)'};
-  color: ${p => p.$active ? 'white' : 'var(--text-light)'};
-  border: none;
-  border-radius: 12px;
-  font-weight: 800;
-  cursor: pointer;
   transition: all 0.2s;
-  &:hover {
-    background: ${p => p.$active ? 'var(--cta-blue)' : 'rgba(148, 163, 184, 0.1)'};
-    color: ${p => p.$active ? 'white' : 'var(--dark-blue)'};
+  &:hover { background: rgba(239, 68, 68, 0.8); border-color: transparent; }
+`;
+
+const PreviewImageArea = styled.div`
+  width: 100%;
+  height: 300px;
+  position: relative;
+  flex-shrink: 0;
+  img { width: 100%; height: 100%; object-fit: cover; }
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 120px;
+    background: linear-gradient(to top, #1e293b 0%, transparent 100%);
   }
 `;
 
-const FreeAdmissionBanner = styled.div`
+const PreviewCatBadge = styled.span`
+  position: absolute;
+  top: 16px; left: 16px;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(4px);
+  color: white;
+  font-size: 0.75rem; font-weight: 800;
+  padding: 6px 14px; border-radius: 20px;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  border: 1px solid rgba(255,255,255,0.1);
+  z-index: 10;
+`;
+
+const PreviewBody = styled.div`
+  padding: 0 28px 32px;
+  margin-top: -20px;
+  position: relative;
+  z-index: 20;
+`;
+
+const PreviewName = styled.h2`
+  font-size: 2rem;
+  font-weight: 900;
+  color: white;
+  margin: 0 0 8px;
+  font-family: ${p => p.theme.fonts.heading};
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+`;
+
+const PreviewLocation = styled.div`
+  display: flex; align-items: center; gap: 6px;
+  color: #94a3b8; font-size: 0.95rem; font-weight: 600;
+  margin-bottom: 20px;
+`;
+
+const PreviewDivider = styled.hr`
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  margin: 20px 0;
+`;
+
+const PreviewInfoBlock = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`;
+
+const PreviewRow = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+`;
+
+const PreviewRowIcon = styled.div`
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--cta-blue);
+  flex-shrink: 0;
+`;
+
+const PreviewRowContent = styled.div`
+  flex: 1;
+  .label { font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .value { font-size: 0.95rem; font-weight: 600; color: #f8fafc; line-height: 1.5; }
+`;
+
+const FreeBadge = styled.span`
+  display: inline-block;
   background: linear-gradient(135deg, #10b981, #059669);
   color: white;
-  padding: 20px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 800;
-  font-size: 1.1rem;
-  box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2);
+  font-size: 0.75rem; font-weight: 900;
+  padding: 4px 12px; border-radius: 20px;
+  text-transform: uppercase; letter-spacing: 1px;
 `;
 
-const OfferItem = styled.div`
+const PreviewOfferLine = styled.div`
   display: flex;
-  align-items: center;
-  gap: 16px;
-  background: var(--surface-bg);
-  border: 1px solid rgba(148, 163, 184, 0.1);
-  padding: 16px;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  .oname { font-weight: 600; color: #f8fafc; }
+  .oprice { font-weight: 800; color: #60a5fa; }
+  &:last-child { border-bottom: none; }
+`;
+
+const TagsPreview = styled.div`
+  display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px;
+  span {
+    background: rgba(46,117,182,0.15);
+    color: #60a5fa;
+    border: 1px solid rgba(46,117,182,0.3);
+    font-size: 0.75rem; font-weight: 700;
+    padding: 4px 12px; border-radius: 20px;
+  }
+`;
+
+const DescriptionBlock = styled.div`
+  background: rgba(255,255,255,0.03);
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-
-  img {
-    width: 60px; height: 60px;
-    border-radius: 12px;
-    object-fit: cover;
-  }
-
-  .offer-details {
-    flex: 1;
-    .name { font-weight: 700; color: var(--text-dark); margin-bottom: 4px; }
-    .price { font-weight: 900; color: var(--cta-blue); }
-  }
+  padding: 20px;
+  border: 1px solid rgba(255,255,255,0.05);
+  margin-top: 24px;
+  
+  .desc-label { font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
+  .desc-text { font-size: 0.95rem; color: #cbd5e1; line-height: 1.7; opacity: 0.9; }
 `;
 
 const ActionButtonsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 16px;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
   margin-top: 24px;
+  
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 const ActionButton = styled.button<{ $primary?: boolean, $success?: boolean }>`
   width: 100%;
-  padding: 16px;
-  border-radius: 16px;
+  padding: 14px;
+  border-radius: 14px;
   font-weight: 800;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -277,39 +219,98 @@ const ActionButton = styled.button<{ $primary?: boolean, $success?: boolean }>`
   transition: all 0.2s;
   border: none;
   
-  background: ${p => p.$success ? '#10b981' : p.$primary ? 'var(--dark-blue)' : 'var(--light-bg)'};
-  color: ${p => (p.$primary || p.$success) ? 'var(--surface-bg)' : 'var(--text-dark)'};
-  border: ${p => (p.$primary || p.$success) ? 'none' : '1px solid rgba(148, 163, 184, 0.2)'};
+  background: ${p => p.$success ? 'linear-gradient(135deg, #10b981, #059669)' : p.$primary ? 'linear-gradient(135deg, var(--cta-blue), var(--primary-blue))' : 'rgba(255,255,255,0.08)'};
+  color: white;
+  border: ${p => (p.$primary || p.$success) ? 'none' : '1px solid rgba(255,255,255,0.1)'};
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    background: ${p => !p.$primary && !p.$success && 'rgba(255,255,255,0.15)'};
   }
 `;
 
+// Reviews
+const ReviewsBlock = styled.div`
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255,255,255,0.08);
 
+  h3 {
+    font-size: 1.1rem;
+    color: white;
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 16px;
+    font-weight: 800;
+  }
+`;
+
+const ReviewItem = styled.div`
+  background: rgba(255,255,255,0.03);
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.05);
+  margin-bottom: 12px;
+
+  .r-header {
+    display: flex; gap: 12px; margin-bottom: 8px; align-items: center;
+  }
+  img { width: 32px; height: 32px; border-radius: 50%; }
+  .r-author { font-weight: 700; font-size: 0.85rem; color: #f8fafc; }
+  .r-date { font-size: 0.7rem; color: #64748b; }
+  p { font-size: 0.85rem; color: #cbd5e1; line-height: 1.5; margin-top: 4px; }
+`;
+
+const ReviewInputBlock = styled.div`
+  margin-top: 16px;
+  background: rgba(255,255,255,0.03);
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+`;
+
+const StyledInput = styled.input`
+  width: 100%;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.85rem;
+  color: white;
+  margin-top: 8px;
+  &::placeholder { color: #64748b; }
+`;
+
+
+// ─── COMPONENT ──────────────────────────────────────────────────────────────
 const AttractionDetailsPage = ({ item: selectedItem, onClose }: { item: any, onClose: () => void }) => {
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();
   const { showAlert } = useAlert();
+  
   const [isAuthPopupOpen, setIsAuthPopupOpen] = useState(false);
   const [authAction, setAuthAction] = useState('');
+  
   const [newRating, setNewRating] = useState(0);
   const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [itinerary, setItinerary] = useState<number[]>([]);
   const [item, setItem] = useState(selectedItem);
-  const [activeTab, setActiveTab] = useState<'reviews' | 'offers'>('reviews');
 
-  useEffect(() => {
-    setItem(selectedItem);
-  }, [selectedItem]);
-
-  useEffect(() => {
-    if (user) setItinerary(user.itinerary || []);
-  }, [user]);
+  useEffect(() => { setItem(selectedItem); }, [selectedItem]);
+  useEffect(() => { if (user) setItinerary(user.itinerary || []); }, [user]);
 
   if (!selectedItem) return null;
+
+  const thumbnail = getMediaUrl(selectedItem.img || (selectedItem.photos && selectedItem.photos[0]));
+  const isFree = selectedItem.pricingType === 'Free' || selectedItem.isFreeAdmission;
 
   const toggleItinerary = async (itemId: number) => {
     if (!user) {
@@ -329,242 +330,204 @@ const AttractionDetailsPage = ({ item: selectedItem, onClose }: { item: any, onC
     }
   };
 
-  // Limit photos to 4
-  const allAvailablePhotos = [selectedItem.img, ...(selectedItem.photos || [])].filter(Boolean);
-  const uniquePhotos = Array.from(new Set(allAvailablePhotos));
-  const limitedGallery = uniquePhotos.slice(0, 4);
+  const handlePostReview = async () => {
+    if (!user) { setAuthAction('post review'); setIsAuthPopupOpen(true); return; }
+    if (newRating === 0) return showAlert('Validation Error', 'Please select a star rating first.', 'error');
+    setSubmitting(true);
+    try {
+      const reviewPayload = {
+        author: user.name,
+        avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`,
+        rating: newRating,
+        comment: newComment,
+      };
+      const newReview = await apiClient.post(`/reviews/attraction/${item.id}`, reviewPayload);
+      setItem((prev: any) => ({ ...prev, reviews: [...(prev.reviews || []), newReview] }));
+      setNewComment(''); setNewRating(0);
+    } catch (err) { 
+      showAlert('Error', 'Failed to post review. Please try again.', 'error'); 
+    } finally { 
+      setSubmitting(false); 
+    }
+  };
 
   return (
     <PageContainer
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 50 }}
-      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
     >
-      <CloseButton onClick={onClose}>
-         <X size={18} /> Close
-      </CloseButton>
+      <CardWrapper
+        initial={{ y: 50, opacity: 0, scale: 0.95 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: 50, opacity: 0, scale: 0.95 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+      >
+        <CloseButton onClick={onClose}><X size={20} /></CloseButton>
 
-      <ContentWrapper>
-        <HeaderSection>
-           <h2>{selectedItem.name}</h2>
-           {(selectedItem.tags?.length > 0 || getDynamicTags(selectedItem, []).length > 0) && (
-              <DetailTags>
-                {/* Category tags */}
-                {(Array.isArray(selectedItem.categories) ? selectedItem.categories : [selectedItem.categories]).filter(Boolean).map((cat: string) => (
-                  <span key={cat} className="tag-pill" style={{ background: 'var(--cta-blue)', color: 'white' }}>
-                    {cat}
-                  </span>
-                ))}
-              
-                {/* Dynamic/System tags */}
-                {getDynamicTags(selectedItem, []).map((tag: string) => {
-                   let Icon = Star;
-                   let bgGradient = 'rgba(255, 215, 0, 0.3)';
-                   let textCol = 'var(--cta-blue)';
-                   
-                   if (tag === 'New') { Icon = Zap; bgGradient = 'linear-gradient(135deg, #10b981, #059669)'; textCol = 'white'; }
-                   else if (tag === 'Top Rated') { Icon = Star; bgGradient = 'linear-gradient(135deg, #f59e0b, #d97706)'; textCol = 'white'; }
-                   else if (tag === 'Trending') { Icon = TrendingUp; bgGradient = 'linear-gradient(135deg, #ef4444, #dc2626)'; textCol = 'white'; }
-                   else if (tag === 'Featured') { Icon = Award; bgGradient = 'linear-gradient(135deg, #3b82f6, #1d4ed8)'; textCol = 'white'; }
-                   else if (tag === 'Most Visited') { Icon = Users; bgGradient = 'linear-gradient(135deg, #8b5cf6, #6d28d9)'; textCol = 'white'; }
+        <PreviewImageArea>
+          {thumbnail && <img src={thumbnail} alt="Attraction preview" />}
+          {item.categories?.[0] && (
+            <PreviewCatBadge>{item.categories[0]}</PreviewCatBadge>
+          )}
+        </PreviewImageArea>
 
-                   return (
-                     <span key={tag} className="tag-pill dynamic-pill" style={{ background: bgGradient, color: textCol, border: 'none', textShadow: 'none' }}>
-                        <Icon size={12} style={{ display: 'inline', marginRight: 4, fill: tag === 'Top Rated' || tag === 'New' ? 'white' : 'none' }} /> {tag.toUpperCase()}
-                     </span>
-                   );
-                })}
-                
-                {/* Custom tags */}
-                {selectedItem.tags?.map((tag: string) => (
-                  <span key={tag} className="tag-pill">
-                    #{tag.toUpperCase()}
-                  </span>
-                ))}
-              </DetailTags>
-           )}
-        </HeaderSection>
+        <PreviewBody>
+          <PreviewName>{item.name}</PreviewName>
+          
+          <PreviewLocation>
+            <MapPin size={16} />
+            {item.location}
+          </PreviewLocation>
 
-        <SplitLayout>
-          {/* LEFT COLUMN: Media (Blue) & Details (Yellow) */}
-          <LeftColumn>
-             {/* Media Section */}
-             <MediaSection>
-               <GalleryWithThumbnails
-                 images={limitedGallery}
-                 videoUrl={selectedItem.videoUrl}
-               />
-             </MediaSection>
-
-             {/* Details Section (Yellow) */}
-             <DetailsScrollArea>
-               <InfoCard $highlight>
-                  <h3><Info size={22} color="#d97706" /> Details & Actions</h3>
-                  
-                  {selectedItem.isFreeAdmission && (
-                    <div style={{ marginBottom: '24px' }}>
-                      <FreeAdmissionBanner>
-                          <Star fill="white" size={24} /> Enjoy Free Admission to this attraction!
-                      </FreeAdmissionBanner>
-                    </div>
-                  )}
-                  
-                  <p style={{ color: '#92400e', fontWeight: 500 }}>{selectedItem.description}</p>
-                  
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginTop: '24px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                         <MapPin size={24} color="#d97706" />
-                         <div>
-                           <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#b45309', textTransform: 'uppercase' }}>Location</div>
-                           <div style={{ fontWeight: 700, color: '#78350f' }}>{selectedItem.location}</div>
-                         </div>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                         <Clock size={24} color="#d97706" />
-                         <div>
-                           <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#b45309', textTransform: 'uppercase' }}>Operating Hours</div>
-                           <div style={{ fontWeight: 700, color: '#78350f' }}>{selectedItem.metadata?.hours || 'Not specified'}</div>
-                         </div>
-                      </div>
+          <PreviewInfoBlock>
+            {/* Admission */}
+            <PreviewRow>
+              <PreviewRowIcon><DollarSign size={18} /></PreviewRowIcon>
+              <PreviewRowContent>
+                <div className="label">Admission</div>
+                {isFree ? (
+                  <FreeBadge>Free Entry</FreeBadge>
+                ) : item.offers && item.offers.length > 0 ? (
+                  <div>
+                    {item.offers.map((o: any) => (
+                      <PreviewOfferLine key={o.id || o.name}>
+                        <span className="oname">{o.name}</span>
+                        <span className="oprice">₱{o.price}</span>
+                      </PreviewOfferLine>
+                    ))}
                   </div>
+                ) : (
+                  <span className="value" style={{ color: '#64748b' }}>Contact for rates</span>
+                )}
+              </PreviewRowContent>
+            </PreviewRow>
 
-                  <ActionButtonsGrid>
-                    <ActionButton onClick={() => {
-                      navigate(`/explore?lat=${selectedItem.lat ?? selectedItem.coordinates?.lat}&lng=${selectedItem.lng ?? selectedItem.coordinates?.lng}&name=${encodeURIComponent(selectedItem.name)}&autoRoute=true`);
-                    }}>
-                      <MapPin size={18}/> View on Map
-                    </ActionButton>
-                    
-                    <ActionButton 
-                      $primary={!itinerary.includes(selectedItem.id)} 
-                      $success={itinerary.includes(selectedItem.id)}
-                      onClick={() => toggleItinerary(selectedItem.id)}
-                    >
-                      <Heart size={18} fill={itinerary.includes(selectedItem.id) ? 'white' : 'none'} />
-                      {itinerary.includes(selectedItem.id) ? 'Saved' : 'Save Landmark'}
-                    </ActionButton>
-                    
-                    {selectedItem.metadata?.website && (
-                       <ActionButton $primary as="a" href={selectedItem.metadata.website} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
-                          Official Site
-                       </ActionButton>
-                    )}
-                  </ActionButtonsGrid>
-
-               </InfoCard>
-             </DetailsScrollArea>
-          </LeftColumn>
-
-          {/* RIGHT COLUMN: Reviews & Offers (Red) */}
-          <RightColumn>
-             {/* If free admission, hide switcher, default to reviews */}
-             {!selectedItem.isFreeAdmission && (
-               <SwitcherHeader>
-                  <SwitchButton 
-                    $active={activeTab === 'reviews'} 
-                    onClick={() => setActiveTab('reviews')}
-                  >
-                    Reviews
-                  </SwitchButton>
-                  <SwitchButton 
-                    $active={activeTab === 'offers'} 
-                    onClick={() => setActiveTab('offers')}
-                  >
-                    Offers & Admission
-                  </SwitchButton>
-               </SwitcherHeader>
-             )}
-
-             {/* OFFERS TAB CONTENT */}
-             {activeTab === 'offers' && !selectedItem.isFreeAdmission && (
-                <InfoCard>
-                  <h3><Tag size={22} color="var(--cta-blue)" /> Available Offers</h3>
-                  {selectedItem.offers && selectedItem.offers.length > 0 ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                          {selectedItem.offers.map((offer: any) => (
-                              <OfferItem key={offer.id}>
-                                  {offer.image && <img loading="lazy" src={offer.image} alt={offer.name} />}
-                                  <div className="offer-details">
-                                      <div className="name">{offer.name}</div>
-                                      <div className="price">PHP {offer.price}</div>
-                                  </div>
-                              </OfferItem>
-                          ))}
-                      </div>
-                  ) : (
-                      <p>Contact for rates or see official website for details.</p>
-                  )}
-                </InfoCard>
-             )}
-
-             {/* REVIEWS TAB CONTENT */}
-             {activeTab === 'reviews' && (
-                <InfoCard>
-                   <h3><Star size={20} color="#f59e0b" fill="#f59e0b" /> Community Reviews</h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {item.reviews && item.reviews.length > 0 ? (
-                      item.reviews.map((review: any) => (
-                        <div key={review.id} style={{ background: 'rgba(148, 163, 184, 0.05)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(148, 163, 184, 0.1)' }}>
-                          <div style={{ display: 'flex', gap: '12px', marginBottom: '8px', alignItems: 'center' }}>
-                            <img loading="lazy" src={review.avatar} style={{ width: '32px', height: '32px', borderRadius: '50%' }} alt="Reviewer" />
-                            <div>
-                              <div style={{ fontWeight: 'bold', fontSize: '0.85rem', color: 'var(--text-dark)' }}>{review.author}</div>
-                              <div style={{ fontSize: '0.7rem', color: 'var(--text-light)' }}>
-                                {review.date ? new Date(review.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
-                              </div>
-                            </div>
-                          </div>
-                          <p style={{ fontSize: '0.85rem', opacity: 0.8, color: 'var(--text-dark)' }}>"{review.comment}"</p>
-                        </div>
-                      ))
-                    ) : (
-                      <p style={{ fontSize: '0.9rem', opacity: 0.5, fontStyle: 'italic', color: 'var(--text-light)' }}>No reviews yet. Be the first to share!</p>
-                    )}
+            {/* Operating Hours */}
+            {(item.metadata?.hours || item.openingTime || item.closingTime) && (
+              <PreviewRow>
+                <PreviewRowIcon><Clock size={18} /></PreviewRowIcon>
+                <PreviewRowContent>
+                  <div className="label">Operating Hours</div>
+                  <div className="value">
+                    {item.metadata?.hours || `${item.openingTime || '--:--'} – ${item.closingTime || '--:--'}`}
                   </div>
+                </PreviewRowContent>
+              </PreviewRow>
+            )}
 
-                  <div style={{ marginTop: '24px', background: 'rgba(148, 163, 184, 0.05)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(148, 163, 184, 0.1)' }}>
-                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                      <div style={{ flex: 1 }}>
-                        <StarRating rating={newRating} editable onChange={setNewRating} size={20} />
-                        <input
-                          type="text"
-                          placeholder="Add a comment..."
-                          value={newComment}
-                          onChange={(e) => setNewComment(e.target.value)}
-                          style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', fontSize: '0.85rem', marginTop: '8px', color: 'var(--text-dark)' }}
-                        />
+            {/* Contact */}
+            {item.contactInfo && (
+              <PreviewRow>
+                <PreviewRowIcon><Phone size={18} /></PreviewRowIcon>
+                <PreviewRowContent>
+                  <div className="label">Contact</div>
+                  <div className="value">{item.contactInfo}</div>
+                </PreviewRowContent>
+              </PreviewRow>
+            )}
+
+            {/* Website */}
+            {(item.website || item.metadata?.website) && (
+              <PreviewRow>
+                <PreviewRowIcon><Globe size={18} /></PreviewRowIcon>
+                <PreviewRowContent>
+                  <div className="label">Website</div>
+                  <a 
+                    href={item.website || item.metadata?.website} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    style={{ color: '#60a5fa', textDecoration: 'none', fontSize: '0.95rem', fontWeight: 600 }}
+                  >
+                    Official Site
+                  </a>
+                </PreviewRowContent>
+              </PreviewRow>
+            )}
+          </PreviewInfoBlock>
+
+          {/* Tags */}
+          {(item.tags || []).length > 0 && (
+            <TagsPreview>
+              {item.tags.map((t: string) => <span key={t}>#{t}</span>)}
+            </TagsPreview>
+          )}
+
+          {/* Description */}
+          {item.description && (
+            <DescriptionBlock>
+              <div className="desc-label">Description</div>
+              <div className="desc-text">{item.description}</div>
+            </DescriptionBlock>
+          )}
+
+          {/* Action Buttons */}
+          <ActionButtonsGrid>
+            <ActionButton $primary onClick={() => {
+              navigate(`/explore?lat=${item.lat ?? item.coordinates?.lat}&lng=${item.lng ?? item.coordinates?.lng}&name=${encodeURIComponent(item.name)}&autoRoute=true`);
+            }}>
+              <MapPin size={18}/> View on Map
+            </ActionButton>
+            
+            <ActionButton 
+              $success={itinerary.includes(item.id)}
+              onClick={() => toggleItinerary(item.id)}
+            >
+              <Heart size={18} fill={itinerary.includes(item.id) ? 'white' : 'none'} />
+              {itinerary.includes(item.id) ? 'Saved' : 'Save Landmark'}
+            </ActionButton>
+          </ActionButtonsGrid>
+
+          {/* Reviews */}
+          <ReviewsBlock>
+            <h3><MessageSquare size={18} color="#60a5fa" /> Community Reviews</h3>
+            
+            {item.reviews && item.reviews.length > 0 ? (
+              item.reviews.map((review: any) => (
+                <ReviewItem key={review.id}>
+                  <div className="r-header">
+                    <img loading="lazy" src={review.avatar} alt="Reviewer" />
+                    <div>
+                      <div className="r-author">{review.author}</div>
+                      <div className="r-date">
+                        {review.date ? new Date(review.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
                       </div>
-                      <button
-                        disabled={submitting}
-                        onClick={async () => {
-                          if (!user) { setAuthAction('post review'); setIsAuthPopupOpen(true); return; }
-                          if (newRating === 0) return showAlert('Validation Error', 'Please select a star rating first.', 'error');
-                          setSubmitting(true);
-                          try {
-                            const reviewPayload = {
-                              author: user.name,
-                              avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`,
-                              rating: newRating,
-                              comment: newComment,
-                            };
-                            const newReview = await apiClient.post(`/reviews/attraction/${item.id}`, reviewPayload);
-                            // Optimistic update for current view using fresh review from server
-                            setItem((prev: any) => ({ ...prev, reviews: [...(prev.reviews || []), newReview] }));
-                            setNewComment(''); setNewRating(0);
-                          } catch (err) { showAlert('Error', 'Failed to post review. Please try again.', 'error'); } finally { setSubmitting(false); }
-                        }}
-                        style={{ background: 'var(--cta-blue)', color: 'white', padding: '8px 16px', borderRadius: '12px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
-                      >
-                        Post
-                      </button>
                     </div>
                   </div>
-                </InfoCard>
-             )}
-          </RightColumn>
-        </SplitLayout>
-      </ContentWrapper>
+                  <StarRating rating={review.rating} size={14} />
+                  <p>"{review.comment}"</p>
+                </ReviewItem>
+              ))
+            ) : (
+              <p style={{ fontSize: '0.85rem', color: '#64748b', fontStyle: 'italic' }}>
+                No reviews yet. Be the first to share!
+              </p>
+            )}
+
+            <ReviewInputBlock>
+              <div style={{ flex: 1 }}>
+                <StarRating rating={newRating} editable onChange={setNewRating} size={18} />
+                <StyledInput
+                  type="text"
+                  placeholder="Add a comment..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                />
+              </div>
+              <ActionButton 
+                $primary 
+                onClick={handlePostReview} 
+                disabled={submitting}
+                style={{ width: 'auto', padding: '10px 20px', borderRadius: '10px' }}
+              >
+                Post
+              </ActionButton>
+            </ReviewInputBlock>
+          </ReviewsBlock>
+
+        </PreviewBody>
+      </CardWrapper>
 
       <AuthGuardPopup
         isOpen={isAuthPopupOpen}
