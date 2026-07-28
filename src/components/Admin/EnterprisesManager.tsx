@@ -729,8 +729,8 @@ export default function EnterprisesManager({ enterprises, ownerMode, onDataChang
                     <OffersBuilder>
                       <FieldLabel style={{ marginBottom: 10 }}>Add Service / Package</FieldLabel>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px', background: 'rgba(148,163,184,0.05)', padding: '12px', borderRadius: '12px' }}>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <SmallInput style={{ flex: 1, minWidth: '100px' }} placeholder="e.g. Room for 2" value={newOfferName} onChange={e => setNewOfferName(e.target.value)} />
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          <SmallInput style={{ flex: '1 1 120px', minWidth: '100px' }} placeholder="e.g. Room for 2" value={newOfferName} onChange={e => setNewOfferName(e.target.value)} />
                           <select
                             value={newOfferType}
                             onChange={e => setNewOfferType(e.target.value as any)}
