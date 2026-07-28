@@ -477,6 +477,12 @@ export default function EnterprisesManager({ enterprises, ownerMode, onDataChang
     if (!formData.categories?.length) return showAlert("Validation Error", "Please select at least 1 category.", "error");
     if (!formData.coordinates?.lat) return showAlert("Validation Error", "Please pinpoint the location on the map on the right side.", "error");
 
+    const lat = formData.coordinates.lat;
+    const lng = formData.coordinates.lng;
+    if (lat < 12.70 || lat > 12.82 || lng < 124.03 || lng > 124.20) {
+      return showAlert("Validation Error", "The selected location is outside the borders of Bulusan, Sorsogon. Please select a valid location.", "error");
+    }
+
     const dataToSave = {
       ...formData,
       img: photos[0] || '',
