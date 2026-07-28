@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Heart, Star, X, Clock, DollarSign, Phone, Globe, MessageSquare } from 'lucide-react';
 import StarRating from '../components/Common/StarRating';
 import AuthGuardPopup from '../components/Common/AuthGuardPopup';
+import OfferCapsule from '../components/Common/OfferCapsule';
 import { useAuth } from '../hooks/useAuth';
 import { apiClient } from '../api/client';
 import { useAlert } from '../components/Common/AlertProvider';
@@ -288,7 +289,6 @@ const StyledInput = styled.input`
   &::placeholder { color: #64748b; }
 `;
 
-
 // ─── COMPONENT ──────────────────────────────────────────────────────────────
 const AttractionDetailsPage = ({ item: selectedItem, onClose }: { item: any, onClose: () => void }) => {
   const navigate = useNavigate();
@@ -390,12 +390,9 @@ const AttractionDetailsPage = ({ item: selectedItem, onClose }: { item: any, onC
                 {isFree ? (
                   <FreeBadge>Free Entry</FreeBadge>
                 ) : item.offers && item.offers.length > 0 ? (
-                  <div>
+                  <div style={{ marginTop: '8px' }}>
                     {item.offers.map((o: any) => (
-                      <PreviewOfferLine key={o.id || o.name}>
-                        <span className="oname">{o.name}</span>
-                        <span className="oprice">₱{o.price}</span>
-                      </PreviewOfferLine>
+                      <OfferCapsule key={o.id || o.name} offer={o} />
                     ))}
                   </div>
                 ) : (

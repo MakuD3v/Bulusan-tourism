@@ -414,6 +414,7 @@ export default function EnterprisesManager({ enterprises, ownerMode, onDataChang
   const [offers, setOffers] = useState<any[]>([]);
   const [newOfferName, setNewOfferName] = useState('');
   const [newOfferPrice, setNewOfferPrice] = useState('');
+  const [newOfferType, setNewOfferType] = useState<'Single Price' | 'Price Range' | 'Hourly Price'>('Single Price');
   const [newOfferImage, setNewOfferImage] = useState<string>('');
   const [isUploadingOfferImg, setIsUploadingOfferImg] = useState(false);
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
@@ -731,7 +732,16 @@ export default function EnterprisesManager({ enterprises, ownerMode, onDataChang
                       <FieldLabel style={{ marginBottom: 10 }}>Add Service / Package</FieldLabel>
                       <OfferInputRow>
                         <SmallInput style={{ flex: '1 1 100%' }} placeholder="e.g. Room for 2" value={newOfferName} onChange={e => setNewOfferName(e.target.value)} />
-                        <SmallInput style={{ flex: 1, minWidth: '80px' }} placeholder="PHP" type="number" value={newOfferPrice} onChange={e => setNewOfferPrice(e.target.value)} />
+                        <select
+                          value={newOfferType}
+                          onChange={e => setNewOfferType(e.target.value as any)}
+                          style={{ padding: '10px 10px', border: '1.5px solid rgba(148,163,184,0.2)', borderRadius: '10px', fontSize: '0.82rem', background: 'var(--surface-bg)', color: 'var(--text-dark)', outline: 'none', cursor: 'pointer', flexShrink: 0 }}
+                        >
+                          <option value="Single Price">Single ₱</option>
+                          <option value="Price Range">Range ₱</option>
+                          <option value="Hourly Price">Hourly / hr</option>
+                        </select>
+                        <SmallInput style={{ flex: 1, minWidth: '80px' }} placeholder={newOfferType === 'Price Range' ? 'e.g. 100-300' : 'PHP'} type={newOfferType === 'Price Range' ? 'text' : 'number'} value={newOfferPrice} onChange={e => setNewOfferPrice(e.target.value)} />
                         <div style={{ position: 'relative', flex: '0 0 auto' }}>
                           <input type="file" accept="image/*" ref={offerImageInputRef} style={{ display: 'none' }} onChange={e => e.target.files && processOfferImage(e.target.files)} />
                           <AddBtn type="button" onClick={() => offerImageInputRef.current?.click()} style={{ background: newOfferImage ? '#10b981' : 'rgba(148,163,184,0.2)', color: newOfferImage ? 'white' : 'var(--text-dark)', fontSize: '0.75rem', padding: '10px 12px' }}>
@@ -739,13 +749,13 @@ export default function EnterprisesManager({ enterprises, ownerMode, onDataChang
                             {isUploadingOfferImg ? '...' : newOfferImage ? '✓' : 'Pic'}
                           </AddBtn>
                         </div>
-                        <AddBtn type="button" style={{ flex: '0 0 auto' }} onClick={() => { if (newOfferName && newOfferPrice) { setOffers([...offers, { id: Date.now().toString(), name: newOfferName, price: newOfferPrice, image: newOfferImage }]); setNewOfferName(''); setNewOfferPrice(''); setNewOfferImage(''); } }}>+ Add</AddBtn>
+                        <AddBtn type="button" style={{ flex: '0 0 auto' }} onClick={() => { if (newOfferName && newOfferPrice) { setOffers([...offers, { id: Date.now().toString(), name: newOfferName, price: newOfferPrice, type: newOfferType, image: newOfferImage }]); setNewOfferName(''); setNewOfferPrice(''); setNewOfferImage(''); } }}>+ Add</AddBtn>
                       </OfferInputRow>
                       {offers.map((o: any) => (
                         <OfferItem key={o.id}>
                           {o.image ? <img src={getMediaUrl(o.image)} alt={o.name} /> : <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(148,163,184,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Ticket size={14} color="var(--text-light)" /></div>}
                           <span className="name">{o.name}</span>
-                          <span className="price">₱{o.price}</span>
+                          <span className="price">{o.type === 'Hourly Price' ? `₱${o.price}/hr` : `₱${o.price}`}</span>
                           <button className="del" type="button" onClick={() => setOffers(offers.filter((x: any) => x.id !== o.id))}><X size={12} /></button>
                         </OfferItem>
                       ))}

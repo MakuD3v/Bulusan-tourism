@@ -25,10 +25,13 @@ export interface Attraction {
     offers?: Offer[];
 }
 
+export type OfferType = 'Single Price' | 'Price Range' | 'Hourly Price';
+
 export interface Offer {
     id: string;
     name: string;
     price: string;
+    type?: OfferType;
     image?: string;
 }
 
