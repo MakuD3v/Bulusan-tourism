@@ -37,31 +37,34 @@ const OfferCapsule: React.FC<OfferCapsuleProps> = ({ offer }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            style={{ display: 'flex', height: '48px' }}
+            style={{ 
+              display: 'flex', 
+              height: '48px',
+              backgroundImage: `linear-gradient(to right, rgba(30,41,59,0.2) 0%, rgba(30,41,59,0.9) 60%, rgba(30,41,59,1) 100%), url(${imgUrl})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
           >
             <div style={{
               flex: 1,
-              backgroundImage: `linear-gradient(to right, rgba(15,23,42,0.8), rgba(15,23,42,0.4)), url(${imgUrl})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
               display: 'flex',
               alignItems: 'center',
-              padding: '0 12px',
-              fontWeight: 600,
+              padding: '0 16px',
+              fontWeight: 700,
               color: 'white',
-              fontSize: '0.9rem'
+              fontSize: '0.95rem',
+              textShadow: '0 2px 4px rgba(0,0,0,0.8)'
             }}>
               {offer.name}
             </div>
             <div style={{
-              background: 'linear-gradient(135deg, var(--cta-blue), var(--primary-blue))',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               padding: '0 16px',
-              fontWeight: 800,
-              color: 'white',
-              fontSize: '0.9rem',
+              fontWeight: 900,
+              color: '#60a5fa', /* Light blue for the price text */
+              fontSize: '1rem',
               whiteSpace: 'nowrap'
             }}>
               {formatPrice(offer.price, offer.type)}
