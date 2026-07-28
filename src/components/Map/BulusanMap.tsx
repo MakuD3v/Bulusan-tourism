@@ -11,6 +11,21 @@ import { Navigation, NavigationOff, Car, Bike, Footprints, Star, MapPin, X, Zap,
 import { getMapIconUrl } from '../Admin/CategoryTagConfig';
 import { getDynamicTags } from '../../utils/tagUtils';
 
+function useRainViewer() {
+  const [radarPath, setRadarPath] = useState<string | null>(null);
+  
+  useEffect(() => {
+    fetch('https://api.rainviewer.com/public/weather-maps.json')
+      .then(r => r.json())
+      .then(d => {
+        const latest = d.radar?.past?.[d.radar.past.length - 1];
+        if (latest) setRadarPath(latest.path);
+      })
+      .catch(console.error);
+  }, []);
+  return radarPath;
+}
+
 const MapStyleWrapper = styled.div`
   width: 100%;
   height: 100%;
@@ -560,6 +575,7 @@ const BulusanMap = ({ items, searchQuery = '', selectedCategories = [], activeTa
   const [travelMode, setTravelMode] = useState<TravelMode>('driving');
   const autoRouteFired = useRef(false);
   const watchId = useRef<number | null>(null);
+  const radarPath = useRainViewer();
 
   const BULUSAN_TOWN_CENTER = L.latLng(12.7533, 124.1362);
 
@@ -730,6 +746,16 @@ const BulusanMap = ({ items, searchQuery = '', selectedCategories = [], activeTa
 
       <MapContainer center={[12.75, 124.13]} zoom={12} style={{ height: '100%', width: '100%', zIndex: 10 }} ref={setMapInstance}>
         <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+        
+        {/* Dynamic Weather Radar Layer */}
+        {radarPath && (
+          <TileLayer
+            url={`https://tilecache.rainviewer.com${radarPath}/256/{z}/{x}/{y}/2/1_1.png`}
+            opacity={0.4}
+            zIndex={15}
+          />
+        )}
+        
         <MapBounds />
         <RoutingEngine waypoints={selection} mode={travelMode} onUpdate={setRouteInfo} />
 

@@ -319,25 +319,11 @@ const CompassWidget = styled.div`
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 50%;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #94a3b8;
+  color: #ef4444; /* North needle indicator color */
   box-shadow: 0 4px 15px rgba(0,0,0,0.3);
   pointer-events: none;
-  
-  .n { color: #ef4444; font-size: 0.65rem; font-weight: 900; line-height: 1; margin-bottom: 12px; }
-  
-  /* little needle in middle */
-  &::after {
-    content: '';
-    position: absolute;
-    width: 3px; height: 16px;
-    background: linear-gradient(to bottom, #ef4444 50%, #94a3b8 50%);
-    border-radius: 2px;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-  }
 `;
 
 // Floating "Tours" button on map
@@ -967,7 +953,7 @@ const ToursAndMapPage: React.FC = () => {
   const [showToursModal, setShowToursModal] = useState(false);
   const [showComingSoonMsg, setShowComingSoonMsg] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
-  const [weatherExpanded, setWeatherExpanded] = useState(true);
+  const [weatherExpanded, setWeatherExpanded] = useState(false);
 
   const weather = useWeather();
   const advisory = weather ? getTravelAdvisory(weather.code) : null;
@@ -1108,7 +1094,7 @@ const ToursAndMapPage: React.FC = () => {
 
         {/* Compass Widget */}
         <CompassWidget>
-          <div className="n">N</div>
+          <Compass size={24} />
         </CompassWidget>
 
         {/* Tours floating button */}
