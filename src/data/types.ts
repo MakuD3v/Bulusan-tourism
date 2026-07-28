@@ -33,6 +33,7 @@ export interface Offer {
     price: string;
     type?: OfferType;
     image?: string;
+    description?: string;
 }
 
 export interface Enterprise {

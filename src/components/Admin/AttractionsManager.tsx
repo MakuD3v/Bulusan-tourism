@@ -783,6 +783,7 @@ export default function AttractionsManager({ attractions, ownerMode, onDataChang
   const [newOfferName, setNewOfferName] = useState('');
   const [newOfferPrice, setNewOfferPrice] = useState('');
   const [newOfferType, setNewOfferType] = useState<'Single Price' | 'Price Range' | 'Hourly Price'>('Single Price');
+  const [newOfferDescription, setNewOfferDescription] = useState('');
   const [newOfferImage, setNewOfferImage] = useState<string>('');
   const [isUploadingOfferImg, setIsUploadingOfferImg] = useState(false);
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
@@ -1152,42 +1153,50 @@ export default function AttractionsManager({ attractions, ownerMode, onDataChang
                     {formData.pricingType === 'Offers' && (
                       <OffersBuilder>
                         <FieldLabel style={{ marginBottom: 10 }}>Add Ticket / Offer</FieldLabel>
-                        <OfferInputRow>
-                          <SmallInput style={{ flex: '1 1 100%' }} placeholder="e.g. Adult Entrance" value={newOfferName} onChange={e => setNewOfferName(e.target.value)} />
-                          <select
-                            value={newOfferType}
-                            onChange={e => setNewOfferType(e.target.value as any)}
-                            style={{ padding: '10px 10px', border: '1.5px solid rgba(148,163,184,0.2)', borderRadius: '10px', fontSize: '0.82rem', background: 'var(--surface-bg)', color: 'var(--text-dark)', outline: 'none', cursor: 'pointer', flexShrink: 0 }}
-                          >
-                            <option value="Single Price">Single ₱</option>
-                            <option value="Price Range">Range ₱</option>
-                            <option value="Hourly Price">Hourly / hr</option>
-                          </select>
-                          <SmallInput style={{ flex: 1, minWidth: '80px' }} placeholder={newOfferType === 'Price Range' ? 'e.g. 100-300' : 'PHP'} type={newOfferType === 'Price Range' ? 'text' : 'number'} value={newOfferPrice} onChange={e => setNewOfferPrice(e.target.value)} />
-                          <div style={{ position: 'relative', flex: '0 0 auto' }}>
-                            <input type="file" accept="image/*" ref={offerImageInputRef} style={{ display: 'none' }} onChange={e => e.target.files && processOfferImage(e.target.files)} />
-                            <AddOfferBtn type="button" onClick={() => offerImageInputRef.current?.click()} style={{ background: newOfferImage ? '#10b981' : 'rgba(148,163,184,0.2)', color: newOfferImage ? 'white' : 'var(--text-dark)', fontSize: '0.75rem', padding: '10px 12px' }}>
-                              <ImageIcon size={14} />
-                              {isUploadingOfferImg ? '...' : newOfferImage ? '✓' : 'Pic'}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px', background: 'rgba(148,163,184,0.05)', padding: '12px', borderRadius: '12px' }}>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <SmallInput style={{ flex: '1 1 100%' }} placeholder="e.g. Adult Entrance" value={newOfferName} onChange={e => setNewOfferName(e.target.value)} />
+                            <select
+                              value={newOfferType}
+                              onChange={e => setNewOfferType(e.target.value as any)}
+                              style={{ padding: '10px 10px', border: '1.5px solid rgba(148,163,184,0.2)', borderRadius: '10px', fontSize: '0.82rem', background: 'var(--surface-bg)', color: 'var(--text-dark)', outline: 'none', cursor: 'pointer', flexShrink: 0 }}
+                            >
+                              <option value="Single Price">Single ₱</option>
+                              <option value="Price Range">Range ₱</option>
+                              <option value="Hourly Price">Hourly / hr</option>
+                            </select>
+                            <SmallInput style={{ flex: 1, minWidth: '80px' }} placeholder={newOfferType === 'Price Range' ? 'e.g. 100-300' : 'PHP'} type={newOfferType === 'Price Range' ? 'text' : 'number'} value={newOfferPrice} onChange={e => setNewOfferPrice(e.target.value)} />
+                            <div style={{ position: 'relative', flex: '0 0 auto' }}>
+                              <input type="file" accept="image/*" ref={offerImageInputRef} style={{ display: 'none' }} onChange={e => e.target.files && processOfferImage(e.target.files)} />
+                              <AddOfferBtn type="button" onClick={() => offerImageInputRef.current?.click()} style={{ background: newOfferImage ? '#10b981' : 'rgba(148,163,184,0.2)', color: newOfferImage ? 'white' : 'var(--text-dark)', fontSize: '0.75rem', padding: '10px 12px' }}>
+                                <ImageIcon size={14} />
+                                {isUploadingOfferImg ? '...' : newOfferImage ? '✓' : 'Pic'}
+                              </AddOfferBtn>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <SmallInput style={{ flex: 1 }} placeholder="Short description (optional)..." value={newOfferDescription} onChange={e => setNewOfferDescription(e.target.value)} />
+                            <AddOfferBtn type="button" style={{ flex: '0 0 auto' }}
+                              onClick={() => {
+                                if (newOfferName && newOfferPrice) {
+                                  setOffers([...offers, { id: Date.now().toString(), name: newOfferName, price: newOfferPrice, type: newOfferType, image: newOfferImage, description: newOfferDescription }]);
+                                  setNewOfferName(''); setNewOfferPrice(''); setNewOfferImage(''); setNewOfferDescription('');
+                                }
+                              }}>
+                              + Add
                             </AddOfferBtn>
                           </div>
-                          <AddOfferBtn type="button" style={{ flex: '0 0 auto' }}
-                            onClick={() => {
-                              if (newOfferName && newOfferPrice) {
-                                setOffers([...offers, { id: Date.now().toString(), name: newOfferName, price: newOfferPrice, type: newOfferType, image: newOfferImage }]);
-                                setNewOfferName(''); setNewOfferPrice(''); setNewOfferImage('');
-                              }
-                            }}>
-                            + Add
-                          </AddOfferBtn>
-                        </OfferInputRow>
+                        </div>
                         {offers.map(o => (
                           <OfferItem key={o.id}>
                             {o.image
                               ? <img src={getMediaUrl(o.image)} alt={o.name} />
                               : <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(148,163,184,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Ticket size={14} color="var(--text-light)" /></div>
                             }
-                            <span className="name">{o.name}</span>
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                              <span className="name">{o.name}</span>
+                              {o.description && <span style={{ fontSize: '0.7rem', color: 'var(--text-light)', marginTop: '2px' }}>{o.description}</span>}
+                            </div>
                             <span className="price">
                               {o.type === 'Hourly Price' ? `₱${o.price}/hr` : `₱${o.price}`}
                             </span>
