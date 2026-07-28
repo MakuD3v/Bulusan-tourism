@@ -153,6 +153,7 @@ const Footer = styled.footer`
 const PersistentLayout = () => {
   const location = useLocation();
   const isHeroPage = location.pathname === '/' || location.pathname === '/discover';
+  const isMapDashboard = location.pathname.includes('/tours-and-map');
 
   return (
     <LayoutWrapper>
@@ -161,31 +162,33 @@ const PersistentLayout = () => {
       <MainContent $isHeroPage={isHeroPage}>
         <Outlet />
       </MainContent>
-      <Footer>
-        <div className="footer-content">
-          <div className="footer-logo">
-            <img loading="lazy" src="/real_bulusan_logo.png" alt="Bulusan Tourism" />
-          </div>
-          
-          <div className="footer-info">
-            <p style={{ gap: '16px' }}>
-              <span><Mail size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} /> bulusantourism@gmail.com</span>
-              <span><Phone size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} /> +63-908-446-6527</span>
-            </p>
-          </div>
+      {!isMapDashboard && (
+        <Footer>
+          <div className="footer-content">
+            <div className="footer-logo">
+              <img loading="lazy" src="/real_bulusan_logo.png" alt="Bulusan Tourism" />
+            </div>
+            
+            <div className="footer-info">
+              <p style={{ gap: '16px' }}>
+                <span><Mail size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} /> bulusantourism@gmail.com</span>
+                <span><Phone size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} /> +63-908-446-6527</span>
+              </p>
+            </div>
 
-          <div className="social-icons">
-            <a href="https://www.facebook.com/bulusan.phl.tourism" target="_blank" rel="noreferrer" aria-label="Facebook"><FacebookIcon size={18} /></a>
-            <a href="https://www.instagram.com/bulusanphltourism/" target="_blank" rel="noreferrer" aria-label="Instagram"><InstagramIcon size={18} /></a>
-            <a href="https://www.tiktok.com/@bulusantourismphl" target="_blank" rel="noreferrer" aria-label="TikTok"><TikTokIcon size={18} /></a>
-            <a href="https://x.com/bulusantourism" target="_blank" rel="noreferrer" aria-label="X (Twitter)"><TwitterIcon size={18} /></a>
-            <a href="https://www.youtube.com/@BulusanPhlTourism" target="_blank" rel="noreferrer" aria-label="YouTube"><YoutubeIcon size={18} /></a>
+            <div className="social-icons">
+              <a href="https://www.facebook.com/bulusan.phl.tourism" target="_blank" rel="noreferrer" aria-label="Facebook"><FacebookIcon size={18} /></a>
+              <a href="https://www.instagram.com/bulusanphltourism/" target="_blank" rel="noreferrer" aria-label="Instagram"><InstagramIcon size={18} /></a>
+              <a href="https://www.tiktok.com/@bulusantourismphl" target="_blank" rel="noreferrer" aria-label="TikTok"><TikTokIcon size={18} /></a>
+              <a href="https://x.com/bulusantourism" target="_blank" rel="noreferrer" aria-label="X (Twitter)"><TwitterIcon size={18} /></a>
+              <a href="https://www.youtube.com/@BulusanPhlTourism" target="_blank" rel="noreferrer" aria-label="YouTube"><YoutubeIcon size={18} /></a>
+            </div>
+            <div className="copyright">
+              &copy; {new Date().getFullYear()} Bulusan Tourism Office Explore Bulusan Project
+            </div>
           </div>
-          <div className="copyright">
-            &copy; {new Date().getFullYear()} Bulusan Tourism Office Explore Bulusan Project
-          </div>
-        </div>
-      </Footer>
+        </Footer>
+      )}
     </LayoutWrapper>
   );
 };

@@ -54,6 +54,7 @@ const LeftSidebar = styled.div`
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
   z-index: 10;
 
   @media (max-width: 1023px) { display: none; }
