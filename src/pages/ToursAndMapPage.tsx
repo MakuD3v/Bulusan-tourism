@@ -390,50 +390,34 @@ const DrawerHandle = styled.button`
 
 // ─── RIGHT PANEL (Weather Dashboard) ─────────────────────────────────────────
 const RightPanelWrapper = styled(motion.div)<{ $expanded: boolean }>`
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: ${p => p.$expanded ? '290px' : '0px'};
+  width: ${p => p.$expanded ? '420px' : '290px'};
   background: #0d1526;
   border-left: 1px solid rgba(255,255,255,0.05);
   display: flex;
   flex-direction: column;
-  z-index: 40;
-  box-shadow: ${p => p.$expanded ? '-10px 0 30px rgba(0,0,0,0.4)' : 'none'};
+  z-index: 10;
+  box-shadow: ${p => p.$expanded ? '-10px 0 30px rgba(0,0,0,0.2)' : 'none'};
   transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  flex-shrink: 0;
 
   @media (max-width: 1279px) { display: none; }
 `;
 
-const WeatherToggleBtn = styled.button`
-  position: absolute;
-  top: 12px;
-  right: 100%;
-  margin-right: 12px;
-  background: rgba(13,21,38,0.85);
-  backdrop-filter: blur(8px);
+const ExpandToggle = styled.button`
+  background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 20px;
-  padding: 8px 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: white;
-  font-weight: 700;
-  font-size: 0.8rem;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  color: #94a3b8;
+  border-radius: 8px;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
-  z-index: 45;
-
-  &:hover { background: rgba(30,41,59,0.9); }
-  
-  @media (max-width: 1279px) { display: none; }
+  &:hover { background: rgba(255,255,255,0.1); color: white; }
 `;
 
 const RightPanelContent = styled.div`
-  width: 290px;
+  width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -1105,22 +1089,19 @@ const ToursAndMapPage: React.FC = () => {
 
       {/* ── RIGHT: Full Weather Dashboard (Expandable) ── */}
       <RightPanelWrapper $expanded={weatherExpanded}>
-        <WeatherToggleBtn onClick={() => setWeatherExpanded(!weatherExpanded)}>
-          {weatherExpanded ? (
-            <><ChevronRight size={14} /> Close Weather</>
-          ) : (
-            <>{weather ? <WeatherEmoji code={weather.code} size="1rem" /> : <Thermometer size={14} />} {weather?.temp}°C <ChevronLeft size={14} /></>
-          )}
-        </WeatherToggleBtn>
-
-        <RightPanelContent style={{ opacity: weatherExpanded ? 1 : 0, pointerEvents: weatherExpanded ? 'auto' : 'none' }}>
+        <RightPanelContent>
           <WeatherPanelScroll>
             <WeatherHeader>
               <div>
                 <h3>Weather</h3>
                 <div className="loc">Bulusan, Sorsogon</div>
               </div>
-              {weather && <WeatherEmoji code={weather.code} size="1.8rem" />}
+              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+                {weather && <WeatherEmoji code={weather.code} size="1.8rem" />}
+                <ExpandToggle onClick={() => setWeatherExpanded(!weatherExpanded)} title={weatherExpanded ? "Collapse" : "Expand"}>
+                  {weatherExpanded ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+                </ExpandToggle>
+              </div>
             </WeatherHeader>
 
             {/* Hero temp card */}
