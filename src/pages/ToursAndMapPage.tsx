@@ -32,39 +32,53 @@ const pulse = keyframes`
   50% { opacity: 0.85; box-shadow: 0 0 0 6px rgba(245,158,11,0); }
 `;
 
-// ─── Rain Effect ──────────────────────────────────────────────────────────────
+// ─── Rain Effect ───────────────────────────────────────────────────────────────
 const RainOverlay = styled.div`
   position: absolute;
   inset: 0;
   z-index: 35;
   pointer-events: none;
   overflow: hidden;
+  /* Dark atmospheric tint so drops show against the light map */
+  background: linear-gradient(
+    to bottom,
+    rgba(15, 25, 60, 0.18) 0%,
+    rgba(10, 20, 50, 0.08) 100%
+  );
 
   .drop {
     position: absolute;
     bottom: 100%;
-    width: 1.5px;
     pointer-events: none;
     animation: drop linear infinite;
-    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0.6));
-    border-radius: 2px;
+    border-radius: 9999px;
   }
 
   @keyframes drop {
-    0% { transform: translateY(0); opacity: 1; }
-    100% { transform: translateY(120vh); opacity: 0; }
+    0%   { transform: translateY(0) skewX(-8deg);  opacity: 0.8; }
+    80%  { opacity: 0.7; }
+    100% { transform: translateY(125vh) skewX(-8deg); opacity: 0; }
   }
 `;
 
 function RainEffect() {
-  const drops = useMemo(() => Array.from({ length: 80 }).map((_, i) => ({
-    left: `${Math.random() * 100}%`,
-    animationDelay: `${Math.random() * 1.5}s`,
-    animationDuration: `${0.4 + Math.random() * 0.4}s`,
-    opacity: Math.random() * 0.4 + 0.2,
-    height: `${15 + Math.random() * 25}px`
-  })), []);
-  
+  const drops = useMemo(() => Array.from({ length: 140 }).map(() => {
+    // Vary between thin fast streaks and slightly thicker slower drops
+    const isFast = Math.random() > 0.4;
+    const r = Math.round(80 + Math.random() * 40);
+    const g = Math.round(110 + Math.random() * 50);
+    const b = Math.round(200 + Math.random() * 55);
+    const alpha = (0.35 + Math.random() * 0.45).toFixed(2);
+    return {
+      left: `${Math.random() * 105}%`,
+      animationDelay: `${(Math.random() * 2).toFixed(2)}s`,
+      animationDuration: `${(isFast ? 0.35 + Math.random() * 0.25 : 0.5 + Math.random() * 0.35).toFixed(2)}s`,
+      width: `${isFast ? 1 : 1.5 + Math.random()}px`,
+      height: `${isFast ? 18 + Math.random() * 28 : 12 + Math.random() * 18}px`,
+      background: `linear-gradient(to bottom, rgba(${r},${g},${b},0), rgba(${r},${g},${b},${alpha}))`,
+    };
+  }), []);
+
   return (
     <RainOverlay>
       {drops.map((style, i) => <div key={i} className="drop" style={style} />)}
