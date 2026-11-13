@@ -10,6 +10,7 @@ import { useAttractions, useEnterprises, useHeritage } from '../hooks/useData';
 import { useAuth } from '../hooks/useAuth';
 import { useLocation } from 'react-router-dom';
 import { getMediaUrl } from '../utils/mediaUtils';
+import { ATTRACTION_CATEGORIES, ENTERPRISE_CATEGORIES, getMapIconUrl } from '../components/Admin/CategoryTagConfig';
 import {
   Search, MapPin, Thermometer, Wind, Droplets,
   Eye, Gauge, Sunrise, Sunset, Cloud, Lock,
@@ -213,6 +214,115 @@ const TagBadge = styled.button<{ $active: boolean }>`
   transition: all 0.15s;
 
   &:hover { background: rgba(255,255,255,0.1); color: #e2e8f0; }
+`;
+
+const CategoryScrollArea = styled.div<{ $expanded: boolean }>`
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: ${p => p.$expanded ? '260px' : '82px'};
+  overflow-y: ${p => p.$expanded ? 'auto' : 'hidden'};
+  overflow-x: hidden;
+  transition: max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+  }
+`;
+
+const CategoryPillBtn = styled.button<{ $active: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: ${p => p.$active ? 'rgba(59, 130, 246, 0.28)' : 'rgba(255, 255, 255, 0.04)'};
+  border: 1px solid ${p => p.$active ? 'rgba(96, 165, 250, 0.65)' : 'rgba(255, 255, 255, 0.08)'};
+  color: ${p => p.$active ? '#93c5fd' : '#cbd5e1'};
+  padding: 4px 10px 4px 6px;
+  border-radius: 20px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: ${p => p.$active ? '0 2px 8px rgba(59, 130, 246, 0.25)' : '0 1px 3px rgba(0, 0, 0, 0.2)'};
+
+  img {
+    width: 17px;
+    height: 17px;
+    object-fit: contain;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  }
+
+  &:hover {
+    background: ${p => p.$active ? 'rgba(59, 130, 246, 0.38)' : 'rgba(255, 255, 255, 0.08)'};
+    color: #ffffff;
+    border-color: ${p => p.$active ? 'rgba(147, 197, 253, 0.9)' : 'rgba(255, 255, 255, 0.2)'};
+    transform: translateY(-1px);
+  }
+`;
+
+const CategoryToggleMoreBtn = styled.button`
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: #60a5fa;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: all 0.18s;
+
+  &:hover {
+    background: rgba(59, 130, 246, 0.08);
+    color: #93c5fd;
+  }
+`;
+
+const ActiveFilterNotice = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 12px;
+  background: rgba(59, 130, 246, 0.12);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+  font-size: 0.62rem;
+  font-weight: 700;
+
+  span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+  }
+
+  button {
+    background: transparent;
+    border: none;
+    color: #f87171;
+    font-size: 0.62rem;
+    font-weight: 800;
+    cursor: pointer;
+    text-transform: uppercase;
+    padding: 0 4px;
+    &:hover { text-decoration: underline; }
+  }
 `;
 
 const CountLabel = styled.div`
@@ -1557,6 +1667,7 @@ const ToursAndMapPage: React.FC = () => {
   const [showComingSoonMsg, setShowComingSoonMsg] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [weatherExpanded, setWeatherExpanded] = useState(false);
+  const [catsExpanded, setCatsExpanded] = useState(false);
   const [weatherOverride, setWeatherOverride] = useState<string | null>(() => {
     return new URLSearchParams(window.location.search).get('weather');
   });
@@ -1581,16 +1692,25 @@ const ToursAndMapPage: React.FC = () => {
     ...heritage.map(h => ({ ...h, entityType: 'Heritage', categories: [h.period] })),
   ], [attractions, enterprises, heritage]);
 
-  // Extract available tags for the current tab
-  const availableTags = useMemo(() => {
-    const tags = new Set<string>();
-    allItems
-      .filter(i => activeTab === 'All' || i.entityType === activeTab)
-      .forEach(item => {
-        (item.categories || item.tags || []).forEach((t: string) => tags.add(t));
-      });
-    return Array.from(tags).sort().slice(0, 15);
-  }, [allItems, activeTab]);
+  // Categories matching the Attraction and Enterprise configurations
+  const sidebarCategories = useMemo(() => {
+    if (activeTab === 'Attraction') {
+      return ATTRACTION_CATEGORIES;
+    }
+    if (activeTab === 'Enterprise') {
+      return ENTERPRISE_CATEGORIES;
+    }
+    if (activeTab === 'Heritage') {
+      return ATTRACTION_CATEGORIES.filter(c => 
+        ['Church', 'Fort', 'Museum', 'Monument', 'Ancestral Home', 'Cemetery', 'Shrine', 'Cultural Site', 'Archaeological', 'Indigenous', 'Ruins', 'Landmarks'].includes(c.label)
+      );
+    }
+    // 'All' tab: include ATTRACTION_CATEGORIES plus top enterprise categories
+    return [
+      ...ATTRACTION_CATEGORIES,
+      ...ENTERPRISE_CATEGORIES.filter(e => ['Resort', 'Hotel', 'Restaurant', 'Cafe', 'Glamping', 'Swimming Pool'].includes(e.label))
+    ];
+  }, [activeTab]);
 
   useEffect(() => {
     if (initialRef.current) return;
@@ -1608,11 +1728,34 @@ const ToursAndMapPage: React.FC = () => {
   const filteredItems = useMemo(() => allItems.filter(item => {
     const textMatch = searchQuery === '' || (item.name + ' ' + ((item as any).description || '')).toLowerCase().includes(searchQuery.toLowerCase());
     const tabMatch = activeTab === 'All' || (item as any).entityType === activeTab;
-    const catMatch = selectedCategories.length === 0 || selectedCategories.some(sc => (item.categories || item.tags || []).includes(sc));
+    
+    if (selectedCategories.length === 0) return textMatch && tabMatch;
+
+    const itemCats = [
+      ...(Array.isArray(item.categories) ? item.categories : []),
+      ...((item as any).category ? [(item as any).category] : []),
+      ...(Array.isArray(item.tags) ? item.tags : []),
+    ].map(c => (c || '').toLowerCase().trim());
+
+    const catMatch = selectedCategories.some(sc => {
+      const scLower = sc.toLowerCase().trim();
+      return itemCats.some(ic => {
+        if (ic === scLower) return true;
+        if (scLower === 'falls' && ic.includes('waterfall')) return true;
+        if (scLower.includes('waterfall') && ic.includes('fall')) return true;
+        if (scLower === 'swimming pool' && (ic.includes('swim') || ic.includes('pool'))) return true;
+        return ic.includes(scLower) || scLower.includes(ic);
+      });
+    });
+
     return textMatch && tabMatch && catMatch;
   }), [allItems, searchQuery, activeTab, selectedCategories]);
 
   const toggleCategory = (cat: string) => {
+    if (cat === 'All') {
+      setSelectedCategories([]);
+      return;
+    }
     setSelectedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]);
   };
 
@@ -1626,14 +1769,50 @@ const ToursAndMapPage: React.FC = () => {
         ))}
       </FilterRow>
       
-      {availableTags.length > 0 && (
-        <TagsContainer>
-          {availableTags.map(tag => (
-            <TagBadge key={tag} $active={selectedCategories.includes(tag)} onClick={() => toggleCategory(tag)}>
-              {tag}
-            </TagBadge>
-          ))}
-        </TagsContainer>
+      {/* Category Icons Row with All Pill & Expand Toggle */}
+      <CategoryScrollArea $expanded={catsExpanded}>
+        <CategoryPillBtn
+          $active={selectedCategories.length === 0}
+          onClick={() => setSelectedCategories([])}
+        >
+          <img loading="lazy" src="/map-icons/general.svg" alt="All" />
+          All
+        </CategoryPillBtn>
+
+        {sidebarCategories.map(cat => {
+          const isActive = selectedCategories.includes(cat.label);
+          return (
+            <CategoryPillBtn
+              key={cat.label}
+              $active={isActive}
+              onClick={() => toggleCategory(cat.label)}
+            >
+              <img loading="lazy" src={getMapIconUrl(cat.label)} alt={cat.label} />
+              {cat.label}
+            </CategoryPillBtn>
+          );
+        })}
+      </CategoryScrollArea>
+
+      {sidebarCategories.length > 6 && (
+        <CategoryToggleMoreBtn onClick={() => setCatsExpanded(!catsExpanded)}>
+          {catsExpanded ? (
+            <>
+              <ChevronUp size={11} /> Show Less
+            </>
+          ) : (
+            <>
+              <ChevronDown size={11} /> Show More Categories ({sidebarCategories.length})
+            </>
+          )}
+        </CategoryToggleMoreBtn>
+      )}
+
+      {selectedCategories.length > 0 && (
+        <ActiveFilterNotice>
+          <span>Filtered: {selectedCategories.join(', ')}</span>
+          <button onClick={() => setSelectedCategories([])}>Clear</button>
+        </ActiveFilterNotice>
       )}
 
       <CountLabel>{filteredItems.length} Destinations</CountLabel>
@@ -1657,6 +1836,10 @@ const ToursAndMapPage: React.FC = () => {
           const img = (item as any).img || (item as any).photos?.[0];
           const type = (item as any).entityType as string;
           const isActive = focusedLocation?.id === item.id && focusedLocation?.entityType === type;
+          const primaryCat = Array.isArray(item.categories) && item.categories.length > 0 
+            ? item.categories[0] 
+            : (item as any).category || (type === 'Enterprise' ? 'Hotel' : 'Nature');
+
           return (
             <DestCard key={`${type}-${item.id}`} $active={isActive} onClick={() => { setFocusedLocation(isActive ? null : item); setMobileDrawerOpen(false); }}>
               <DestThumb>
@@ -1664,7 +1847,10 @@ const ToursAndMapPage: React.FC = () => {
               </DestThumb>
               <DestMeta>
                 <div className="name">{item.name}</div>
-                <div className="loc"><MapPin size={9} />{(item as any).location || 'Bulusan, Sorsogon'}</div>
+                <div className="loc">
+                  <img src={getMapIconUrl(primaryCat)} alt="" style={{ width: 11, height: 11, marginRight: 3, verticalAlign: 'middle', display: 'inline-block' }} />
+                  {(item as any).location || 'Bulusan, Sorsogon'}
+                </div>
               </DestMeta>
               <TypePill $t={type}>{type === 'Attraction' ? 'Spot' : type === 'Enterprise' ? 'Biz' : 'Heritage'}</TypePill>
             </DestCard>
