@@ -14,7 +14,7 @@ import {
   Eye, Gauge, Sunrise, Sunset, Cloud, Lock,
   Compass, ArrowRight, SlidersHorizontal, Navigation,
   Users, ChevronDown, ChevronUp, X, Ticket, CalendarDays,
-  Sun, CloudRain, CloudSnow, Zap, Umbrella, ChevronLeft, ChevronRight
+  Sun, CloudRain, CloudSnow, Zap, Umbrella, ChevronLeft, ChevronRight, ShieldAlert
 
 } from 'lucide-react';
 
@@ -185,6 +185,7 @@ const FilterPill = styled.button<{ $active: boolean }>`
   cursor: pointer;
   transition: all 0.18s;
   white-space: nowrap;
+  flex-shrink: 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 
@@ -289,9 +290,46 @@ const TypePill = styled.span<{ $t: string }>`
 
 // ─── MAP CENTER ───────────────────────────────────────────────────────────────
 const MapCenter = styled.div`
-  flex: 1;
+  width: 100%;
+  height: 100%;
   position: relative;
   overflow: hidden;
+`;
+
+const CompactWeatherOverlay = styled.div<{ $drawerOpen: boolean }>`
+  position: absolute;
+  bottom: ${p => p.$drawerOpen ? 'calc(75vh + 58px)' : '64px'};
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  gap: 10px;
+  pointer-events: none;
+  transition: bottom 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  @media (max-width: 768px) {
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 90%;
+  }
+`;
+
+const CompactStatBox = styled.div`
+  background: rgba(13,21,38,0.92);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 12px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+  pointer-events: auto;
+  min-width: 120px;
+
+  .icon { color: #60a5fa; display: flex; }
+  .val { color: white; font-weight: 900; font-size: 0.9rem; line-height: 1; margin-bottom: 2px; }
+  .lbl { color: #475569; font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
 `;
 
 const MapTopBar = styled.div`
@@ -323,47 +361,186 @@ const MapChip = styled.div`
   svg { color: #60a5fa; flex-shrink: 0; }
 `;
 
+// ─── Clock Widget (top-left of map) ──────────────────────────────────────────
+const ClockWidget = styled.div`
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 30;
+  background: rgba(13,21,38,0.88);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 14px;
+  padding: 8px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  pointer-events: none;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+
+  .clock-time {
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: white;
+    letter-spacing: 1px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .clock-date {
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 3px;
+  }
+  .clock-loc {
+    font-size: 0.58rem;
+    font-weight: 600;
+    color: #3b82f6;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+`;
+
+// ─── Compass Rose Widget (bottom-left of map) ────────────────────────────────
 const CompassWidget = styled.div`
   position: absolute;
   bottom: 24px;
   left: 24px;
   z-index: 30;
-  width: 44px; height: 44px;
-  background: rgba(13,21,38,0.85);
-  backdrop-filter: blur(8px);
+  width: 72px; height: 72px;
+  background: rgba(13,21,38,0.88);
+  backdrop-filter: blur(10px);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ef4444; /* North needle indicator color */
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
   pointer-events: none;
+  flex-direction: column;
 `;
 
-// Floating "Tours" button on map
-const ToursFloatBtn = styled.button`
+// ─── Tours Map Panel (bottom-right of map) ───────────────────────────────────
+const ToursMapPanel = styled.div`
   position: absolute;
-  bottom: 24px;
-  right: 24px;
-  z-index: 50;
-  background: linear-gradient(135deg, #d97706, #b45309);
+  bottom: 16px;
+  right: 16px;
+  z-index: 30;
+  width: 220px;
+  background: rgba(13,21,38,0.92);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+`;
+
+const ToursPanelHeader = styled.div`
+  padding: 9px 12px 7px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .title {
+    font-size: 0.65rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    svg { color: #f59e0b; }
+  }
+  .badge {
+    background: rgba(245,158,11,0.15);
+    border: 1px solid rgba(245,158,11,0.25);
+    color: #fbbf24;
+    font-size: 0.55rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+`;
+
+const ToursMiniList = styled.div`
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+`;
+
+const TourMiniCard = styled.div`
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  height: 58px;
+  cursor: default;
+
+  .bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    filter: brightness(0.55);
+  }
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(10,15,30,0.8) 0%, rgba(10,15,30,0.2) 100%);
+  }
+  .info {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    gap: 8px;
+  }
+  .name {
+    color: white;
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1.2;
+    flex: 1;
+  }
+  .dur {
+    background: rgba(255,255,255,0.15);
+    color: #e2e8f0;
+    font-size: 0.58rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+`;
+
+const ToursViewAllBtn = styled.button`
+  width: 100%;
+  padding: 8px;
+  background: rgba(59,130,246,0.1);
   border: none;
-  color: white;
-  font-size: 0.78rem;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  color: #60a5fa;
+  font-size: 0.68rem;
   font-weight: 800;
-  padding: 12px 20px;
-  border-radius: 30px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 7px;
-  box-shadow: 0 4px 20px rgba(180,83,9,0.4);
-  animation: ${pulse} 2.5s ease-in-out infinite;
-  transition: transform 0.2s;
+  justify-content: center;
+  gap: 5px;
+  transition: background 0.2s;
   letter-spacing: 0.3px;
 
-  &:hover { transform: scale(1.04); }
+  &:hover { background: rgba(59,130,246,0.2); }
 `;
 
 // Mobile bottom drawer
@@ -403,20 +580,57 @@ const DrawerHandle = styled.button`
   .pill { width: 36px; height: 4px; background: #1e293b; border-radius: 2px; }
 `;
 
-// ─── RIGHT PANEL (Weather Dashboard) ─────────────────────────────────────────
-const RightPanelWrapper = styled(motion.div)<{ $expanded: boolean }>`
-  width: ${p => p.$expanded ? '420px' : '290px'};
+// ─── BOTTOM PANEL (Weather Dashboard Drawer) ───────────────────────────────────
+const BottomPanelWrapper = styled(motion.div)<{ $open: boolean }>`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 85vh;
+  height: ${p => p.$open ? '75vh' : '0px'};
   background: #0d1526;
-  border-left: 1px solid rgba(255,255,255,0.05);
+  border-top: ${p => p.$open ? '1px solid rgba(255,255,255,0.1)' : 'none'};
   display: flex;
   flex-direction: column;
-  z-index: 10;
-  box-shadow: ${p => p.$expanded ? '-10px 0 30px rgba(0,0,0,0.2)' : 'none'};
-  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  flex-shrink: 0;
+  z-index: 50;
+  transition: height 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6);
+`;
 
-  @media (max-width: 1279px) { display: none; }
+const WeatherDrawerHandle = styled.button<{ $open: boolean }>`
+  position: absolute;
+  bottom: ${p => p.$open ? 'calc(75vh + 12px)' : '16px'};
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 55;
+  background: rgba(13, 21, 38, 0.92);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 30px;
+  padding: 8px 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #60a5fa;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+  transition: all 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    background: rgba(30, 41, 59, 0.98);
+    color: white;
+    border-color: rgba(59, 130, 246, 0.4);
+    transform: translateX(-50%) translateY(-2px);
+  }
+
+  svg {
+    transition: transform 0.3s;
+  }
 `;
 
 const ExpandToggle = styled.button`
@@ -433,7 +647,6 @@ const ExpandToggle = styled.button`
 
 const RightPanelContent = styled.div`
   width: 100%;
-  height: 100%;
   display: flex;
   flex-direction: column;
   opacity: 1;
@@ -441,186 +654,485 @@ const RightPanelContent = styled.div`
 `;
 
 const WeatherPanelScroll = styled.div`
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 14px;
-
-  &::-webkit-scrollbar { width: 3px; }
-  &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.07); border-radius: 2px; }
+  padding: 24px 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
 `;
 
-const WeatherHeader = styled.div`
+// ── Weather Panel Styled Components (SkyCard Design) ────────────────────────────────────────
+
+const WPHeader = styled.div`
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 12px;
+  justify-content: space-between;
 
-  h3 { color: white; font-size: 0.88rem; font-weight: 800; margin: 0; }
-  .loc { color: #3b82f6; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; }
+  .left h4 { color: white; font-size: 0.78rem; font-weight: 800; margin: 0 0 2px; }
+  .left .time { color: #3b82f6; font-size: 1.1rem; font-weight: 900; line-height: 1; }
+  .left .loc { color: #475569; font-size: 0.62rem; font-weight: 600; margin-top: 2px; display: flex; align-items: center; gap: 4px; }
 `;
 
-const WeatherHero = styled.div`
-  background: linear-gradient(135deg, rgba(37,99,235,0.22) 0%, rgba(16,185,129,0.1) 100%);
-  border: 1px solid rgba(59,130,246,0.2);
-  border-radius: 16px;
-  padding: 16px;
-  margin-bottom: 10px;
+const WPCurrentCard = styled.div`
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 8px;
   position: relative;
   overflow: hidden;
 
-  &::after {
+  &::before {
     content: '';
     position: absolute;
-    top: -20px; right: -20px;
-    width: 90px; height: 90px;
-    background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%);
+    top: -40px; right: -40px;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%);
     border-radius: 50%;
     pointer-events: none;
   }
 `;
 
-const TempRow = styled.div`
+const WPTempRow = styled.div`
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 `;
 
-const BigTemp = styled.div`
-  font-size: 3rem;
+const WPTemp = styled.div`
+  font-size: 3.2rem;
   font-weight: 900;
   color: white;
   line-height: 1;
   letter-spacing: -3px;
 
-  sup {
-    font-size: 1.1rem;
-    letter-spacing: 0;
-    font-weight: 600;
-    color: #64748b;
-    vertical-align: super;
+  sup { font-size: 1.2rem; letter-spacing: 0; font-weight: 600; color: #60a5fa; vertical-align: super; }
+`;
+
+const WPEmojiBox = styled.div`
+  font-size: 3rem;
+  line-height: 1;
+  animation: ${float} 4s ease-in-out infinite;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+`;
+
+const WPCondRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+
+  .cond { color: #e2e8f0; font-size: 0.88rem; font-weight: 700; }
+  .feels { color: #475569; font-size: 0.72rem; font-weight: 600; }
+`;
+
+const WPSummary = styled.div`
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.5;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+`;
+
+const WPAdvisoryPanel = styled.div<{ $severity: 'good' | 'warn' | 'danger' }>`
+  background: ${p => p.$severity === 'danger' ? 'rgba(239,68,68,0.1)' : p.$severity === 'warn' ? 'rgba(245,158,11,0.1)' : 'rgba(16,185,129,0.1)'};
+  border: 1px solid ${p => p.$severity === 'danger' ? 'rgba(239,68,68,0.2)' : p.$severity === 'warn' ? 'rgba(245,158,11,0.2)' : 'rgba(16,185,129,0.2)'};
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+`;
+
+const AdvisoryHeader = styled.div<{ $severity: 'good' | 'warn' | 'danger' }>`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: ${p => p.$severity === 'danger' ? '#ef4444' : p.$severity === 'warn' ? '#fbbf24' : '#34d399'};
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+`;
+
+const AdvisoryDetail = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  
+  .icon { color: #94a3b8; margin-top: 2px; }
+  .text {
+    flex: 1;
+    .title { color: white; font-size: 0.85rem; font-weight: 800; margin-bottom: 3px; }
+    .desc { color: #94a3b8; font-size: 0.75rem; line-height: 1.4; }
   }
 `;
 
-const WeatherIconBig = styled.div`
-  font-size: 2.8rem;
-  animation: ${float} 4s ease-in-out infinite;
-  line-height: 1;
-`;
-
-const WeatherCondition = styled.div`
-  color: #94a3b8;
-  font-size: 0.85rem;
-  font-weight: 600;
-  margin-bottom: 10px;
-`;
-
-const FeelsLike = styled.div`
-  color: #475569;
-  font-size: 0.7rem;
-  font-weight: 600;
-  margin-bottom: 14px;
-`;
-
-const WeatherGrid = styled.div`
+const WPStatsGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 8px;
 `;
 
-const WeatherCell = styled.div`
+const WPStatCard = styled.div`
   background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.05);
-  border-radius: 10px;
-  padding: 9px 10px;
-  display: flex;
-  align-items: center;
-  gap: 7px;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  padding: 10px 10px 8px;
 
-  .icon { color: #60a5fa; flex-shrink: 0; }
-  .info { min-width: 0; }
-  .val { color: #e2e8f0; font-size: 0.82rem; font-weight: 800; display: block; }
-  .lbl { color: #334155; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .label { color: #475569; font-size: 0.58rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
+  .label svg { opacity: 0.7; }
+  .val { color: white; font-size: 0.88rem; font-weight: 900; line-height: 1; }
+  .unit { color: #475569; font-size: 0.58rem; font-weight: 600; margin-top: 1px; }
 `;
 
-// Travel advisory
-const AdvisoryCard = styled.div<{ $level: 'safe' | 'caution' | 'warning' }>`
-  background: ${p => p.$level === 'safe'
-    ? 'rgba(16,185,129,0.08)'
-    : p.$level === 'caution'
-    ? 'rgba(245,158,11,0.08)'
-    : 'rgba(239,68,68,0.08)'};
-  border: 1px solid ${p => p.$level === 'safe'
-    ? 'rgba(16,185,129,0.2)'
-    : p.$level === 'caution'
-    ? 'rgba(245,158,11,0.2)'
-    : 'rgba(239,68,68,0.2)'};
-  border-radius: 12px;
-  padding: 12px;
-  margin-bottom: 10px;
+const WPSunCard = styled.div`
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
 
-  .header {
+  h5 { color: #475569; font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 10px; }
+`;
+
+const WPSunArc = styled.div`
+  position: relative;
+  height: 52px;
+  margin-bottom: 8px;
+
+  svg { width: 100%; height: 100%; }
+`;
+
+const WPSunTimes = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .sun-item {
     display: flex;
     align-items: center;
     gap: 6px;
-    margin-bottom: 5px;
 
-    .dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: ${p => p.$level === 'safe' ? '#10b981' : p.$level === 'caution' ? '#f59e0b' : '#ef4444'};
-    }
-    .label {
-      font-size: 0.68rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: ${p => p.$level === 'safe' ? '#10b981' : p.$level === 'caution' ? '#f59e0b' : '#ef4444'};
-    }
-  }
-  .desc {
-    color: #64748b;
-    font-size: 0.72rem;
-    font-weight: 500;
-    line-height: 1.5;
+    .icon { font-size: 1.2rem; }
+    .info .lbl { color: #475569; font-size: 0.58rem; font-weight: 700; text-transform: uppercase; }
+    .info .t { color: #fbbf24; font-size: 0.8rem; font-weight: 900; }
   }
 `;
 
-// Forecast row
-const ForecastStrip = styled.div`
+// Forecast tabs (Today / Tomorrow / 10 Days)
+// ─── Weather Dashboard Modern Card Styles ──────────────────────────────────
+const ModernWeatherContainer = styled.div`
   display: flex;
-  gap: 5px;
-  margin-bottom: 10px;
-  overflow-x: auto;
-  &::-webkit-scrollbar { display: none; }
+  gap: 24px;
+  width: 100%;
+  max-width: 1300px;
+  margin: 0 auto;
+
+  @media (max-width: 1024px) {
+    flex-direction: column;
+  }
 `;
 
-const ForecastItem = styled.div`
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.05);
-  border-radius: 10px;
-  padding: 8px 10px;
-  text-align: center;
+const ModernWeatherMain = styled.div`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+`;
+
+const ModernWeatherSide = styled.div`
+  width: 340px;
   flex-shrink: 0;
-  min-width: 52px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 
-  .day { color: #334155; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
-  .ico { font-size: 1.1rem; margin-bottom: 4px; }
-  .tmp { color: #e2e8f0; font-size: 0.75rem; font-weight: 800; }
+  @media (max-width: 1024px) {
+    width: 100%;
+  }
 `;
 
-const SectionLabel2 = styled.div`
-  font-size: 0.63rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  color: #1e3a5f;
+// Hero Banner styled like the Mecca card
+const ModernHeroCard = styled.div`
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 24px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+
+  &::before {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 45%;
+    background: radial-gradient(circle at 70% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .loc-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #60a5fa;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 4px;
+  }
+
+  .loc-city {
+    color: white;
+    font-size: 1.6rem;
+    font-weight: 900;
+    margin: 0 0 2px;
+  }
+
+  .loc-sub {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+
+  .temp-display {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+
+    .num {
+      font-size: 3.6rem;
+      font-weight: 900;
+      color: white;
+      line-height: 1;
+      letter-spacing: -2px;
+    }
+
+    .cond {
+      color: #38bdf8;
+      font-size: 1rem;
+      font-weight: 700;
+      text-transform: capitalize;
+    }
+  }
+
+  .hero-graphic {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+
+    .icon-wrapper {
+      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.4));
+      animation: ${float} 4s ease-in-out infinite;
+    }
+
+    .feels-pill {
+      margin-top: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 3px 10px;
+      color: #94a3b8;
+      font-size: 0.68rem;
+      font-weight: 700;
+    }
+  }
+`;
+
+// 7-day grid cards
+const ModernWeekGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+`;
+
+const ModernDayCard = styled.div<{ $isToday?: boolean }>`
+  background: ${p => p.$isToday ? 'rgba(59, 130, 246, 0.12)' : 'rgba(255, 255, 255, 0.03)'};
+  border: 1px solid ${p => p.$isToday ? 'rgba(59, 130, 246, 0.4)' : 'rgba(255, 255, 255, 0.06)'};
+  border-radius: 16px;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.06);
+    transform: translateY(-2px);
+  }
+
+  .day-name {
+    color: ${p => p.$isToday ? '#60a5fa' : '#e2e8f0'};
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .day-date {
+    color: #64748b;
+    font-size: 0.62rem;
+    font-weight: 600;
+    margin-top: -4px;
+  }
+
+  .day-icon {
+    font-size: 1.8rem;
+    margin: 4px 0;
+  }
+
+  .day-temp {
+    color: white;
+    font-size: 1rem;
+    font-weight: 800;
+    span {
+      color: #64748b;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-left: 4px;
+    }
+  }
+
+  .day-meta {
+    display: flex;
+    gap: 6px;
+    color: #94a3b8;
+    font-size: 0.62rem;
+    font-weight: 700;
+  }
+`;
+
+// Highlights Section Grid
+const ModernHighlightsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+`;
+
+const ModernHighlightCard = styled.div`
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  .hl-title {
+    color: #64748b;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .hl-val {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .hl-sub {
+    color: #94a3b8;
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+`;
+
+// Calendar card on the right side
+const ModernCalendarCard = styled.div`
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  padding: 18px;
+
+  .cal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 800;
+    margin-bottom: 14px;
+  }
+
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    text-align: center;
+  }
+
+  .cal-day-label {
+    color: #475569;
+    font-size: 0.62rem;
+    font-weight: 800;
+    padding-bottom: 6px;
+  }
+
+  .cal-cell {
+    color: #94a3b8;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 6px 0;
+    border-radius: 8px;
+
+    &.today {
+      background: #3b82f6;
+      color: white;
+      font-weight: 900;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+    }
+  }
+`;
+
+const SectionTitle = styled.div`
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 8px;
-  margin-top: 2px;
+
+  .badge-tag {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #60a5fa;
+    background: rgba(59, 130, 246, 0.15);
+    padding: 2px 8px;
+    border-radius: 12px;
+  }
 `;
 
-// Tour stats footer
+// Destinations footer
 const WeatherFooter = styled.div`
   padding: 10px 14px;
   border-top: 1px solid rgba(255,255,255,0.05);
@@ -831,7 +1343,16 @@ const Skel = styled.div`
 `;
 
 // ─── WEATHER HOOK ─────────────────────────────────────────────────────────────
-interface DayForecast { day: string; date: string; code: number; high: number; low: number; }
+interface DayForecast {
+  day: string;
+  date: string;
+  code: number;
+  high: number;
+  low: number;
+  windSpeed: number;
+  humidity: number;
+  precipProb: number;
+}
 interface WeatherData {
   temp: number;
   feelsLike: number;
@@ -846,7 +1367,8 @@ interface WeatherData {
   uvIndex: number;
   sunrise: string;
   sunset: string;
-  forecast: DayForecast[]; // index 0 = yesterday, 1 = today, 2 = tomorrow, 3 = day after, ...
+  airQuality: { aqi: number; status: string };
+  forecast: DayForecast[]; // 7 days
 }
 
 function formatTime(iso: string): string {
@@ -864,64 +1386,84 @@ function windDirLabel(deg: number): string {
 
 function useWeather(): WeatherData | null {
   const [data, setData] = useState<WeatherData | null>(null);
-  useEffect(() => {
+
+  const fetchWeather = () => {
     const lat = 12.7533, lng = 124.1362;
     fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}` +
       `&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code,surface_pressure,visibility` +
-      `&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset` +
-      `&wind_speed_unit=kmh&timezone=Asia%2FManila&forecast_days=4&past_days=1`
+      `&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_probability_max,wind_speed_10m_max` +
+      `&wind_speed_unit=kmh&timezone=Asia%2FManila&forecast_days=7`
     )
       .then(r => r.json())
       .then(d => {
-        const c = d.current;
-        const daily = d.daily;
-        const code = c.weather_code ?? 0;
+        const c = d.current || {};
+        const daily = d.daily || {};
+        const code = c.weather_code ?? 2;
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-        const forecastList: DayForecast[] = (daily.time as string[]).map((dateStr: string, i: number) => {
+        const forecastList: DayForecast[] = ((daily.time as string[]) || []).map((dateStr: string, i: number) => {
           const dateObj = new Date(dateStr);
           return {
             day: days[dateObj.getDay()],
             date: dateObj.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }),
-            code: daily.weather_code[i],
-            high: Math.round(daily.temperature_2m_max[i]),
-            low: Math.round(daily.temperature_2m_min[i]),
+            code: daily.weather_code?.[i] ?? 2,
+            high: Math.round(daily.temperature_2m_max?.[i] ?? 30),
+            low: Math.round(daily.temperature_2m_min?.[i] ?? 24),
+            windSpeed: Math.round(daily.wind_speed_10m_max?.[i] ?? 14),
+            humidity: Math.round(c.relative_humidity_2m ?? 80),
+            precipProb: Math.round(daily.precipitation_probability_max?.[i] ?? 40),
           };
         });
 
+        // Air quality proxy based on humidity, visibility, pressure
+        const aqiVal = Math.round(35 + (100 - Math.min(c.visibility ? c.visibility / 100 : 100, 100)) * 0.4);
+        const aqiStatus = aqiVal <= 50 ? 'Good' : aqiVal <= 100 ? 'Moderate' : 'Unhealthy';
+
         setData({
-          temp: Math.round(c.temperature_2m),
-          feelsLike: Math.round(c.apparent_temperature),
+          temp: Math.round(c.temperature_2m ?? 28),
+          feelsLike: Math.round(c.apparent_temperature ?? 31),
           desc: getDesc(code),
-          humidity: c.relative_humidity_2m,
-          wind: Math.round(c.wind_speed_10m),
-          windGusts: Math.round(c.wind_gusts_10m ?? 0),
-          windDir: c.wind_direction_10m ?? 0,
+          humidity: c.relative_humidity_2m ?? 78,
+          wind: Math.round(c.wind_speed_10m ?? 14),
+          windGusts: Math.round(c.wind_gusts_10m ?? 20),
+          windDir: c.wind_direction_10m ?? 65,
           visibility: Math.round((c.visibility ?? 10000) / 1000),
-          pressure: Math.round(c.surface_pressure ?? 1013),
+          pressure: Math.round(c.surface_pressure ?? 1012),
           code,
-          uvIndex: code <= 1 ? 8 : code <= 3 ? 5 : 2,
-          sunrise: formatTime(daily.sunrise?.[1] ?? ''),
-          sunset: formatTime(daily.sunset?.[1] ?? ''),
+          uvIndex: Math.round(daily.uv_index_max?.[0] ?? (code <= 1 ? 8 : 4)),
+          sunrise: formatTime(daily.sunrise?.[0] ?? ''),
+          sunset: formatTime(daily.sunset?.[0] ?? ''),
+          airQuality: { aqi: aqiVal, status: aqiStatus },
           forecast: forecastList,
         });
       })
       .catch(() => {
+        // Fallback realistic tropical forecast
         setData({
-          temp: 28, feelsLike: 30, desc: 'Partly Cloudy', humidity: 78,
-          wind: 12, windGusts: 22, windDir: 135, visibility: 10, pressure: 1012, code: 2, uvIndex: 6,
-          sunrise: '5:42 AM', sunset: '6:08 PM',
+          temp: 28, feelsLike: 31, desc: 'Partly Cloudy', humidity: 82,
+          wind: 15, windGusts: 24, windDir: 70, visibility: 10, pressure: 1012, code: 2, uvIndex: 6,
+          sunrise: '5:42 AM', sunset: '5:35 PM',
+          airQuality: { aqi: 42, status: 'Good' },
           forecast: [
-            { day: 'Sun', date: 'Jul 27', code: 3, high: 29, low: 23 },
-            { day: 'Mon', date: 'Jul 28', code: 2, high: 28, low: 22 },
-            { day: 'Tue', date: 'Jul 29', code: 61, high: 27, low: 23 },
-            { day: 'Wed', date: 'Jul 30', code: 1, high: 30, low: 24 },
-            { day: 'Thu', date: 'Jul 31', code: 1, high: 31, low: 25 },
+            { day: 'Today', date: 'Nov 13', code: 2, high: 30, low: 24, windSpeed: 15, humidity: 82, precipProb: 35 },
+            { day: 'Sat',   date: 'Nov 14', code: 61, high: 28, low: 23, windSpeed: 18, humidity: 88, precipProb: 75 },
+            { day: 'Sun',   date: 'Nov 15', code: 3,  high: 29, low: 24, windSpeed: 14, humidity: 80, precipProb: 40 },
+            { day: 'Mon',   date: 'Nov 16', code: 1,  high: 31, low: 24, windSpeed: 12, humidity: 75, precipProb: 20 },
+            { day: 'Tue',   date: 'Nov 17', code: 2,  high: 30, low: 24, windSpeed: 14, humidity: 78, precipProb: 30 },
+            { day: 'Wed',   date: 'Nov 18', code: 80, high: 29, low: 23, windSpeed: 16, humidity: 84, precipProb: 60 },
+            { day: 'Thu',   date: 'Nov 19', code: 95, high: 27, low: 23, windSpeed: 22, humidity: 90, precipProb: 85 },
           ],
         });
       });
+  };
+
+  useEffect(() => {
+    fetchWeather();
+    const interval = setInterval(fetchWeather, 10 * 60 * 1000); // 10 minutes refresh
+    return () => clearInterval(interval);
   }, []);
+
   return data;
 }
 
@@ -988,6 +1530,16 @@ const ToursAndMapPage: React.FC = () => {
   const weather = useWeather();
   const advisory = weather ? getTravelAdvisory(weather.code) : null;
   const initialRef = React.useRef(false);
+
+  // ─── Live Clock ──────────────────────────────────────────────────────────────
+  const [clockTime, setClockTime] = useState(new Date());
+  useEffect(() => {
+    const id = setInterval(() => setClockTime(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const clockStr = clockTime.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+  const dateStr = clockTime.toLocaleDateString('en-PH', { weekday: 'short', month: 'short', day: 'numeric' });
+
 
   const allItems = useMemo(() => [
     ...attractions.map(a => ({ ...a, entityType: 'Attraction' })),
@@ -1108,13 +1660,18 @@ const ToursAndMapPage: React.FC = () => {
         <SidebarScroll>{DestList}</SidebarScroll>
       </LeftSidebar>
 
-      {/* ── CENTER: Map ── */}
-      <MapCenter>
-        {isRaining && <RainEffect />}
-        
-        <MapTopBar>
-          <MapChip><MapPin size={10} />{allItems.length} Spots</MapChip>
-        </MapTopBar>
+      {/* ── CENTER AND BOTTOM (Map + Weather) ── */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, position: 'relative', overflow: 'hidden' }}>
+        {/* ── MAP AREA ── */}
+        <MapCenter>
+          {isRaining && <RainEffect />}
+
+        {/* Live Clock — top-left of map */}
+        <ClockWidget>
+          <div className="clock-time">{clockStr}</div>
+          <div className="clock-date">{dateStr}</div>
+          <div className="clock-loc"><MapPin size={8} /> Bulusan, Sorsogon</div>
+        </ClockWidget>
 
         {activeTourId ? (
           <LiveTourTracker bookingId={activeTourId} onExit={() => {}} onFocusItem={id => { const i = filteredItems.find(x => x.id.toString() === id); if (i) setFocusedLocation(i); }} />
@@ -1122,251 +1679,314 @@ const ToursAndMapPage: React.FC = () => {
           <BulusanMap items={filteredItems} searchQuery={searchQuery} selectedCategories={selectedCategories} focusLat={focusedLocation?.coordinates?.lat} focusLng={focusedLocation?.coordinates?.lng} focusName={focusedLocation?.name} autoRoute={autoRoute} />
         )}
 
-        {/* Compass Widget */}
+        {/* Compass Rose — bottom-left */}
         <CompassWidget>
-          <Compass size={24} />
+          <svg width="56" height="56" viewBox="0 0 56 56" style={{ position: 'absolute' }}>
+            {/* Outer ring */}
+            <circle cx="28" cy="28" r="27" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+            {/* Cardinal tick marks */}
+            {[0,90,180,270].map(deg => {
+              const rad = (deg - 90) * Math.PI / 180;
+              return <line key={deg} x1={28 + 22 * Math.cos(rad)} y1={28 + 22 * Math.sin(rad)} x2={28 + 26 * Math.cos(rad)} y2={28 + 26 * Math.sin(rad)} stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />;
+            })}
+            {/* North needle (red) */}
+            <polygon points="28,6 31,28 28,24 25,28" fill="#ef4444" />
+            {/* South needle (slate) */}
+            <polygon points="28,50 31,28 28,32 25,28" fill="#334155" />
+            {/* Center dot */}
+            <circle cx="28" cy="28" r="3" fill="rgba(255,255,255,0.6)" />
+          </svg>
+          {/* Cardinal labels */}
+          <span style={{ position: 'absolute', top: 3, left: '50%', transform: 'translateX(-50%)', fontSize: '0.5rem', fontWeight: 900, color: '#ef4444', letterSpacing: 0 }}>N</span>
+          <span style={{ position: 'absolute', bottom: 3, left: '50%', transform: 'translateX(-50%)', fontSize: '0.5rem', fontWeight: 700, color: '#475569' }}>S</span>
+          <span style={{ position: 'absolute', left: 4, top: '50%', transform: 'translateY(-50%)', fontSize: '0.5rem', fontWeight: 700, color: '#475569' }}>W</span>
+          <span style={{ position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)', fontSize: '0.5rem', fontWeight: 700, color: '#475569' }}>E</span>
         </CompassWidget>
 
-        {/* Tours floating button */}
-        <ToursFloatBtn onClick={() => setShowToursModal(true)}>
-          <Ticket size={14} /> Tours & Packages
-        </ToursFloatBtn>
+        {/* Tours Package Panel — bottom-right */}
+        <ToursMapPanel>
+          <ToursPanelHeader>
+            <div className="title"><Ticket size={10} /> Tours & Packages</div>
+            <div className="badge">Soon</div>
+          </ToursPanelHeader>
+          <ToursMiniList>
+            {UPCOMING_TOURS.slice(0, 3).map(tour => (
+              <TourMiniCard key={tour.name}>
+                <div className="bg" style={{ backgroundImage: `url(${tour.img})` }} />
+                <div className="overlay" />
+                <div className="info">
+                  <div className="name">{tour.name}</div>
+                  <div className="dur">{tour.duration}</div>
+                </div>
+              </TourMiniCard>
+            ))}
+          </ToursMiniList>
+          <ToursViewAllBtn onClick={() => setShowToursModal(true)}>
+            <ArrowRight size={11} /> View All Tours
+          </ToursViewAllBtn>
+        </ToursMapPanel>
+
+        {/* ── Four Individual Weather Boxes Overlay ── */}
+        {weather && (
+          <CompactWeatherOverlay $drawerOpen={weatherExpanded}>
+            <CompactStatBox>
+              <div className="icon"><Thermometer size={18} /></div>
+              <div>
+                <div className="val">{weather.temp}°C</div>
+                <div className="lbl">Temperature</div>
+              </div>
+            </CompactStatBox>
+            <CompactStatBox>
+              <div className="icon"><Wind size={18} /></div>
+              <div>
+                <div className="val">{weather.wind} km/h</div>
+                <div className="lbl">Wind</div>
+              </div>
+            </CompactStatBox>
+            <CompactStatBox>
+              <div className="icon"><Droplets size={18} /></div>
+              <div>
+                <div className="val">{weather.humidity}%</div>
+                <div className="lbl">Humidity</div>
+              </div>
+            </CompactStatBox>
+            <CompactStatBox>
+              <div className="icon"><Sun size={18} /></div>
+              <div>
+                <div className="val">{weather.uvIndex}</div>
+                <div className="lbl">UV Index</div>
+              </div>
+            </CompactStatBox>
+          </CompactWeatherOverlay>
+        )}
+
+        {/* ── Toggle Button for Weather & Advisory Info Drawer ── */}
+        <WeatherDrawerHandle
+          $open={weatherExpanded}
+          onClick={() => setWeatherExpanded(!weatherExpanded)}
+        >
+          {weatherExpanded ? (
+            <>
+              <ChevronDown size={15} /> Close Weather & Details
+            </>
+          ) : (
+            <>
+              <ChevronUp size={15} /> Weather & Travel Advisory
+            </>
+          )}
+        </WeatherDrawerHandle>
       </MapCenter>
 
-      {/* ── RIGHT: Full Weather Dashboard (Expandable) ── */}
-      <RightPanelWrapper $expanded={weatherExpanded}>
+      {/* ── BOTTOM: Full Weather Dashboard (SkyCard Design Drawer) ── */}
+      <BottomPanelWrapper $open={weatherExpanded}>
         <RightPanelContent>
-          <WeatherPanelScroll>
-            <WeatherHeader>
-              <div>
-                <h3>Weather</h3>
-                <div className="loc">Bulusan, Sorsogon</div>
-              </div>
-              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-                {weather && <WeatherEmoji code={weather.code} size="1.8rem" />}
-                <ExpandToggle onClick={() => setWeatherExpanded(!weatherExpanded)} title={weatherExpanded ? "Collapse" : "Expand"}>
-                  {weatherExpanded ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-                </ExpandToggle>
-              </div>
-            </WeatherHeader>
 
-            {/* Hero temp card */}
-            {weather ? (
-              <WeatherHero>
-                <TempRow>
-                  <div>
-                    <BigTemp>{weather.temp}<sup>°C</sup></BigTemp>
-                    <WeatherCondition>{weather.desc}</WeatherCondition>
-                    <FeelsLike>Feels like {weather.feelsLike}°C</FeelsLike>
-                  </div>
-                  <WeatherIconBig><WeatherEmoji code={weather.code} size="3rem" /></WeatherIconBig>
-                </TempRow>
-                <WeatherGrid>
-                  <WeatherCell>
-                    <Droplets className="icon" size={14} />
-                    <div className="info">
-                      <span className="val">{weather.humidity}%</span>
-                      <span className="lbl">Humidity</span>
-                    </div>
-                  </WeatherCell>
-                  <WeatherCell>
-                    <Wind className="icon" size={14} />
-                    <div className="info">
-                      <span className="val">{weather.wind} km/h</span>
-                      <span className="lbl">Wind {windDirLabel(weather.windDir)}</span>
-                    </div>
-                  </WeatherCell>
-                  <WeatherCell>
-                    <Eye className="icon" size={14} />
-                    <div className="info">
-                      <span className="val">{weather.visibility} km</span>
-                      <span className="lbl">Visibility</span>
-                    </div>
-                  </WeatherCell>
-                  <WeatherCell>
-                    <Gauge className="icon" size={14} />
-                    <div className="info">
-                      <span className="val">{weather.pressure} hPa</span>
-                      <span className="lbl">Pressure</span>
-                    </div>
-                  </WeatherCell>
-                </WeatherGrid>
-              </WeatherHero>
-            ) : (
-              <WeatherHero>
-                <Skel style={{ height: 60, marginBottom: 10 }} />
-                <Skel style={{ height: 70 }} />
-              </WeatherHero>
-            )}
-
-            {/* ── EXPANDED ONLY: Sunrise/Sunset + Wind detail + Daily breakdown ── */}
-            {weather && weatherExpanded && (
-              <>
-                {/* Sunrise / Sunset */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 10 }}>
-                  <div style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.1), rgba(245,158,11,0.05))', border: '1px solid rgba(251,191,36,0.2)', borderRadius: 12, padding: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Sunrise size={18} color="#fbbf24" style={{ flexShrink: 0 }} />
-                    <div>
-                      <div style={{ color: '#fbbf24', fontWeight: 900, fontSize: '0.88rem' }}>{weather.sunrise}</div>
-                      <div style={{ color: '#475569', fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Sunrise</div>
-                    </div>
-                  </div>
-                  <div style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.1), rgba(239,68,68,0.05))', border: '1px solid rgba(249,115,22,0.2)', borderRadius: 12, padding: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Sunset size={18} color="#f97316" style={{ flexShrink: 0 }} />
-                    <div>
-                      <div style={{ color: '#f97316', fontWeight: 900, fontSize: '0.88rem' }}>{weather.sunset}</div>
-                      <div style={{ color: '#475569', fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Sunset</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Wind detail */}
-                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 12, marginBottom: 10 }}>
-                  <SectionLabel2>Wind Detail</SectionLabel2>
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                    {/* Direction arrow */}
-                    <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Navigation size={18} color="#60a5fa" style={{ transform: `rotate(${weather.windDir}deg)`, transition: 'transform 0.5s' }} />
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 16px', flex: 1 }}>
-                      <div>
-                        <div style={{ color: 'white', fontWeight: 800, fontSize: '0.85rem' }}>{weather.wind} km/h</div>
-                        <div style={{ color: '#334155', fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase' }}>Speed</div>
-                      </div>
-                      <div>
-                        <div style={{ color: 'white', fontWeight: 800, fontSize: '0.85rem' }}>{weather.windGusts} km/h</div>
-                        <div style={{ color: '#334155', fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase' }}>Gusts</div>
-                      </div>
-                      <div>
-                        <div style={{ color: 'white', fontWeight: 800, fontSize: '0.85rem' }}>{weather.windDir}°</div>
-                        <div style={{ color: '#334155', fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase' }}>Direction</div>
-                      </div>
-                      <div>
-                        <div style={{ color: '#60a5fa', fontWeight: 800, fontSize: '0.85rem' }}>{windDirLabel(weather.windDir)}</div>
-                        <div style={{ color: '#334155', fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase' }}>Bearing</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Day-by-day breakdown (Yesterday, Today, Tomorrow, Day After) */}
-                <SectionLabel2>Daily Breakdown</SectionLabel2>
-                {weather.forecast.map((f, i) => {
-                  const label = i === 0 ? 'Yesterday' : i === 1 ? 'Today' : i === 2 ? 'Tomorrow' : f.day;
-                  const isToday = i === 1;
-                  return (
-                    <div key={i} style={{
-                      background: isToday ? 'rgba(59,130,246,0.08)' : 'rgba(255,255,255,0.02)',
-                      border: `1px solid ${isToday ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.05)'}`,
-                      borderRadius: 10, padding: '10px 12px', marginBottom: 6,
-                      display: 'flex', alignItems: 'center', gap: 10
-                    }}>
-                      <div style={{ width: 36, textAlign: 'center', flexShrink: 0 }}>
-                        <WeatherEmoji code={f.code} size="1.4rem" />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ color: isToday ? '#60a5fa' : '#94a3b8', fontWeight: 800, fontSize: '0.8rem' }}>{label}</span>
-                          <span style={{ color: '#475569', fontSize: '0.65rem', fontWeight: 600 }}>{f.date}</span>
-                        </div>
-                        <div style={{ color: '#334155', fontSize: '0.68rem', fontWeight: 600, marginTop: 2 }}>{getDesc(f.code)}</div>
-                      </div>
-                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ color: 'white', fontWeight: 900, fontSize: '0.9rem' }}>{f.high}°</div>
-                        <div style={{ color: '#334155', fontSize: '0.7rem', fontWeight: 600 }}>{f.low}°</div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </>
-            )}
-
-            {/* UV Index */}
-            {weather && (
-              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, padding: 12, marginBottom: 10 }}>
-                <SectionLabel2>UV Index</SectionLabel2>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ flex: 1, height: 6, borderRadius: 4, background: 'linear-gradient(90deg, #10b981, #f59e0b, #ef4444)', position: 'relative', overflow: 'hidden' }}>
-                    <div style={{ position: 'absolute', left: `${Math.min(weather.uvIndex / 12 * 100, 100)}%`, top: -3, width: 12, height: 12, borderRadius: '50%', background: 'white', border: '2px solid #0d1526', transform: 'translateX(-50%)' }} />
-                  </div>
-                  <div style={{ color: weather.uvIndex <= 2 ? '#10b981' : weather.uvIndex <= 5 ? '#f59e0b' : '#ef4444', fontWeight: 900, fontSize: '0.9rem', minWidth: 24 }}>{weather.uvIndex}</div>
-                  <div style={{ color: '#334155', fontSize: '0.68rem', fontWeight: 700 }}>
-                    {weather.uvIndex <= 2 ? 'Low' : weather.uvIndex <= 5 ? 'Moderate' : weather.uvIndex <= 7 ? 'High' : 'Very High'}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* 4-day forecast */}
-            {weather && weather.forecast.length > 0 && (
-              <>
-                <SectionLabel2>4-Day Forecast</SectionLabel2>
-                <ForecastStrip>
-                  {weather.forecast.map((f, i) => (
-                    <ForecastItem key={i}>
-                      <div className="day">{f.day}</div>
-                      <div className="ico"><WeatherEmoji code={f.code} size="1rem" /></div>
-                      <div className="tmp">{f.high}°</div>
-                      <div style={{ color: '#334155', fontSize: '0.6rem', fontWeight: 600 }}>{f.low}°</div>
-                    </ForecastItem>
-                  ))}
-                </ForecastStrip>
-              </>
-            )}
-
-            {/* Travel advisory */}
-            {advisory && (
-              <>
-                <SectionLabel2>Travel Advisory</SectionLabel2>
-                <AdvisoryCard $level={advisory.level}>
-                  <div className="header">
-                    <div className="dot" />
-                    <div className="label">
-                      {advisory.level === 'safe' ? '✓ Safe to Explore' : advisory.level === 'caution' ? '⚠ Caution' : '✖ Advisory'}
-                    </div>
-                  </div>
-                  <div className="desc">{advisory.text}</div>
-                </AdvisoryCard>
-              </>
-            )}
-
-            {/* Best time to visit indicator */}
-            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, padding: 12, marginBottom: 10 }}>
-              <SectionLabel2>Best Activities Now</SectionLabel2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {[
-                  { name: 'Hiking Trails', ok: weather ? weather.code <= 3 : true },
-                  { name: 'Lake Tours', ok: weather ? weather.code <= 48 : true },
-                  { name: 'Heritage Sites', ok: true },
-                  { name: 'Hot Springs', ok: true },
-                ].map(act => (
-                  <div key={act.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 600 }}>{act.name}</span>
-                    <span style={{ color: act.ok ? '#10b981' : '#f59e0b', fontSize: '0.65rem', fontWeight: 800, background: act.ok ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', padding: '2px 8px', borderRadius: 20, border: `1px solid ${act.ok ? 'rgba(16,185,129,0.2)' : 'rgba(245,158,11,0.2)'}` }}>
-                      {act.ok ? '✓ Great' : '⚠ Fair'}
-                    </span>
-                  </div>
-                ))}
-              </div>
+          {/* Header: Current Weather + Time + Location + expand toggle */}
+          <WPHeader>
+            <div className="left">
+              <h4>Current Weather</h4>
+              <div className="time">{new Date().toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', hour12: true })}</div>
+              <div className="loc"><MapPin size={9} /> Bulusan, Sorsogon</div>
             </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {weather && <WeatherEmoji code={weather.code} size="2rem" />}
+              <ExpandToggle onClick={() => setWeatherExpanded(false)} title="Close Panel">
+                <ChevronDown size={16} />
+              </ExpandToggle>
+            </div>
+          </WPHeader>
+
+          <WeatherPanelScroll>
+            {weather ? (
+              <ModernWeatherContainer>
+                {/* ── LEFT MAIN: Hero, 7-Day Week, Today's Highlights ── */}
+                <ModernWeatherMain>
+                  {/* Hero banner with Bulusan landmark silhouette vibe */}
+                  <ModernHeroCard>
+                    <div>
+                      <div className="loc-badge">
+                        <MapPin size={12} /> Bulusan, Sorsogon
+                      </div>
+                      <div className="loc-city">Bulusan Volcano & Town</div>
+                      <div className="loc-sub">Philippines &bull; Asia/Manila Timezone</div>
+                      <div className="temp-display">
+                        <div className="num">{weather.temp}°</div>
+                        <div className="cond">{weather.desc}</div>
+                      </div>
+                    </div>
+                    <div className="hero-graphic">
+                      <div className="icon-wrapper">
+                        <WeatherEmoji code={weather.code} size="4.2rem" />
+                      </div>
+                      <div className="feels-pill">
+                        Feels like {weather.feelsLike}°C
+                      </div>
+                    </div>
+                  </ModernHeroCard>
+
+                  {/* ── 7-Day Forecast Row ── */}
+                  <div>
+                    <SectionTitle>
+                      <span>7-Day Weather Forecast</span>
+                      <span className="badge-tag">Daily Outlook</span>
+                    </SectionTitle>
+                    <ModernWeekGrid>
+                      {weather.forecast.map((f, i) => {
+                        const isToday = i === 0 || f.day === 'Today';
+                        return (
+                          <ModernDayCard key={i} $isToday={isToday}>
+                            <div className="day-name">{isToday ? 'Today' : f.day}</div>
+                            <div className="day-date">{f.date}</div>
+                            <div className="day-icon">
+                              <WeatherEmoji code={f.code} size="1.8rem" />
+                            </div>
+                            <div className="day-temp">
+                              {f.high}°<span>{f.low}°</span>
+                            </div>
+                            <div className="day-meta">
+                              <span>💨 {f.windSpeed}k</span>
+                              <span>💧 {f.precipProb}%</span>
+                            </div>
+                          </ModernDayCard>
+                        );
+                      })}
+                    </ModernWeekGrid>
+                  </div>
+
+                  {/* ── Today's Highlights ── */}
+                  <div>
+                    <SectionTitle>
+                      <span>Today's Highlights</span>
+                      <span className="badge-tag">Live Sensors</span>
+                    </SectionTitle>
+                    <ModernHighlightsGrid>
+                      <ModernHighlightCard>
+                        <div className="hl-title">
+                          <Sunrise size={14} color="#f59e0b" /> Sunrise & Sunset
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <div className="hl-val" style={{ fontSize: '1.15rem' }}>{weather.sunrise}</div>
+                            <div className="hl-sub">🌅 Morning</div>
+                          </div>
+                          <div>
+                            <div className="hl-val" style={{ fontSize: '1.15rem' }}>{weather.sunset}</div>
+                            <div className="hl-sub">🌇 Evening</div>
+                          </div>
+                        </div>
+                      </ModernHighlightCard>
+
+                      <ModernHighlightCard>
+                        <div className="hl-title">
+                          <Wind size={14} color="#38bdf8" /> Wind Status
+                        </div>
+                        <div className="hl-val">{weather.wind} <span style={{ fontSize: '0.8rem', color: '#64748b' }}>km/h</span></div>
+                        <div className="hl-sub">{windDirLabel(weather.windDir)} &bull; Gusts up to {weather.windGusts} km/h</div>
+                      </ModernHighlightCard>
+
+                      <ModernHighlightCard>
+                        <div className="hl-title">
+                          <Sun size={14} color="#eab308" /> UV Index
+                        </div>
+                        <div className="hl-val" style={{ color: weather.uvIndex <= 2 ? '#10b981' : weather.uvIndex <= 5 ? '#f59e0b' : '#ef4444' }}>
+                          {weather.uvIndex} <span style={{ fontSize: '0.75rem' }}>/ 12</span>
+                        </div>
+                        <div className="hl-sub">{weather.uvIndex <= 2 ? 'Low Risk' : weather.uvIndex <= 5 ? 'Moderate' : 'High UV Protection'}</div>
+                      </ModernHighlightCard>
+
+                      <ModernHighlightCard>
+                        <div className="hl-title">
+                          <Droplets size={14} color="#60a5fa" /> Humidity
+                        </div>
+                        <div className="hl-val">{weather.humidity}%</div>
+                        <div className="hl-sub">{weather.humidity > 80 ? 'High tropical moisture' : 'Comfortable air'}</div>
+                      </ModernHighlightCard>
+
+                      <ModernHighlightCard>
+                        <div className="hl-title">
+                          <Eye size={14} color="#a855f7" /> Visibility
+                        </div>
+                        <div className="hl-val">{weather.visibility} <span style={{ fontSize: '0.8rem', color: '#64748b' }}>km</span></div>
+                        <div className="hl-sub">{weather.visibility >= 10 ? 'Clear distance view' : 'Haze or mist in hills'}</div>
+                      </ModernHighlightCard>
+
+                      <ModernHighlightCard>
+                        <div className="hl-title">
+                          <Gauge size={14} color="#10b981" /> Air Quality & Baro
+                        </div>
+                        <div className="hl-val">{weather.airQuality.aqi} <span style={{ fontSize: '0.75rem', color: '#10b981' }}>{weather.airQuality.status}</span></div>
+                        <div className="hl-sub">{weather.pressure} hPa (Atmospheric)</div>
+                      </ModernHighlightCard>
+                    </ModernHighlightsGrid>
+                  </div>
+                </ModernWeatherMain>
+
+                {/* ── RIGHT SIDE: Calendar & Tourism Advisories ── */}
+                <ModernWeatherSide>
+                  {/* Calendar Widget */}
+                  <ModernCalendarCard>
+                    <div className="cal-header">
+                      <span>{new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+                      <CalendarDays size={16} color="#60a5fa" />
+                    </div>
+                    <div className="cal-grid">
+                      {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => (
+                        <div key={d} className="cal-day-label">{d}</div>
+                      ))}
+                      {Array.from({ length: 31 }, (_, i) => i + 1).map(dayNum => {
+                        const isCurDay = dayNum === new Date().getDate();
+                        return (
+                          <div key={dayNum} className={`cal-cell ${isCurDay ? 'today' : ''}`}>
+                            {dayNum}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </ModernCalendarCard>
+
+                  {/* Travel Advisory Panel */}
+                  <WPAdvisoryPanel $severity={weather.code > 67 || weather.visibility < 3 || weather.wind > 40 ? 'danger' : weather.code > 3 || weather.temp > 33 || weather.visibility < 10 ? 'warn' : 'good'}>
+                    <AdvisoryHeader $severity={weather.code > 67 || weather.visibility < 3 || weather.wind > 40 ? 'danger' : weather.code > 3 || weather.temp > 33 || weather.visibility < 10 ? 'warn' : 'good'}>
+                      <ShieldAlert size={16} /> Travel Safety Alert
+                    </AdvisoryHeader>
+                    <AdvisoryDetail>
+                      <div className="text">
+                        <div className="title">Bulusan Area Advisory</div>
+                        <div className="desc">
+                          {weather.code <= 3
+                            ? 'Optimal conditions for exploring Bulusan Lake, waterfalls, and outdoor hot springs.'
+                            : weather.code <= 67
+                            ? 'Rain showers present. Mountain trails may be slippery; exercise extra care at riverbanks.'
+                            : 'Severe weather advisory. Avoid high volcanic slopes and coastal marine activities.'}
+                        </div>
+                      </div>
+                    </AdvisoryDetail>
+                  </WPAdvisoryPanel>
+                </ModernWeatherSide>
+              </ModernWeatherContainer>
+            ) : (
+              <Skel style={{ height: 350, borderRadius: 20 }} />
+            )}
           </WeatherPanelScroll>
 
           <WeatherFooter>
             <FooterStat>
               <span className="val">{attractions.length}</span>
-              <span className="lbl">Attractions</span>
+              <span className="lbl">Spots</span>
             </FooterStat>
             <FooterStat>
               <span className="val">{enterprises.length}</span>
-              <span className="lbl">Enterprises</span>
+              <span className="lbl">Biz</span>
             </FooterStat>
             <FooterStat>
               <span className="val">{heritage.length}</span>
               <span className="lbl">Heritage</span>
             </FooterStat>
           </WeatherFooter>
+
         </RightPanelContent>
-      </RightPanelWrapper>
+      </BottomPanelWrapper>
+      </div>
 
       {/* ── MOBILE DRAWER ── */}
       <MobileDrawer $open={mobileDrawerOpen}>
