@@ -54,6 +54,7 @@ model Attraction {
 
   ownerId         String?
   owner           User?    @relation("AttractionOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  touristTrackerId String?
 
   @@index([dateAdded])
   @@index([visits])
@@ -86,6 +87,7 @@ model Enterprise {
 
   ownerId     String?
   owner       User?    @relation("EnterpriseOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  touristTrackerId String?
 
   @@index([dateAdded])
   @@index([visits])

@@ -15,6 +15,12 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const MOCK_ACCOUNTS: Record<string, Partial<AppUser>> = {
+  'owner@localhost.com': { id: 'mock-owner-id', name: 'Local Owner', email: 'owner@localhost.com', role: 'OWNER', approvalStatus: 'APPROVED', emailVerified: true },
+  'admin@localhost.com': { id: 'mock-admin-id', name: 'Local Admin', email: 'admin@localhost.com', role: 'ADMIN', approvalStatus: 'APPROVED', emailVerified: true },
+  'user@localhost.com': { id: 'mock-user-id', name: 'Local User', email: 'user@localhost.com', role: 'USER', approvalStatus: 'APPROVED', emailVerified: true }
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -24,7 +30,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const loadUser = async () => {
       const stored = localStorage.getItem('bulusan_user') || sessionStorage.getItem('bulusan_user');
       const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+      
       if (stored && token) {
+        // Bypass fetching for mock accounts
+        if (token.startsWith('mock-token-')) {
+          try {
+            setUser(JSON.parse(stored));
+          } catch {
+            setUser(null);
+          }
+          setLoading(false);
+          return;
+        }
         try {
           const res = await apiClient.get('/auth/me');
           setUser(res.user);
@@ -73,6 +90,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string, rememberMe: boolean = true) => {
     try {
+      // Local Host bypass logic
+      if (MOCK_ACCOUNTS[email] && password === 'password123') {
+        const mockUser = MOCK_ACCOUNTS[email] as AppUser;
+        const storage = rememberMe ? localStorage : sessionStorage;
+        storage.setItem('auth_token', 'mock-token-' + mockUser.id);
+        storage.setItem('bulusan_user', JSON.stringify(mockUser));
+        setUser(mockUser);
+        return { success: true };
+      }
+
       const res = await apiClient.post('/auth/login', { email, password });
       if (res.token) {
         const storage = rememberMe ? localStorage : sessionStorage;

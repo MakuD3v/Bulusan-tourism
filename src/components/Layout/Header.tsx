@@ -305,14 +305,28 @@ const Header = ({ isTransparent }: { isTransparent: boolean }) => {
           { path: '/blog', label: 'Blog', baybayin: 'ᜃᜓᜏᜒᜈ᜔ᜆᜓ' },
           { path: '/contact', label: 'Contact', baybayin: 'ᜂᜐᜉ᜔' }
         ].filter(item => !(item as any).adminOnly || role === 'ADMIN').map(item => (
-          <NavItem
-            key={item.path}
-            to={item.path}
-            $active={location.pathname === item.path || (item.path === '/discover' && location.pathname === '/')}
-            data-baybayin={item.baybayin}
-          >
-            <span className="nav-text">{item.label}</span>
-          </NavItem>
+          (item as any).isExternal ? (
+            <NavItem
+              as="a"
+              key={item.path}
+              href={item.path}
+              target="_blank"
+              rel="noopener noreferrer"
+              $active={false}
+              data-baybayin={item.baybayin}
+            >
+              <span className="nav-text">{item.label}</span>
+            </NavItem>
+          ) : (
+            <NavItem
+              key={item.path}
+              to={item.path}
+              $active={location.pathname === item.path || (item.path === '/discover' && location.pathname === '/')}
+              data-baybayin={item.baybayin}
+            >
+              <span className="nav-text">{item.label}</span>
+            </NavItem>
+          )
         ))}
       </NavLinks>
 
@@ -398,10 +412,17 @@ const Header = ({ isTransparent }: { isTransparent: boolean }) => {
                 { path: '/blog', label: 'Blog', baybayin: 'ᜃᜓᜏᜒᜈ᜔ᜆᜓ' },
                 { path: '/contact', label: 'Contact', baybayin: 'ᜂᜐᜉ᜔' }
               ].filter(item => !(item as any).adminOnly || role === 'ADMIN').map(item => (
-                <MobileNavItem key={item.path} to={item.path} onClick={() => setIsMobileMenuOpen(false)}>
-                  <span className="baybayin">{item.baybayin}</span>
-                  {item.label}
-                </MobileNavItem>
+                (item as any).isExternal ? (
+                  <MobileNavItem as="a" href={item.path} target="_blank" rel="noopener noreferrer" key={item.path} onClick={() => setIsMobileMenuOpen(false)}>
+                    <span className="baybayin">{item.baybayin}</span>
+                    {item.label}
+                  </MobileNavItem>
+                ) : (
+                  <MobileNavItem key={item.path} to={item.path} onClick={() => setIsMobileMenuOpen(false)}>
+                    <span className="baybayin">{item.baybayin}</span>
+                    {item.label}
+                  </MobileNavItem>
+                )
               ))}
             </MobileDrawer>
           </>

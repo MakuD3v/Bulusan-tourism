@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import BulusanMap from '../components/Map/BulusanMap';
+import WeatherCanvas from '../components/Map/WeatherCanvas';
 import TravelGuideFlow from '../components/Map/TravelGuideFlow';
 import BookingModal from '../components/Map/BookingModal';
 import LiveTourTracker from '../components/Map/LiveTourTracker';
@@ -1369,6 +1370,7 @@ interface WeatherData {
   sunset: string;
   airQuality: { aqi: number; status: string };
   forecast: DayForecast[]; // 7 days
+  isDay?: number;
 }
 
 function formatTime(iso: string): string {
@@ -1384,14 +1386,18 @@ function windDirLabel(deg: number): string {
   return dirs[Math.round(deg / 45) % 8];
 }
 
-function useWeather(): WeatherData | null {
+function useWeather(overrideWeather?: string | null): WeatherData | null {
   const [data, setData] = useState<WeatherData | null>(null);
+
+  // Debug query override (e.g. ?weather=thunderstorm or ?weather=rain or ?weather=fog)
+  const queryParams = new URLSearchParams(window.location.search);
+  const debugWeather = queryParams.get('weather');
 
   const fetchWeather = () => {
     const lat = 12.7533, lng = 124.1362;
     fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}` +
-      `&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code,surface_pressure,visibility` +
+      `&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code,surface_pressure,visibility,is_day` +
       `&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_probability_max,wind_speed_10m_max` +
       `&wind_speed_unit=kmh&timezone=Asia%2FManila&forecast_days=7`
     )
@@ -1399,7 +1405,19 @@ function useWeather(): WeatherData | null {
       .then(d => {
         const c = d.current || {};
         const daily = d.daily || {};
-        const code = c.weather_code ?? 2;
+        let code = c.weather_code ?? 2;
+        let isDay = c.is_day !== undefined ? c.is_day : 1;
+
+        const activeOverride = overrideWeather !== undefined ? overrideWeather : debugWeather;
+        if (activeOverride) {
+          if (activeOverride === 'thunderstorm') code = 95;
+          else if (activeOverride === 'rain') code = 65;
+          else if (activeOverride === 'drizzle') code = 53;
+          else if (activeOverride === 'fog') code = 45;
+          else if (activeOverride === 'clear') code = 0;
+          else if (activeOverride === 'night') { code = 0; isDay = 0; }
+        }
+
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
         const forecastList: DayForecast[] = ((daily.time as string[]) || []).map((dateStr: string, i: number) => {
@@ -1431,6 +1449,7 @@ function useWeather(): WeatherData | null {
           visibility: Math.round((c.visibility ?? 10000) / 1000),
           pressure: Math.round(c.surface_pressure ?? 1012),
           code,
+          isDay,
           uvIndex: Math.round(daily.uv_index_max?.[0] ?? (code <= 1 ? 8 : 4)),
           sunrise: formatTime(daily.sunrise?.[0] ?? ''),
           sunset: formatTime(daily.sunset?.[0] ?? ''),
@@ -1439,14 +1458,26 @@ function useWeather(): WeatherData | null {
         });
       })
       .catch(() => {
-        // Fallback realistic tropical forecast
+        let code = 2;
+        let isDay = 1;
+        const activeOverride = overrideWeather !== undefined ? overrideWeather : debugWeather;
+        if (activeOverride) {
+          if (activeOverride === 'thunderstorm') code = 95;
+          else if (activeOverride === 'rain') code = 65;
+          else if (activeOverride === 'drizzle') code = 53;
+          else if (activeOverride === 'fog') code = 45;
+          else if (activeOverride === 'clear') code = 0;
+          else if (activeOverride === 'night') { code = 0; isDay = 0; }
+        }
+
         setData({
-          temp: 28, feelsLike: 31, desc: 'Partly Cloudy', humidity: 82,
-          wind: 15, windGusts: 24, windDir: 70, visibility: 10, pressure: 1012, code: 2, uvIndex: 6,
+          temp: 28, feelsLike: 31, desc: getDesc(code), humidity: 82,
+          wind: 15, windGusts: 24, windDir: 70, visibility: 10, pressure: 1012, code, uvIndex: 6,
+          isDay,
           sunrise: '5:42 AM', sunset: '5:35 PM',
           airQuality: { aqi: 42, status: 'Good' },
           forecast: [
-            { day: 'Today', date: 'Nov 13', code: 2, high: 30, low: 24, windSpeed: 15, humidity: 82, precipProb: 35 },
+            { day: 'Today', date: 'Nov 13', code, high: 30, low: 24, windSpeed: 15, humidity: 82, precipProb: 35 },
             { day: 'Sat',   date: 'Nov 14', code: 61, high: 28, low: 23, windSpeed: 18, humidity: 88, precipProb: 75 },
             { day: 'Sun',   date: 'Nov 15', code: 3,  high: 29, low: 24, windSpeed: 14, humidity: 80, precipProb: 40 },
             { day: 'Mon',   date: 'Nov 16', code: 1,  high: 31, low: 24, windSpeed: 12, humidity: 75, precipProb: 20 },
@@ -1462,7 +1493,7 @@ function useWeather(): WeatherData | null {
     fetchWeather();
     const interval = setInterval(fetchWeather, 10 * 60 * 1000); // 10 minutes refresh
     return () => clearInterval(interval);
-  }, []);
+  }, [overrideWeather]);
 
   return data;
 }
@@ -1526,8 +1557,11 @@ const ToursAndMapPage: React.FC = () => {
   const [showComingSoonMsg, setShowComingSoonMsg] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [weatherExpanded, setWeatherExpanded] = useState(false);
+  const [weatherOverride, setWeatherOverride] = useState<string | null>(() => {
+    return new URLSearchParams(window.location.search).get('weather');
+  });
 
-  const weather = useWeather();
+  const weather = useWeather(weatherOverride);
   const advisory = weather ? getTravelAdvisory(weather.code) : null;
   const initialRef = React.useRef(false);
 
@@ -1664,7 +1698,16 @@ const ToursAndMapPage: React.FC = () => {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, position: 'relative', overflow: 'hidden' }}>
         {/* ── MAP AREA ── */}
         <MapCenter>
-          {isRaining && <RainEffect />}
+          {weather && (
+            <WeatherCanvas
+              weatherCode={weather.code}
+              windSpeed={weather.wind}
+              windDirection={weather.windDir}
+              isDay={weather.isDay}
+              currentOverride={weatherOverride}
+              onSelectOverride={setWeatherOverride}
+            />
+          )}
 
         {/* Live Clock — top-left of map */}
         <ClockWidget>

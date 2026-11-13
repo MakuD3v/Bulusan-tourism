@@ -23,6 +23,7 @@ export interface Attraction {
     photos?: string[];
     isFreeAdmission?: boolean;
     offers?: Offer[];
+    touristTrackerId?: string;
 }
 
 export type OfferType = 'Single Price' | 'Price Range' | 'Hourly Price';
@@ -57,6 +58,7 @@ export interface Enterprise {
     featured?: boolean;
     photos?: string[];
     offers?: Offer[];
+    touristTrackerId?: string;
 }
 
 export interface Review {

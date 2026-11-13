@@ -97,9 +97,60 @@ router.post('/register', registerLimiter, async (req, res) => {
 });
 
 // ─── Login ────────────────────────────────────────────────────────────────────
+
+// Mock Accounts for local testing
+const mockAccounts = {
+  'owner@localhost.com': {
+    id: 'mock-owner-id',
+    name: 'Local Owner',
+    email: 'owner@localhost.com',
+    password: 'password123',
+    role: 'OWNER',
+    avatar: null,
+    itinerary: null,
+    history: null,
+    approvalStatus: 'APPROVED',
+    emailVerified: true,
+  },
+  'admin@localhost.com': {
+    id: 'mock-admin-id',
+    name: 'Local Admin',
+    email: 'admin@localhost.com',
+    password: 'password123',
+    role: 'ADMIN',
+    avatar: null,
+    itinerary: null,
+    history: null,
+    approvalStatus: 'APPROVED',
+    emailVerified: true,
+  },
+  'user@localhost.com': {
+    id: 'mock-user-id',
+    name: 'Local User',
+    email: 'user@localhost.com',
+    password: 'password123',
+    role: 'USER',
+    avatar: null,
+    itinerary: null,
+    history: null,
+    approvalStatus: 'APPROVED',
+    emailVerified: true,
+  }
+};
+
 router.post('/login', loginLimiter, async (req, res) => {
   const { email, password } = req.body;
   try {
+    if (mockAccounts[email as keyof typeof mockAccounts]) {
+      const mockUser = mockAccounts[email as keyof typeof mockAccounts];
+      if (password !== mockUser.password) {
+        return res.status(401).json({ error: 'Incorrect password. Please try again.' });
+      }
+      const token = jwt.sign({ userId: mockUser.id, role: mockUser.role }, JWT_SECRET, { expiresIn: '7d' });
+      const { password: _, ...userWithoutPassword } = mockUser;
+      return res.json({ token, user: userWithoutPassword });
+    }
+
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
@@ -135,6 +186,14 @@ router.post('/login', loginLimiter, async (req, res) => {
 // ─── Me ──────────────────────────────────────────────────────────────────────
 router.get('/me', authenticateToken, async (req: any, res: any) => {
   try {
+    if (String(req.user.userId).startsWith('mock-')) {
+      const mockUser = Object.values(mockAccounts).find(u => u.id === req.user.userId);
+      if (mockUser) {
+        const { password: _, ...userWithoutPassword } = mockUser;
+        return res.json({ user: userWithoutPassword });
+      }
+    }
+
     const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
     if (!user) return res.status(404).json({ error: 'User not found' });
     res.json({

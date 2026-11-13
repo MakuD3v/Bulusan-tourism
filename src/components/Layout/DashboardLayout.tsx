@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { 
   Compass, MapPin, Building2, Map, 
-  BookOpen, Mail, User, LogOut, LogIn, LayoutDashboard
+  BookOpen, Mail, User, LogOut, LogIn, LayoutDashboard, ExternalLink
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { apiClient } from '../../api/client';
@@ -193,6 +193,33 @@ export const SignOutBtn = styled.button`
   }
 `;
 
+export const LinkedSiteBtn = styled.a`
+  width: calc(100% - 32px);
+  margin: 0 16px 10px;
+  padding: 12px;
+  background: linear-gradient(135deg, rgba(43, 108, 176, 0.2) 0%, rgba(14, 165, 233, 0.15) 100%);
+  border: 1px solid rgba(14, 165, 233, 0.3);
+  border-radius: 12px;
+  color: #90cdf4;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+  text-decoration: none;
+
+  &:hover {
+    background: linear-gradient(135deg, rgba(43, 108, 176, 0.35) 0%, rgba(14, 165, 233, 0.25) 100%);
+    border-color: rgba(14, 165, 233, 0.5);
+    color: #bde3ff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(14, 165, 233, 0.15);
+  }
+`;
+
 export const Main = styled.main`
   flex: 1;
   background: rgba(6, 15, 36, 0.5);
@@ -339,6 +366,7 @@ const DashboardLayout = () => {
                 <div className="badge">{role || 'Explorer'}</div>
               </div>
             </UserCard>
+
             <SignOutBtn onClick={handleLogout}>
               <LogOut size={15} />
               Sign Out

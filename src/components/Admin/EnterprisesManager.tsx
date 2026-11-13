@@ -1,6 +1,6 @@
 import React, { useState, lazy, Suspense, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { MapPin, Edit2, Trash2, Plus, X, UploadCloud, Map, Film, Image as ImageIcon, Clock, Phone, Globe, DollarSign, Ticket, Check, ChevronDown, Store, Sparkles } from 'lucide-react';
+import { MapPin, Edit2, Trash2, Plus, X, UploadCloud, Map, Film, Image as ImageIcon, Clock, Phone, Globe, DollarSign, Ticket, Check, ChevronDown, Store, Sparkles, ExternalLink } from 'lucide-react';
 import AdminSearchBar from './AdminSearchBar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { dbService } from '../../api/db';
@@ -636,6 +636,9 @@ export default function EnterprisesManager({ enterprises, ownerMode, onDataChang
               </td>
               <td>
                 <div className="row-actions">
+                  <a href="http://localhost:8080" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex' }}>
+                    <button title="View Public Page"><ExternalLink size={16} /></button>
+                  </a>
                   <button onClick={() => handleOpenModal(item)}><Edit2 size={16} /></button>
                   {(role !== 'OWNER' || ownerMode) && (
                     <button className="delete" onClick={() => handleDelete(item.id)}><Trash2 size={16} /></button>
@@ -663,7 +666,26 @@ export default function EnterprisesManager({ enterprises, ownerMode, onDataChang
                     <div className="subtitle">Fill in the details • Preview updates live on the right</div>
                   </div>
                 </div>
-                <button className="close-btn" onClick={() => setIsModalOpen(false)}><X size={18} /></button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  {formData.recordId && (
+                    <button
+                      type="button"
+                      style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', padding: '8px 16px', borderRadius: '8px', border: 'none', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem' }}
+                      onClick={() => {
+                        const url = new URL('http://localhost:5174/');
+                        url.searchParams.append('source', 'bulusan');
+                        url.searchParams.append('entityType', 'enterprise');
+                        url.searchParams.append('entityId', formData.recordId.toString());
+                        if (formData.touristTrackerId) url.searchParams.append('trackerId', formData.touristTrackerId);
+                        window.open(url.toString(), '_blank');
+                      }}
+                    >
+                      <Globe size={14} />
+                      {formData.touristTrackerId ? 'Manage in Tracker' : 'Connect to Tracker'}
+                    </button>
+                  )}
+                  <button className="close-btn" onClick={() => setIsModalOpen(false)}><X size={18} /></button>
+                </div>
               </ModalHeader>
 
               <ThreeColumnLayout>

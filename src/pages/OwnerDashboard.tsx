@@ -57,9 +57,56 @@ const OwnerDashboard = () => {
   const [myEnterprises, setMyEnterprises] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
+  const MOCK_OWNER_ATTRACTIONS = [
+    {
+      id: 10001,
+      name: "Bulusan Lake Viewing Deck",
+      categories: ["Nature", "Scenic"],
+      rating: 4.8,
+      location: "Bulusan Volcano Natural Park, Sorsogon",
+      coordinates: { lat: 12.769, lng: 124.057 },
+      img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&q=80&w=800",
+      description: "A stunning elevated viewing deck overlooking the serene Bulusan Lake, nestled within the lush crater of the Bulusan Volcano. Perfect for sunrise photography and nature walks.",
+      featured: true,
+      isFreeAdmission: false,
+      tags: ["Lake", "Volcano", "Scenic"],
+      metadata: { entranceFee: "\u20b150", hours: "6:00 AM - 5:00 PM", difficulty: "Moderate" },
+      visits: 892,
+      ownerId: 'mock-owner-id',
+      ownerName: 'Local Owner',
+      offers: [{ id: "o1", name: "Day Pass", price: "\u20b150", type: "Single Price" }]
+    },
+    {
+      id: 10002,
+      name: "Dancalan Beach Resort",
+      categories: ["Beach", "Swimming"],
+      rating: 4.6,
+      location: "Dancalan, Bulusan, Sorsogon",
+      coordinates: { lat: 12.745, lng: 124.101 },
+      img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=800",
+      description: "A pristine black-sand beach with calm, crystal-clear waters ideal for swimming, snorkeling, and beachside relaxation. Owned and managed by Local Owner.",
+      featured: false,
+      isFreeAdmission: true,
+      tags: ["Beach", "Swimming", "Black Sand"],
+      metadata: { entranceFee: "Free", hours: "Open 24 Hours", difficulty: "Easy" },
+      visits: 1540,
+      ownerId: 'mock-owner-id',
+      ownerName: 'Local Owner',
+      offers: []
+    }
+  ];
+
   const fetchOwnerData = async () => {
     setLoadingData(true);
     try {
+      // Mock bypass for localhost owner account
+      if (user?.id === 'mock-owner-id') {
+        setMyAttractions(MOCK_OWNER_ATTRACTIONS);
+        setMyEnterprises([]);
+        setLoadingData(false);
+        return;
+      }
+
       const [atRes, enRes] = await Promise.all([
         apiClient.get('/attractions/mine'),
         apiClient.get('/enterprises/mine'),
@@ -75,7 +122,7 @@ const OwnerDashboard = () => {
 
   useEffect(() => {
     fetchOwnerData();
-  }, []);
+  }, [user?.id]);
 
   return (
     <>
