@@ -308,6 +308,7 @@ const Header = ({ isTransparent }: { isTransparent: boolean }) => {
           (item as any).isExternal ? (
             <NavItem
               as="a"
+              to=""
               key={item.path}
               href={item.path}
               target="_blank"
@@ -413,7 +414,7 @@ const Header = ({ isTransparent }: { isTransparent: boolean }) => {
                 { path: '/contact', label: 'Contact', baybayin: 'ᜂᜐᜉ᜔' }
               ].filter(item => !(item as any).adminOnly || role === 'ADMIN').map(item => (
                 (item as any).isExternal ? (
-                  <MobileNavItem as="a" href={item.path} target="_blank" rel="noopener noreferrer" key={item.path} onClick={() => setIsMobileMenuOpen(false)}>
+                  <MobileNavItem as="a" to="" href={item.path} target="_blank" rel="noopener noreferrer" key={item.path} onClick={() => setIsMobileMenuOpen(false)}>
                     <span className="baybayin">{item.baybayin}</span>
                     {item.label}
                   </MobileNavItem>
