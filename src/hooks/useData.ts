@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { apiClient } from '../api/client';
 import { Attraction, BlogPost, Inquiry, Tour, Enterprise, CheckIn, User, Heritage } from '../data/types';
 
@@ -91,7 +91,24 @@ export function useBlogs(initialData: BlogPost[] = []) {
 }
 
 export function useInquiries(initialData: Inquiry[] = []) {
-    return useCollection<Inquiry>('inquiries', initialData);
+    const col = useCollection<Inquiry>('inquiries', initialData);
+    
+    // Deduplicate inquiries: ensure no duplicate IDs or duplicate messages (same sender, email, message)
+    const deduplicatedData = useMemo(() => {
+        if (!col.data || !Array.isArray(col.data)) return [];
+        const seen = new Set<string>();
+        return col.data.filter(inq => {
+            if (!inq) return false;
+            const idKey = `id:${inq.id}`;
+            const contentKey = `content:${(inq.email || '').trim().toLowerCase()}|${(inq.message || '').trim()}`;
+            if (seen.has(idKey) || seen.has(contentKey)) return false;
+            seen.add(idKey);
+            seen.add(contentKey);
+            return true;
+        });
+    }, [col.data]);
+
+    return { ...col, data: deduplicatedData };
 }
 
 export function useTours(initialData: Tour[] = []) {

@@ -45,11 +45,22 @@ const InboxReader: React.FC<InboxReaderProps> = ({ inquiries }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const { showAlert, showConfirm } = useAlert();
 
-  const filteredInquiries = (inquiries || []).filter(inq => 
-    inq.sender.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    inq.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    inq.subject.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredInquiries = React.useMemo(() => {
+    const list = (inquiries || []).filter(inq => 
+      (inq.sender || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (inq.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (inq.subject || '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    const seen = new Set<string>();
+    return list.filter(inq => {
+      const idKey = `id:${inq.id}`;
+      const contentKey = `c:${(inq.email || '').trim().toLowerCase()}|${(inq.message || '').trim()}`;
+      if (seen.has(idKey) || seen.has(contentKey)) return false;
+      seen.add(idKey);
+      seen.add(contentKey);
+      return true;
+    });
+  }, [inquiries, searchTerm]);
 
   const handleReply = async () => {
     if (!selectedInquiry) return;

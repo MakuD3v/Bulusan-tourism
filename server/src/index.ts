@@ -51,6 +51,37 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
+// Cleanup duplicate inquiries on startup
+async function cleanupDuplicateInquiries() {
+  try {
+    const { PrismaClient } = await import('@prisma/client');
+    const prisma = new PrismaClient();
+    const inquiries = await prisma.inquiry.findMany({ orderBy: { id: 'asc' } });
+    const seen = new Set<string>();
+    const duplicateIds: number[] = [];
+
+    for (const inq of inquiries) {
+      const key = `${(inq.email || '').trim().toLowerCase()}|${(inq.message || '').trim()}`;
+      if (seen.has(key)) {
+        duplicateIds.push(inq.id);
+      } else {
+        seen.add(key);
+      }
+    }
+
+    if (duplicateIds.length > 0) {
+      console.log(`[Deduplication] Purging ${duplicateIds.length} duplicate inquiries from DB:`, duplicateIds);
+      await prisma.inquiry.deleteMany({
+        where: { id: { in: duplicateIds } }
+      });
+    }
+    await prisma.$disconnect();
+  } catch (err: any) {
+    console.warn('[Deduplication] Startup cleanup skipped or failed:', err?.message);
+  }
+}
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  cleanupDuplicateInquiries();
 });

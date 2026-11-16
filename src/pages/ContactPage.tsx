@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
-import { MapPin, Phone, Mail, Send, CheckCircle } from 'lucide-react';
+import { MapPin, Phone, Mail, Send, CheckCircle, Loader2 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { useState } from 'react';
 import { dbService } from '../api/db';
@@ -170,10 +170,17 @@ const GlassForm = styled(motion.form)`
     transition: all 0.3s ease;
     box-shadow: 0 8px 16px rgba(46, 117, 182, 0.2);
 
-    &:hover { 
+    &:hover:not(:disabled) { 
       background: var(--primary-blue);
       transform: translateY(-2px);
       box-shadow: 0 12px 24px rgba(46, 117, 182, 0.3);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
     }
   }
 `;
@@ -181,29 +188,32 @@ const GlassForm = styled(motion.form)`
 const ContactPage = () => {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [sent, setSent] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { showAlert } = useAlert();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.message) return;
+    if (isSubmitting) return;
+    if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) return;
 
+    setIsSubmitting(true);
     try {
       // 1. Save to Database
       await dbService.add('inquiries', {
-        sender: formData.name,
-        email: formData.email,
-        subject: `General Inquiry from ${formData.name}`,
-        message: formData.message,
+        sender: formData.name.trim(),
+        email: formData.email.trim(),
+        subject: `General Inquiry from ${formData.name.trim()}`,
+        message: formData.message.trim(),
         date: new Date().toISOString(),
         status: 'New'
       });
-
-      // 2. Direct Email Link (Removed as per user request)
 
       setSent(true);
       setFormData({ name: '', email: '', message: '' });
     } catch (err) {
       showAlert('Error', 'Failed to send inquiry. Please try again or call our direct line.', 'error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -317,7 +327,17 @@ const ContactPage = () => {
                     required
                   />
                 </div>
-                <button type="submit">Send Message <Send size={18} /></button>
+                <button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      Sending... <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
+                    </>
+                  ) : (
+                    <>
+                      Send Message <Send size={18} />
+                    </>
+                  )}
+                </button>
               </>
             )}
           </GlassForm>

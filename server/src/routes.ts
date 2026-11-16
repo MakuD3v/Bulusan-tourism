@@ -141,7 +141,19 @@ const createCrudRoutes = (model: any, modelName: string, include?: any) => {
         orderBy = { id: 'desc' };
       }
 
-      const data = await model.findMany({ include, orderBy });
+      let data = await model.findMany({ include, orderBy });
+
+      // Deduplicate inquiries: ensure no duplicate rows appear in the inbox
+      if (modelName === 'Inquiry' && Array.isArray(data)) {
+        const seen = new Set<string>();
+        data = data.filter((item: any) => {
+          const key = `${(item.email || '').trim().toLowerCase()}|${(item.message || '').trim()}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+      }
+
       await redisCache.set(cacheKey, data, 3600);
       res.json(data);
     } catch (e) {
@@ -288,6 +300,20 @@ const createCrudRoutes = (model: any, modelName: string, include?: any) => {
         }
       }
 
+      if (modelName === 'Inquiry') {
+        const target = await model.findUnique({ where: { id: recordId } });
+        if (target) {
+          await model.deleteMany({
+            where: {
+              email: target.email,
+              message: target.message
+            }
+          });
+          await redisCache.invalidatePattern(`${modelName}:*`);
+          return res.json({ success: true });
+        }
+      }
+
       await model.delete({ where: { id: recordId } });
       await redisCache.invalidatePattern(`${modelName}:*`);
       res.json({ success: true });
@@ -338,11 +364,44 @@ router.use('/enterprises', createCrudRoutes(prisma.enterprise, 'Enterprise', { r
 router.use('/heritage', createCrudRoutes(prisma.heritage, 'Heritage', { reviews: true }));
 router.use('/tours', createCrudRoutes(prisma.tour, 'Tour', { routes: true }));
 router.use('/blogs', createCrudRoutes(prisma.blogPost, 'BlogPost', { reviews: true }));
-// Public endpoint for submitting inquiries
+// Public endpoint for submitting inquiries with deduplication protection
 router.post('/inquiries', async (req, res) => {
   try {
     const payload = formatPrismaPayload(req.body);
-    const data = await prisma.inquiry.create({ data: payload });
+    const sender = (payload.sender || '').trim();
+    const email = (payload.email || '').trim().toLowerCase();
+    const message = (payload.message || '').trim();
+    const subject = (payload.subject || '').trim() || `General Inquiry from ${sender}`;
+
+    if (!sender || !email || !message) {
+      return res.status(400).json({ error: 'Sender, email, and message are required.' });
+    }
+
+    // Deduplication guard: if an identical inquiry was submitted within the last 5 minutes, return it
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const existing = await prisma.inquiry.findFirst({
+      where: {
+        email: { equals: email, mode: 'insensitive' },
+        message: message,
+        date: { gte: fiveMinutesAgo }
+      }
+    });
+
+    if (existing) {
+      return res.json(existing);
+    }
+
+    const data = await prisma.inquiry.create({
+      data: {
+        sender,
+        email,
+        subject,
+        message,
+        status: payload.status || 'New'
+      }
+    });
+
+    await redisCache.invalidatePattern('Inquiry:*');
     res.json(data);
   } catch (e: any) {
     res.status(500).json({ error: 'Error creating inquiry', details: e.message });
