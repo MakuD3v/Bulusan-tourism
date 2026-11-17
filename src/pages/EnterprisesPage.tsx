@@ -590,7 +590,7 @@ const EnterprisesPage = () => {
       <HeroContainer>
         <div className="video-container">
           <SmartMedia
-            src="https://youtu.be/sBFeTzfXeu8"
+            src="/Bulusan%20Promotional%20Video%20(All%20Activities).mp4"
             type="video"
             className="video-bg"
             autoPlay

@@ -19,6 +19,12 @@ export const getMediaUrl = (path: string | undefined | null): string => {
     return path;
   }
 
+  // If it's a root-relative path that is NOT an upload (e.g. a file in /public),
+  // return it as-is so Vite/the web server serves it from the site root.
+  if (path.startsWith('/') && !path.startsWith('/uploads')) {
+    return path;
+  }
+
   // Prepend the API base URL (stripping /api suffix if present)
   let apiBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api$/, '');
   

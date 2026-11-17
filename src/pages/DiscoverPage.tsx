@@ -668,7 +668,7 @@ const DiscoverPage = () => {
           >
             <SmartMedia
               type="video"
-              src="https://youtu.be/sBFeTzfXeu8"
+              src="/Bulusan%20Promotional%20Video%20(All%20Activities).mp4"
               autoPlay
               loop
               muted
